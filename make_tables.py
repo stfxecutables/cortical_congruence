@@ -1,12 +1,3 @@
-from __future__ import annotations
-
-# fmt: off
-import sys  # isort: skip
-from pathlib import Path  # isort: skip
-ROOT = Path(__file__).resolve().parent.parent  # isort: skip
-sys.path.append(str(ROOT))  # isort: skip
-# fmt: on
-
 import os
 import sys
 from argparse import ArgumentParser, Namespace
@@ -35,17 +26,7 @@ from numpy import ndarray
 from pandas import DataFrame, Series
 from typing_extensions import Literal
 
-
-DATA = ROOT / "data"
-ABIDE_I = DATA / "ABIDE-I"
-ABIDE_II = DATA / "ABIDE-II"
-
-ABIDE_I_PHENO = DATA / "ABIDE_I_Phenotypic_V1_0b.csv"
-ABIDE_II_PHENO = DATA / "ABIDEII_Composite_Phenotypic.csv"
-
+from src.constants import ABIDE_I_PHENO, ABIDE_II_PHENO
 
 if __name__ == "__main__":
-    df = pd.read_csv(ABIDE_I_PHENO)
-    df2 = pd.read_csv(ABIDE_II_PHENO, encoding="iso8859_2")
-    print(df)
-    print(df2)
+    pass

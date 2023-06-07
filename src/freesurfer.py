@@ -7,12 +7,13 @@ ROOT = Path(__file__).resolve().parent.parent  # isort: skip
 sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
-from io import StringIO
 import os
+import re
 import sys
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from enum import Enum
+from io import StringIO
 from pathlib import Path
 from typing import (
     Any,
@@ -21,6 +22,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    TextIO,
     Tuple,
     Union,
     cast,
@@ -30,15 +32,10 @@ from typing import (
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from dataclasses import dataclass
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
-
-
-from typing import TextIO
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
@@ -59,6 +56,72 @@ class MetaData:
     subjectname: str
     filename: Path
     annot: Path
+
+
+@dataclass
+class Subject:
+    root: Path
+    id: str
+    statfiles: list[Path]
+
+    @staticmethod
+    def from_root(root: Path) -> Subject:
+        stats = root.rglob("*.stats")
+
+
+@dataclass
+class FreesurferStats:
+    root: Path
+    sid: str
+    columns: list[ColumnInfo]
+    meta: MetaData
+    data: DataFrame
+
+    @staticmethod
+    def from_statsfile(stats: Path) -> FreesurferStats:
+        root = stats.parent
+        try:
+            with open(stats, "r") as handle:
+                lines = handle.readlines()
+        except Exception as e:
+            raise RuntimeError(f"Could not read lines from file: {stats}") from e
+
+        meta = parse_metadata(lines, stats)
+        data = parse_table(lines)
+        columns = parse_table_metadata(lines)
+        result = re.search(r"\d+", meta.subjectname)
+        if result is None:
+            sid = meta.subjectname
+        else:
+            sid = result[0]
+
+        return FreesurferStats(
+            root=root,
+            sid=sid,
+            columns=columns,
+            meta=meta,
+            data=data,
+        )
+
+    def to_subject_table(self) -> DataFrame:
+        # below make table with columns
+        df = self.data.copy()
+        if "Index" in df.columns:
+            df.drop(columns="Index", inplace=True)
+        cols = list(df.columns)
+        df["sid"] = self.sid
+        df["sname"] = self.meta.subjectname
+        df["fname"] = self.meta.filename
+        df = df.loc[:, ["sid", "sname", "fname"] + cols]
+        return df
+
+    def __str__(self) -> str:
+        fmt = []
+        fmt.append(f"{self.sid} @ {self.root.resolve()}")
+        fmt.append(self.data.head().to_markdown(tablefmt="simple"))
+        return "\n".join(fmt)
+
+    __repr__ = __str__
 
 
 def parse_comment(line: str) -> str:
@@ -146,18 +209,19 @@ def parse_table_metadata_lines(triple: tuple[str, str, str]) -> ColumnInfo:
     return ColumnInfo(shortname=shortname, name=name, unit=unit, index=int(index))
 
 
-class FreesurferStats:
-    def __init__(self) -> None:
-        self.header: str
-
-
+PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
 TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
 if __name__ == "__main__":
-    with open(TEST, "r") as handle:
-        all_lines = handle.readlines()
-    infos = parse_table_metadata(all_lines)
-    for info in infos:
-        print(info)
-    print(parse_table(all_lines))
-    print(parse_metadata(all_lines, Path(TEST)))
+    stats = sorted(PARENT.glob("*.stats"))
+    for stat in stats:
+        fs = FreesurferStats.from_statsfile(stat)
+        print(fs.to_subject_table())
+
+    # with open(TEST, "r") as handle:
+    #     all_lines = handle.readlines()
+    # infos = parse_table_metadata(all_lines)
+    # for info in infos:
+    #     print(info)
+    # print(parse_table(all_lines))
+    # print(parse_metadata(all_lines, Path(TEST)))
