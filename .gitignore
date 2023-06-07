@@ -4,7 +4,9 @@
 
 data/**/*.stats
 data/**/*.csv
+data/**/*.yml
 data/**/*.tsv
+data/**/*.nii.gz
 
 
 
@@ -29,7 +31,7 @@ data/**/*.tsv
 .directory
 
 # Linux trash folder which might appear on any partition or disk
-.Trash-*
+.Trash-git ls-files --others --exclude-standard*
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
