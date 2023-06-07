@@ -1,6 +1,6 @@
 #!/bin/bash
 alias awscli="$SCRATCH/aws-cli/v2/2.11.25/dist/aws"
-alias awscli=aws
+# alias awscli=aws
 
 
 awscli s3 sync --no-sign-request \
