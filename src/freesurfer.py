@@ -37,6 +37,8 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 
+from src.constants import DATA
+
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
 for motivation and reasoning behind code below.
@@ -111,9 +113,15 @@ class FreesurferStats:
         cols = list(df.columns)
         df["sid"] = self.sid
         df["sname"] = self.meta.subjectname
-        df["fname"] = self.meta.filename
-        df = df.loc[:, ["sid", "sname", "fname"] + cols]
+        df["parent"] = self.meta.filename.parent
+        df["fname"] = self.meta.filename.name
+        cols.remove("StructName")
+        df = df.loc[:, ["sid", "sname", "parent", "fname", "StructName"] + cols]
         return df
+
+    @property
+    def has_area(self) -> bool:
+        return "SurfArea" in self.data.columns
 
     def __str__(self) -> str:
         fmt = []
@@ -155,7 +163,7 @@ def parse_metadata(lines: list[str], fname: Path) -> MetaData:
             continue
     return MetaData(
         subjectname=subject,
-        filename=Path(fname),
+        filename=Path(fname).relative_to(DATA),
         annot=Path(annot),
     )
 
@@ -214,10 +222,43 @@ TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
 if __name__ == "__main__":
     stats = sorted(PARENT.glob("*.stats"))
+    dfs, df_area = [], []
     for stat in stats:
         fs = FreesurferStats.from_statsfile(stat)
-        print(fs.to_subject_table())
+        df = fs.to_subject_table()
+        print(df.columns)
+        if fs.has_area:
+            df_area.append(df)
+        else:
+            dfs.append(df)
+    df = pd.concat(dfs, axis=0, ignore_index=True)
+    df_area = pd.concat(df_area, axis=0, ignore_index=True)
+    print(df.drop(columns="parent"))
+    print(f"Unique fles: {df['fname'].unique()}")
 
+    uq_fnames = df_area["fname"].unique().tolist()
+    examples = []
+    for unq in uq_fnames:
+        examples.append(df_area.loc[df_area.fname.isin([unq])].iloc[:2, :])
+    df_area_sample = pd.concat(examples, axis=0, ignore_index=True)
+    # print(df_area.drop(columns="parent"))
+    print(df_area_sample.drop(columns="parent"))
+    print(f"Unique fles: {uq_fnames}")
+
+    names1 = set(df["StructName"].to_list())
+    names2 = set(df_area["StructName"].to_list())
+    print("aseg.stats + wmparc.stats structures")
+    for name in sorted(names1):
+        print(name)
+
+    print("="*80)
+    print("Hemispheric structures")
+    for name in sorted(names2):
+        print(name)
+
+    structs = ["wm-lh-caudalanteriorcingulate", "wm-rh-caudalanteriorcingulate", "caudalanteriorcingulate"]
+    print(df.loc[df.StructName.isin(structs)])
+    print(df_area.loc[df_area.StructName.isin(structs)])
     # with open(TEST, "r") as handle:
     #     all_lines = handle.readlines()
     # infos = parse_table_metadata(all_lines)
