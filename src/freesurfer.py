@@ -37,7 +37,7 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 
-from src.constants import DATA
+from src.constants import ABIDE_I_PHENO, ABIDE_II_PHENO, DATA
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
@@ -325,6 +325,10 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
     df["SegId"] = df["SegId"].fillna(-1).astype(int)
 
     return df
+
+
+def get_subject_meta(sid: str) -> DataFrame:
+    """Get: site, dx, dx_dsm_iv, age, sex"""
 
 
 def bilateral_stats_to_row(stats: DataFrame) -> DataFrame:
