@@ -111,10 +111,18 @@ class FreesurferStats:
         if "Index" in df.columns:
             df.drop(columns="Index", inplace=True)
         cols = list(df.columns)
+        fname = self.meta.filename.name
+
         df["sid"] = self.sid
         df["sname"] = self.meta.subjectname
         df["parent"] = self.meta.filename.parent
-        df["fname"] = self.meta.filename.name
+        df["fname"] = fname
+
+        if fname.startswith("lh.") or fname.startswith("rh."):
+            reg = r"([lr]h)."
+            hemi = df["fname"].apply(lambda s: f"wm-{re.search(reg, s)[1]}-")  # type: ignore # noqa
+            df["StructName"] = hemi + df["StructName"]
+
         cols.remove("StructName")
         df = df.loc[:, ["sid", "sname", "parent", "fname", "StructName"] + cols]
         return df
@@ -222,47 +230,49 @@ TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
 if __name__ == "__main__":
     stats = sorted(PARENT.glob("*.stats"))
-    dfs, df_area = [], []
+    dfs, df_hemi = [], []
     for stat in stats:
         fs = FreesurferStats.from_statsfile(stat)
         df = fs.to_subject_table()
-        print(df.columns)
         if fs.has_area:
-            df_area.append(df)
+            df_hemi.append(df)
         else:
             dfs.append(df)
-    df = pd.concat(dfs, axis=0, ignore_index=True)
-    df_area = pd.concat(df_area, axis=0, ignore_index=True)
-    print(df.drop(columns="parent"))
-    print(f"Unique fles: {df['fname'].unique()}")
+    df = pd.concat(dfs, axis=0, ignore_index=True).drop(columns="parent")
+    df_hemi = pd.concat(df_hemi, axis=0, ignore_index=True).drop(columns="parent")
 
-    uq_fnames = df_area["fname"].unique().tolist()
-    examples = []
-    for unq in uq_fnames:
-        examples.append(df_area.loc[df_area.fname.isin([unq])].iloc[:2, :])
-    df_area_sample = pd.concat(examples, axis=0, ignore_index=True)
-    # print(df_area.drop(columns="parent"))
-    print(df_area_sample.drop(columns="parent"))
-    print(f"Unique fles: {uq_fnames}")
+    uq_fnames = df_hemi["fname"].unique().tolist()
+    print(uq_fnames)
+    # reg = r"([lr]h)."
+    # df_hemi["hemi"] = df_hemi["fname"].apply(lambda s: f"wm-{re.search(reg, s)[1]}-")
+    # df_hemi["StructName"] = df_hemi["hemi"] + df_hemi["StructName"]
+    print(df_hemi)
+
+    # print(f"Unique fles: {df['fname'].unique()}")
+
+    # uq_fnames = df_hemi["fname"].unique().tolist()
+    # examples = []
+    # for unq in uq_fnames:
+    #     examples.append(df_hemi.loc[df_hemi.fname.isin([unq])].iloc[:2, :])
+    # df_hemi_sample = pd.concat(examples, axis=0, ignore_index=True)
+    # # print(df_area.drop(columns="parent"))
+    # print(df_hemi_sample)
+    # print(f"Unique fles: {uq_fnames}")
 
     names1 = set(df["StructName"].to_list())
-    names2 = set(df_area["StructName"].to_list())
+    names2 = set(df_hemi["StructName"].to_list())
+    print("Shared StructNames:")
+    print(set(names1).intersection(names2))
+    sys.exit()
     print("aseg.stats + wmparc.stats structures")
     for name in sorted(names1):
         print(name)
 
-    print("="*80)
+    print("=" * 80)
     print("Hemispheric structures")
     for name in sorted(names2):
         print(name)
 
-    structs = ["wm-lh-caudalanteriorcingulate", "wm-rh-caudalanteriorcingulate", "caudalanteriorcingulate"]
-    print(df.loc[df.StructName.isin(structs)])
-    print(df_area.loc[df_area.StructName.isin(structs)])
-    # with open(TEST, "r") as handle:
-    #     all_lines = handle.readlines()
-    # infos = parse_table_metadata(all_lines)
-    # for info in infos:
-    #     print(info)
-    # print(parse_table(all_lines))
-    # print(parse_metadata(all_lines, Path(TEST)))
+    # structs = ["wm-lh-caudalanteriorcingulate", "wm-rh-caudalanteriorcingulate", "caudalanteriorcingulate"]
+    # print(df.loc[df.StructName.isin(structs)])
+    # print(df_area.loc[df_area.StructName.isin(structs)])
