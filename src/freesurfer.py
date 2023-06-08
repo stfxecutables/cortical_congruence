@@ -122,9 +122,24 @@ class FreesurferStats:
             reg = r"([lr]h)."
             hemi = df["fname"].apply(lambda s: f"wm-{re.search(reg, s)[1]}-")  # type: ignore # noqa
             df["StructName"] = hemi + df["StructName"]
+        else:
+            pass
+
+        df["Struct"] = df["StructName"].str.replace("wm-lh-", "")
+        df["Struct"] = df["Struct"].str.replace("wm-rh-", "")
+        df["Struct"] = df["Struct"].str.lower()
+        df["StructName"] = df["StructName"].str.replace("wm-", "")
+        df["StructName"] = df["StructName"].str.replace("Left-", "lh-")
+        df["StructName"] = df["StructName"].str.replace("Right-", "rh-")
+        df["StructName"] = df["StructName"].str.lower()
+        df["hemi"] = df["StructName"].apply(
+            lambda s: "left" if "lh-" in s else "right" if "rh-" in s else "NA"
+        )
 
         cols.remove("StructName")
-        df = df.loc[:, ["sid", "sname", "parent", "fname", "StructName"] + cols]
+        df = df.loc[
+            :, ["sid", "sname", "parent", "fname", "StructName", "Struct", "hemi"] + cols
+        ]
         return df
 
     @property
@@ -228,7 +243,98 @@ def parse_table_metadata_lines(triple: tuple[str, str, str]) -> ColumnInfo:
 PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
 TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
+
+def merge_stats(root: Path) -> DataFrame:
+    stats = sorted(root.glob("*.stats"))
+    dfs, df_hemi = [], []
+    for stat in stats:
+        fs = FreesurferStats.from_statsfile(stat)
+        df = fs.to_subject_table()
+        if fs.has_area:
+            df_hemi.append(df)
+        else:
+            dfs.append(df)
+    df = pd.concat(dfs, axis=0, ignore_index=True).drop(columns="parent")
+    df_hemi = pd.concat(df_hemi, axis=0, ignore_index=True).drop(columns="parent")
+    df = pd.merge(
+        df.drop(columns=["fname"]),
+        df_hemi.drop(columns=["fname", "sid", "hemi", "sname", "Struct"]),
+        # how="left",
+        how="inner",
+        on="StructName",
+    )
+    df["GrayVol"] = df["GrayVol"].astype(np.float64)
+    df["SurfArea"] = df["SurfArea"].astype(np.float64)
+    return df
+
+
+def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
+    """Compute CNC variants and bilateral ROIs"""
+    summable_cols = ["Volume_mm3", "GrayVol", "SurfArea", "pseudoVolume"]
+    cmc_cols = summable_cols + ["ThickAvg"]
+    computed_cols = ["CMC_mesh", "CMC_vox", "CMC_asym_mesh", "CMC_asym_vox"]
+    keep_cols = ["sid", "sname", "StructName", "hemi", "SegId"] + cmc_cols
+    all_cols = ["sid", "sname", "StructName", "hemi", "SegId"] + cmc_cols + computed_cols
+
+    unique_names = stats["StructName"].str.replace("[lr]h-", "").unique().tolist()
+
+    # note that stats at this point contains only bilateral ROIs
+    laterals = []
+    for name in unique_names:
+        idx = stats["StructName"].apply(lambda s: name in s)
+        laterals.append(stats.loc[idx])
+    df = pd.concat(laterals, axis=0, ignore_index=True)
+    pseudovolume = df["SurfArea"] * df["ThickAvg"]
+    df["pseudoVolume"] = pseudovolume
+
+    # compute bilateral ROIs
+    df_bilateral = (
+        df.groupby("Struct")
+        .sum()
+        .loc[:, summable_cols]
+        .reset_index()
+        .rename(columns={"Struct": "StructName"})
+    )
+    df_bilateral["StructName"] = df_bilateral["StructName"].apply(lambda s: f"bh-{s}")
+    df_bilateral["sid"] = df["sid"].iloc[0]
+    df_bilateral["sname"] = df["sname"].iloc[0]
+    df_bilateral["hemi"] = "both"
+    df = pd.concat([df, df_bilateral], axis=0, ignore_index=True)
+    df.index = df["StructName"]  # type: ignore
+
+    df["CMC_mesh"] = df["GrayVol"] / df["pseudoVolume"]
+    df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
+
+    df_bi = df[df["hemi"] == "both"].copy()
+    df_left = df[df["hemi"] == "left"].copy()
+    df_left.index = df_left["StructName"].apply(lambda s: s.replace("lh-", ""))
+    df_right = df[df["hemi"] == "right"].copy()
+    df_right.index = df_right["StructName"].apply(lambda s: s.replace("rh-", ""))
+    cmc_asym_mesh = (df_left["CMC_mesh"] - df_right["CMC_mesh"]).abs()
+    cmc_asym_vox = (df_left["CMC_vox"] - df_right["CMC_vox"]).abs()
+    df_left.index = df_left["StructName"].apply(lambda s: f"lh-{s}")
+    df_right.index = df_left["StructName"].apply(lambda s: f"rh-{s}")
+    df_left["CMC_asym_mesh"] = cmc_asym_mesh.values
+    df_left["CMC_asym_vox"] = cmc_asym_vox.values
+    df_right["CMC_asym_mesh"] = cmc_asym_mesh.values
+    df_right["CMC_asym_vox"] = cmc_asym_vox.values
+    df_bi["CMC_asym_mesh"] = cmc_asym_mesh.values
+    df_bi["CMC_asym_vox"] = cmc_asym_vox.values
+
+    df = pd.concat([df_left, df_right, df_bi], axis=0, ignore_index=True).loc[:, all_cols]
+    df["SegId"] = df["SegId"].fillna(-1).astype(int)
+
+    return df
+
+
 if __name__ == "__main__":
+    df = merge_stats(PARENT)
+    pd.options.display.max_rows = 300
+    print(df.drop(columns=["Struct"]))
+
+    df = compute_bilateral_stats(df)
+    print(df)
+    sys.exit()
     stats = sorted(PARENT.glob("*.stats"))
     dfs, df_hemi = [], []
     for stat in stats:
@@ -240,6 +346,15 @@ if __name__ == "__main__":
             dfs.append(df)
     df = pd.concat(dfs, axis=0, ignore_index=True).drop(columns="parent")
     df_hemi = pd.concat(df_hemi, axis=0, ignore_index=True).drop(columns="parent")
+    df_all = pd.merge(
+        df.drop(columns=["fname"]),
+        df_hemi.drop(columns=["fname", "sid", "hemi", "sname", "Struct"]),
+        how="left",
+        on="StructName",
+    )
+    pd.options.display.max_rows = 300
+    print(df_all.drop(columns=["Struct", "sname", "sid"]))
+    sys.exit()
 
     uq_fnames = df_hemi["fname"].unique().tolist()
     print(uq_fnames)
@@ -259,8 +374,8 @@ if __name__ == "__main__":
     # print(df_hemi_sample)
     # print(f"Unique fles: {uq_fnames}")
 
-    names1 = set(df["StructName"].to_list())
-    names2 = set(df_hemi["StructName"].to_list())
+    names1 = set(df["Struct"].to_list())
+    names2 = set(df_hemi["Struct"].to_list())
     print("Shared StructNames:")
     print(set(names1).intersection(names2))
     sys.exit()
