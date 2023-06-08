@@ -327,6 +327,31 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
     return df
 
 
+def bilateral_stats_to_row(stats: DataFrame) -> DataFrame:
+    df = stats.drop(
+        columns=[
+            "sid",
+            "sname",
+            "hemi",
+            "SegId",
+            "Volume_mm3",
+            "GrayVol",
+            "SurfArea",
+            "pseudoVolume",
+            "ThickAvg",
+        ]
+    )
+    meta = stats.loc[0, ["sid", "sname"]].to_frame().T
+    df.index = df["StructName"]
+    df.drop(columns="StructName", inplace=True)
+
+    row = df.unstack()
+    row.index = map(lambda items: f"{items[1]}__{items[0]}", row.index.to_list())
+    row = row.to_frame().T
+    df = pd.concat([meta, row], axis=1, ignore_index=False)
+    return df
+
+
 if __name__ == "__main__":
     df = merge_stats(PARENT)
     pd.options.display.max_rows = 300
@@ -334,6 +359,8 @@ if __name__ == "__main__":
 
     df = compute_bilateral_stats(df)
     print(df)
+    row = bilateral_stats_to_row(df)
+    print(row)
     sys.exit()
     stats = sorted(PARENT.glob("*.stats"))
     dfs, df_hemi = [], []
