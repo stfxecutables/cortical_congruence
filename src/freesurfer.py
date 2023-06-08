@@ -28,6 +28,7 @@ from typing import (
     cast,
     no_type_check,
 )
+from warnings import warn
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,13 +37,28 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
+from pandas.errors import ParserError
 
-from src.constants import DATA, load_abide_i_pheno, load_abide_ii_pheno
+from src.constants import (
+    ABIDE_II_ENCODING,
+    ALL_ROIS,
+    COMMON_MISSING_ROIS,
+    DATA,
+    RARE_MISSING_ROIS,
+    load_abide_i_pheno,
+    load_abide_ii_pheno,
+)
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
 for motivation and reasoning behind code below.
 """
+
+EXPECTED_ROIS = set(
+    [f"rh-{s}" for s in ALL_ROIS]
+    + [f"lh-{s}" for s in ALL_ROIS]
+    + [f"bh-{s}" for s in ALL_ROIS]
+)
 
 
 @dataclass
@@ -89,7 +105,13 @@ class FreesurferStats:
             raise RuntimeError(f"Could not read lines from file: {stats}") from e
 
         meta = parse_metadata(lines, stats)
-        data = parse_table(lines)
+        try:
+            data = parse_table(lines)
+        except ParserError as e:
+            text = "\n".join(lines)
+            raise RuntimeError(
+                f"Could not parse data in {stats}. Offending text:\n{text}"
+            ) from e
         columns = parse_table_metadata(lines)
         result = re.search(r"\d+", meta.subjectname)
         if result is None:
@@ -200,7 +222,10 @@ def parse_table(lines: list[str]) -> DataFrame:
     lines[0] = lines[0].replace("# ColHeaders ", "")
     text = "\n".join(lines)
 
-    return pd.read_table(StringIO(text), sep="\s+")
+    try:
+        return pd.read_table(StringIO(text), sep="\s+")
+    except ParserError:
+        return pd.read_table(StringIO(text), sep="\s+", encoding=ABIDE_II_ENCODING)
 
 
 def parse_table_metadata(lines: list[str]) -> list[ColumnInfo]:
@@ -244,8 +269,37 @@ PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
 TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
 
-def merge_stats(root: Path) -> DataFrame:
-    stats = sorted(root.glob("*.stats"))
+def is_standard(file: Path) -> bool:
+    return not (
+        file.name
+        in [
+            "lh.aparc.DKTatlas40.stats",
+            "lh.curv.stats" "lh.w-g.pct.stats" "rh.aparc.DKTatlas40.stats",
+            "rh.curv.stats" "rh.w-g.pct.stats",
+        ]
+    )
+
+
+def merge_stats(root: Path) -> DataFrame | None:
+    statfiles = [
+        "aseg.stats",
+        "wmparc.stats",
+        # "lh.BA.stats",
+        "lh.aparc.a2009s.stats",
+        "lh.aparc.stats",
+        # "lh.entorhinal_exvivo.stats",
+        # "rh.BA.stats",
+        "rh.aparc.a2009s.stats",
+        "rh.aparc.stats",
+        # "rh.entorhinal_exvivo.stats",
+    ]
+    stats = [root / stat for stat in statfiles]
+    available = list(map(lambda p: p.exists(), stats))
+    if not all(available):
+        return None
+    # there are a number of nuisance files that show up very rarely in some subjects
+    # E.g. OHSU_0050155,
+    # that need to be removed.
     dfs, df_hemi = [], []
     for stat in stats:
         fs = FreesurferStats.from_statsfile(stat)
@@ -268,26 +322,8 @@ def merge_stats(root: Path) -> DataFrame:
     return df
 
 
-def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
-    """Compute CNC variants and bilateral ROIs"""
+def compute_bilateral_rois(df: DataFrame) -> DataFrame:
     summable_cols = ["Volume_mm3", "GrayVol", "SurfArea", "pseudoVolume"]
-    cmc_cols = summable_cols + ["ThickAvg"]
-    computed_cols = ["CMC_mesh", "CMC_vox", "CMC_asym_mesh", "CMC_asym_vox"]
-    keep_cols = ["sid", "sname", "StructName", "hemi", "SegId"] + cmc_cols
-    all_cols = ["sid", "sname", "StructName", "hemi", "SegId"] + cmc_cols + computed_cols
-
-    unique_names = stats["StructName"].str.replace("[lr]h-", "").unique().tolist()
-
-    # note that stats at this point contains only bilateral ROIs
-    laterals = []
-    for name in unique_names:
-        idx = stats["StructName"].apply(lambda s: name in s)
-        laterals.append(stats.loc[idx])
-    df = pd.concat(laterals, axis=0, ignore_index=True)
-    pseudovolume = df["SurfArea"] * df["ThickAvg"]
-    df["pseudoVolume"] = pseudovolume
-
-    # compute bilateral ROIs
     df_bilateral = (
         df.groupby("Struct")
         .sum()
@@ -299,21 +335,81 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
     df_bilateral["sid"] = df["sid"].iloc[0]
     df_bilateral["sname"] = df["sname"].iloc[0]
     df_bilateral["hemi"] = "both"
+    df_bilateral["Struct"] = df_bilateral["StructName"].str.replace("bh-", "")
+    return df_bilateral
+
+
+def fill_missing_rois(df: DataFrame) -> DataFrame:
+    rois = set(df["StructName"])
+    missing_rois = EXPECTED_ROIS.difference(rois)
+    if len(missing_rois) == 0:
+        return df
+    base = df.iloc[0].to_frame().T.copy()
+    keeps = ["sid", "sname"]
+    meta = base.loc[:, keeps]
+    base = base.drop(columns=keeps).applymap(lambda x: np.nan)
+    new_rows = []
+    for roi in missing_rois:
+        new_row = pd.concat([meta, base], axis=1, ignore_index=False)
+        new_row.index = [roi]  # type: ignore
+        new_row["StructName"] = roi
+        new_row["Struct"] = re.sub("[blr]h-", "", roi)
+        new_row["hemi"] = {"rh": "right", "lh": "left", "bh": "both"}[
+            roi[: roi.find("-")]
+        ]
+        new_rows.append(new_row)
+    return pd.concat([df, *new_rows], axis=0, ignore_index=False)
+
+
+def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
+    """Compute CNC variants and bilateral ROIs"""
+    cmc_cols = ["Volume_mm3", "GrayVol", "SurfArea", "pseudoVolume", "ThickAvg"]
+    computed_cols = ["CMC_mesh", "CMC_vox", "CMC_asym_mesh", "CMC_asym_vox"]
+    all_cols = ["sid", "sname", "StructName", "hemi", "SegId"] + cmc_cols + computed_cols
+
+    unique_names = stats["StructName"].str.replace("[lr]h-", "").unique().tolist()
+
+    # note that stats at this point contains only bilateral ROIs (rh-* or lh-*)
+    laterals = []
+    for name in unique_names:
+        idx = stats["StructName"].apply(lambda s: name in s)
+        laterals.append(stats.loc[idx])
+    df = pd.concat(laterals, axis=0, ignore_index=True)
+    pseudovolume = df["SurfArea"] * df["ThickAvg"]
+    df["pseudoVolume"] = pseudovolume
+
+    # compute bilateral ROIs
+    df_bilateral = compute_bilateral_rois(df)
     df = pd.concat([df, df_bilateral], axis=0, ignore_index=True)
     df.index = df["StructName"]  # type: ignore
+
+    df = fill_missing_rois(df)
 
     df["CMC_mesh"] = df["GrayVol"] / df["pseudoVolume"]
     df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
 
     df_bi = df[df["hemi"] == "both"].copy()
     df_left = df[df["hemi"] == "left"].copy()
+
+    # fill missing ROIs with NaN rows
     df_left.index = df_left["StructName"].apply(lambda s: s.replace("lh-", ""))  # type: ignore  # noqa
     df_right = df[df["hemi"] == "right"].copy()
     df_right.index = df_right["StructName"].apply(lambda s: s.replace("rh-", ""))  # type: ignore  # noqa
     cmc_asym_mesh = (df_left["CMC_mesh"] - df_right["CMC_mesh"]).abs()
     cmc_asym_vox = (df_left["CMC_vox"] - df_right["CMC_vox"]).abs()
-    df_left.index = df_left["StructName"].apply(lambda s: f"lh-{s}")  # type: ignore
-    df_right.index = df_left["StructName"].apply(lambda s: f"rh-{s}")  # type: ignore
+    index_right = df_right["StructName"]
+    index_left = df_left["StructName"]
+    df_left.index = index_left  # type: ignore
+    df_right.index = index_right  # type: ignore
+
+    if (len(df_left) != len(cmc_asym_mesh)) or (len(df_right) != len(df_left)):
+        left_rois = set(df_left["Struct"])
+        right_rois = set(df_right["Struct"])
+        diff1 = left_rois.difference(right_rois)
+        diff2 = right_rois.difference(left_rois)
+        diff = diff1 if len(diff1) > len(diff2) else diff2
+        raise RuntimeError(f"Missing ROIs between left vs. right hemispheres: {diff}")
+
     df_left["CMC_asym_mesh"] = cmc_asym_mesh.values
     df_left["CMC_asym_vox"] = cmc_asym_vox.values
     df_right["CMC_asym_mesh"] = cmc_asym_mesh.values
@@ -375,6 +471,8 @@ if __name__ == "__main__":
     df = merge_stats(PARENT)
     pd.options.display.max_rows = 300
     print(df.drop(columns=["Struct"]))
+    print(df)
+    sys.exit()
 
     df = compute_bilateral_stats(df)
     print(df)
