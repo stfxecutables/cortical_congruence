@@ -37,7 +37,7 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 
-from src.constants import ABIDE_I_PHENO, ABIDE_II_PHENO, DATA
+from src.constants import DATA, load_abide_i_pheno, load_abide_ii_pheno
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
@@ -307,13 +307,13 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
 
     df_bi = df[df["hemi"] == "both"].copy()
     df_left = df[df["hemi"] == "left"].copy()
-    df_left.index = df_left["StructName"].apply(lambda s: s.replace("lh-", ""))
+    df_left.index = df_left["StructName"].apply(lambda s: s.replace("lh-", ""))  # type: ignore  # noqa
     df_right = df[df["hemi"] == "right"].copy()
-    df_right.index = df_right["StructName"].apply(lambda s: s.replace("rh-", ""))
+    df_right.index = df_right["StructName"].apply(lambda s: s.replace("rh-", ""))  # type: ignore  # noqa
     cmc_asym_mesh = (df_left["CMC_mesh"] - df_right["CMC_mesh"]).abs()
     cmc_asym_vox = (df_left["CMC_vox"] - df_right["CMC_vox"]).abs()
-    df_left.index = df_left["StructName"].apply(lambda s: f"lh-{s}")
-    df_right.index = df_left["StructName"].apply(lambda s: f"rh-{s}")
+    df_left.index = df_left["StructName"].apply(lambda s: f"lh-{s}")  # type: ignore
+    df_right.index = df_left["StructName"].apply(lambda s: f"rh-{s}")  # type: ignore
     df_left["CMC_asym_mesh"] = cmc_asym_mesh.values
     df_left["CMC_asym_vox"] = cmc_asym_vox.values
     df_right["CMC_asym_mesh"] = cmc_asym_mesh.values
@@ -329,6 +329,17 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
 
 def get_subject_meta(sid: str) -> DataFrame:
     """Get: site, dx, dx_dsm_iv, age, sex"""
+    abidei = load_abide_i_pheno()
+    abide2 = load_abide_ii_pheno()
+    df = pd.concat([abidei, abide2], axis=0, ignore_index=True)
+    meta = df[df["sid"].isin([int(sid)])]
+    if isinstance(meta, Series):
+        meta = meta.to_frame()
+    if len(meta) == 0:
+        raise ValueError(f"SID {sid} not found in ABIDE-I or ABIDE-II phenotypic data")
+    if len(meta) > 1:
+        raise ValueError(f"Duplicate SIDs in ABIDE-I and ABIDE-II for sid: {sid}\n{meta}")
+    return meta.drop(columns="sid")
 
 
 def bilateral_stats_to_row(stats: DataFrame) -> DataFrame:
@@ -345,14 +356,18 @@ def bilateral_stats_to_row(stats: DataFrame) -> DataFrame:
             "ThickAvg",
         ]
     )
-    meta = stats.loc[0, ["sid", "sname"]].to_frame().T
-    df.index = df["StructName"]
+    meta = stats.loc[0, ["sid", "sname"]].to_frame().T  # type: ignore
+    df.index = df["StructName"]  # type: ignore
     df.drop(columns="StructName", inplace=True)
 
     row = df.unstack()
-    row.index = map(lambda items: f"{items[1]}__{items[0]}", row.index.to_list())
-    row = row.to_frame().T
+    row.index = map(lambda items: f"{items[1]}__{items[0]}", row.index.to_list())  # type: ignore  # noqa
+    row = row.to_frame().T  # type: ignore
     df = pd.concat([meta, row], axis=1, ignore_index=False)
+    meta = get_subject_meta(int(df.loc[0, "sid"]))  # type: ignore
+    for col in meta.columns.to_list():
+        df.insert(1, col, meta[col].values)
+
     return df
 
 
