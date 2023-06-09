@@ -20,6 +20,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Literal,
     Optional,
     Sequence,
     TextIO,
@@ -40,11 +41,12 @@ from pandas import DataFrame, Series
 from pandas.errors import ParserError
 
 from src.constants import (
+    ABIDE_I_ALL_ROIS,
+    ABIDE_II_ALL_EXTRA_ROIS,
+    ABIDE_II_ALL_ROIS,
     ABIDE_II_ENCODING,
-    ALL_ROIS,
-    COMMON_MISSING_ROIS,
+    ABIDE_II_EXTRA_REMOVE,
     DATA,
-    RARE_MISSING_ROIS,
     load_abide_i_pheno,
     load_abide_ii_pheno,
 )
@@ -54,11 +56,18 @@ See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/
 for motivation and reasoning behind code below.
 """
 
-EXPECTED_ROIS = set(
-    [f"rh-{s}" for s in ALL_ROIS]
-    + [f"lh-{s}" for s in ALL_ROIS]
-    + [f"bh-{s}" for s in ALL_ROIS]
-)
+STATFILES = [
+    "aseg.stats",
+    "wmparc.stats",
+    "lh.aparc.a2009s.stats",
+    "lh.aparc.stats",
+    "rh.aparc.a2009s.stats",
+    "rh.aparc.stats",
+]
+ABIDE_II_EXTRA = [
+    "lh.aparc.DKTatlas.stats",
+    "lh.aparc.pial.stats",
+]
 
 
 @dataclass
@@ -147,6 +156,9 @@ class FreesurferStats:
         else:
             pass
 
+        if "DKTatlas" in str(fname):
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-DKT")
+
         df["Struct"] = df["StructName"].str.replace("wm-lh-", "")
         df["Struct"] = df["Struct"].str.replace("wm-rh-", "")
         df["Struct"] = df["Struct"].str.lower()
@@ -154,8 +166,9 @@ class FreesurferStats:
         df["StructName"] = df["StructName"].str.replace("Left-", "lh-")
         df["StructName"] = df["StructName"].str.replace("Right-", "rh-")
         df["StructName"] = df["StructName"].str.lower()
+
         df["hemi"] = df["StructName"].apply(
-            lambda s: "left" if "lh-" in s else "right" if "rh-" in s else "NA"
+            lambda s: "left" if "lh-" in s else "right" if "rh-" in s else "both"
         )
 
         cols.remove("StructName")
@@ -280,26 +293,16 @@ def is_standard(file: Path) -> bool:
     )
 
 
-def merge_stats(root: Path) -> DataFrame | None:
-    statfiles = [
-        "aseg.stats",
-        "wmparc.stats",
-        # "lh.BA.stats",
-        "lh.aparc.a2009s.stats",
-        "lh.aparc.stats",
-        # "lh.entorhinal_exvivo.stats",
-        # "rh.BA.stats",
-        "rh.aparc.a2009s.stats",
-        "rh.aparc.stats",
-        # "rh.entorhinal_exvivo.stats",
-    ]
+def collect_struct_names(root: Path, abide2_extra: bool = False) -> set:
+    statfiles = STATFILES
+    if abide2_extra:
+        statfiles = STATFILES + ABIDE_II_EXTRA
+
     stats = [root / stat for stat in statfiles]
     available = list(map(lambda p: p.exists(), stats))
     if not all(available):
         return None
-    # there are a number of nuisance files that show up very rarely in some subjects
-    # E.g. OHSU_0050155,
-    # that need to be removed.
+
     dfs, df_hemi = [], []
     for stat in stats:
         fs = FreesurferStats.from_statsfile(stat)
@@ -310,13 +313,49 @@ def merge_stats(root: Path) -> DataFrame | None:
             dfs.append(df)
     df = pd.concat(dfs, axis=0, ignore_index=True).drop(columns="parent")
     df_hemi = pd.concat(df_hemi, axis=0, ignore_index=True).drop(columns="parent")
+    names = set(df["StructName"]).union(df_hemi["StructName"])
+    # remove useless structures with no info to compute CMC
+    names = set([n for n in names if re.match("[lr]h-", n) is not None])
+    names = set([n.replace("lh-", "").replace("rh-", "") for n in names])
+    return names
+
+
+def merge_stats(root: Path, abide2_extra: bool = False) -> DataFrame | None:
+    statfiles = STATFILES
+    if abide2_extra:
+        statfiles = STATFILES + ABIDE_II_EXTRA
+
+    stats = [root / stat for stat in statfiles]
+    available = list(map(lambda p: p.exists(), stats))
+    if not all(available):
+        return None
+
+    dfs, df_hemi = [], []
+    for stat in stats:
+        fs = FreesurferStats.from_statsfile(stat)
+        df = fs.to_subject_table()
+        if fs.has_area:
+            df_hemi.append(df)
+        else:
+            dfs.append(df)
+    df = pd.concat(dfs, axis=0, ignore_index=True).drop(columns="parent")
+    df_hemi = pd.concat(df_hemi, axis=0, ignore_index=True).drop(columns="parent")
+
+    # NOTE: None of the structures that lack a hemisphere, that is:
+    #
+    #      ['3rd-ventricle' '4th-ventricle' 'brain-stem' 'csf' '5th-ventricle'
+    #      'wm-hypointensities' 'non-wm-hypointensities' 'optic-chiasm'
+    #      'cc_posterior' 'cc_mid_posterior' 'cc_central' 'cc_mid_anterior'
+    #      'cc_anterior']
+    #
+    # have the metrics needed for computing CMC (e.g. SurfArea, ThickAvg, GrayVol)
     df = pd.merge(
-        df.drop(columns=["fname"]),
-        df_hemi.drop(columns=["fname", "sid", "hemi", "sname", "Struct"]),
+        df_hemi.drop(columns=["fname"]),
+        df.drop(columns=["fname", "sid", "hemi", "sname", "Struct"]),
         # how="left",
-        how="inner",
+        how="left",
         on="StructName",
-    )
+    ).sort_values(by=["Volume_mm3", "StructName"])
     df["GrayVol"] = df["GrayVol"].astype(np.float64)
     df["SurfArea"] = df["SurfArea"].astype(np.float64)
     return df
@@ -339,9 +378,16 @@ def compute_bilateral_rois(df: DataFrame) -> DataFrame:
     return df_bilateral
 
 
-def fill_missing_rois(df: DataFrame) -> DataFrame:
+def fill_missing_rois(df: DataFrame, abide: Literal[1, 2], extra: bool) -> DataFrame:
     rois = set(df["StructName"])
-    missing_rois = EXPECTED_ROIS.difference(rois)
+    if abide == 1:
+        expected_rois = ABIDE_I_ALL_ROIS
+    elif abide == 2:
+        expected_rois = ABIDE_II_ALL_EXTRA_ROIS if extra else ABIDE_II_ALL_ROIS
+    else:
+        raise ValueError("Invalid argument to `abide`")
+
+    missing_rois = set(expected_rois).difference(rois)
     if len(missing_rois) == 0:
         return df
     base = df.iloc[0].to_frame().T.copy()
@@ -354,14 +400,21 @@ def fill_missing_rois(df: DataFrame) -> DataFrame:
         new_row.index = [roi]  # type: ignore
         new_row["StructName"] = roi
         new_row["Struct"] = re.sub("[blr]h-", "", roi)
-        new_row["hemi"] = {"rh": "right", "lh": "left", "bh": "both"}[
-            roi[: roi.find("-")]
-        ]
+        if "rh" in roi:
+            new_row["hemi"] = "right"
+        elif "lh" in roi:
+            new_row["hemi"] = "left"
+        elif "bh" in roi:
+            new_row["hemi"] = "both"
+        else:
+            new_row["hemi"] = "both"
         new_rows.append(new_row)
     return pd.concat([df, *new_rows], axis=0, ignore_index=False)
 
 
-def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
+def compute_bilateral_stats(
+    stats: DataFrame, abide: Literal[1, 2], extra: bool
+) -> DataFrame:
     """Compute CNC variants and bilateral ROIs"""
     cmc_cols = ["Volume_mm3", "GrayVol", "SurfArea", "pseudoVolume", "ThickAvg"]
     computed_cols = ["CMC_mesh", "CMC_vox", "CMC_asym_mesh", "CMC_asym_vox"]
@@ -383,20 +436,25 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
     df = pd.concat([df, df_bilateral], axis=0, ignore_index=True)
     df.index = df["StructName"]  # type: ignore
 
-    df = fill_missing_rois(df)
+    df = fill_missing_rois(df, abide=abide, extra=extra)
+    to_drop = df["SurfArea"].isnull()
+    df = df[~to_drop]
 
     df["CMC_mesh"] = df["GrayVol"] / df["pseudoVolume"]
     df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
 
     df_bi = df[df["hemi"] == "both"].copy()
     df_left = df[df["hemi"] == "left"].copy()
+    df_right = df[df["hemi"] == "right"].copy()
 
     # fill missing ROIs with NaN rows
+    # NOTE: PROBLEM IS duplicate names in atlases
     df_left.index = df_left["StructName"].apply(lambda s: s.replace("lh-", ""))  # type: ignore  # noqa
-    df_right = df[df["hemi"] == "right"].copy()
     df_right.index = df_right["StructName"].apply(lambda s: s.replace("rh-", ""))  # type: ignore  # noqa
-    cmc_asym_mesh = (df_left["CMC_mesh"] - df_right["CMC_mesh"]).abs()
-    cmc_asym_vox = (df_left["CMC_vox"] - df_right["CMC_vox"]).abs()
+    cmc_asym_mesh = (
+        df_left["CMC_mesh"].sub(df_right["CMC_mesh"], fill_value=np.nan)
+    ).abs()
+    cmc_asym_vox = (df_left["CMC_vox"].sub(df_right["CMC_vox"], fill_value=np.nan)).abs()
     index_right = df_right["StructName"]
     index_left = df_left["StructName"]
     df_left.index = index_left  # type: ignore
@@ -408,7 +466,9 @@ def compute_bilateral_stats(stats: DataFrame) -> DataFrame:
         diff1 = left_rois.difference(right_rois)
         diff2 = right_rois.difference(left_rois)
         diff = diff1 if len(diff1) > len(diff2) else diff2
-        raise RuntimeError(f"Missing ROIs between left vs. right hemispheres: {diff}")
+        raise RuntimeError(
+            f"Missing ROIs between left vs. right hemispheres: {sorted(diff)}"
+        )
 
     df_left["CMC_asym_mesh"] = cmc_asym_mesh.values
     df_left["CMC_asym_vox"] = cmc_asym_vox.values

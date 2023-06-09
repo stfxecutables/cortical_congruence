@@ -9,11 +9,13 @@ sys.path.append(str(ROOT))  # isort: skip
 
 
 import os
+import re
 import sys
 import traceback
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from enum import Enum
+from functools import reduce
 from pathlib import Path
 from typing import (
     Any,
@@ -39,15 +41,71 @@ from tqdm.contrib.concurrent import process_map
 from typing_extensions import Literal
 
 from src.constants import ABIDE_I, ABIDE_II
-from src.freesurfer import bilateral_stats_to_row, compute_bilateral_stats, merge_stats
+from src.freesurfer import (
+    bilateral_stats_to_row,
+    collect_struct_names,
+    compute_bilateral_stats,
+    merge_stats,
+)
 
 
-def load_row(root: Path) -> DataFrame | None:
+def collect_names(root: Path) -> set:
+    return collect_struct_names(root, abide2_extra=False)
+
+
+def collect_names_extra(root: Path) -> set:
+    return collect_struct_names(root, abide2_extra=True)
+
+
+def collect_all_names() -> None:
+    abide_i_roots = sorted(ABIDE_I.rglob("stats"))
+    abide_ii_roots = sorted(
+        filter(lambda s: not ("fsaverage" in str(s)), ABIDE_II.rglob("stats"))
+    )
+
+    names_i = process_map(
+        collect_names,
+        abide_i_roots,
+        desc="Loading and parsing ABIDE-I StructNames",
+    )
+    names_ii = process_map(
+        collect_names,
+        abide_ii_roots,
+        desc="Loading and parsing ABIDE-II StructNames",
+    )
+    names_ii_extra = process_map(
+        collect_names_extra,
+        abide_ii_roots,
+        desc="Loading and parsing ABIDE-II extra StructNames",
+    )
+    names_i = [n for n in names_i if n is not None]
+    names_ii = [n for n in names_ii if n is not None]
+    names_ii_extra = [n for n in names_ii_extra if n is not None]
+
+    sep = "=" * 80
+    print(sep)
+    print("ABIDE-I names")
+    print(sep)
+    print(sorted(set().union(*names_i)))
+
+    print(sep)
+    print("ABIDE-II names")
+    print(sep)
+    print(sorted(set().union(*names_ii)))
+
+    print(sep)
+    print("ABIDE-II extra names")
+    print(sep)
+    print(sorted(set().union(*names_ii_extra)))
+
+
+def load_row_no_extra(root: Path) -> DataFrame | None:
     try:
+        abide = 2 if "ABIDE-II" in str(root) else 1
         df = merge_stats(root)
         if df is None:
             return None
-        df = compute_bilateral_stats(df)
+        df = compute_bilateral_stats(df, abide=abide, extra=False)
         df = bilateral_stats_to_row(df)
         return df
     except Exception as e:
@@ -56,14 +114,65 @@ def load_row(root: Path) -> DataFrame | None:
         return None
 
 
-if __name__ == "__main__":
+def load_row_extra(root: Path) -> DataFrame | None:
+    try:
+        extra = "ABIDE-II" in str(root)
+        abide = 2 if extra else 1
+        df = merge_stats(root, abide2_extra=extra)
+        if df is None:
+            return None
+        df = compute_bilateral_stats(df, abide=abide, extra=extra)
+        df = bilateral_stats_to_row(df)
+        return df
+    except Exception as e:
+        traceback.print_exc()
+        print(f"Got error processing stats files at {root}: {e}")
+        return None
+
+
+def make_separate_tables() -> None:
+    abide_i_roots = sorted(ABIDE_I.rglob("stats"))
+    abide_ii_roots = sorted(
+        filter(lambda s: not ("fsaverage" in str(s)), ABIDE_II.rglob("stats"))
+    )
+
+    df_abide_iis = process_map(
+        # load_row_no_extra,
+        load_row_extra,
+        abide_ii_roots,
+        # abide_ii_roots[:2],
+        desc="Loading and parsing ABIDE-II stats + extra",
+    )
+
+    df_abide_is = process_map(
+        load_row_no_extra, abide_i_roots, desc="Loading and parsing ABIDE-I stats"
+    )
+
+    df_abide_i = pd.concat(
+        [df for df in df_abide_is if df is not None], axis=0, ignore_index=True
+    )
+    df_abide_ii = pd.concat(
+        [df for df in df_abide_iis if df is not None], axis=0, ignore_index=True
+    )
+
+    df_abide_i.to_json(ROOT / "abide_i_cmc.json")
+    df_abide_i.to_parquet(ROOT / "abide_i_cmc.parquet")
+    df_abide_i.to_csv(ROOT / "abide_i_cmc.csv")
+
+    df_abide_ii.to_json(ROOT / "abide_ii_cmc_extra.json")
+    df_abide_ii.to_parquet(ROOT / "abide_ii_cmc_extra.parquet")
+    df_abide_ii.to_csv(ROOT / "abide_ii_cmc_extra.csv")
+
+
+def make_combined_table() -> None:
     abide_i_roots = sorted(ABIDE_I.rglob("stats"))
     abide_ii_roots = sorted(ABIDE_II.rglob("stats"))
+
     df_abide_is = process_map(
-        load_row, abide_i_roots, desc="Loading and parsing ABIDE-I stats"
+        load_row_no_extra, abide_i_roots, desc="Loading and parsing ABIDE-I stats"
     )
     df_abide_iis = process_map(
-        load_row, abide_ii_roots, desc="Loading and parsing ABIDE-II stats"
+        load_row_no_extra, abide_ii_roots, desc="Loading and parsing ABIDE-II stats"
     )
 
     df_abide_i = pd.concat(
@@ -74,9 +183,14 @@ if __name__ == "__main__":
     )
 
     df = pd.concat([df_abide_i, df_abide_ii], axis=0, ignore_index=True)
-    df.to_json(ROOT / "abide_cmc.json")
-    df.to_parquet(ROOT / "abide_cmc.parquet")
-    df.to_csv(ROOT / "abide_cmc.csv")
+    df.to_json(ROOT / "abide_cmc_combined.json")
+    df.to_parquet(ROOT / "abide_cmc_combined.parquet")
+    df.to_csv(ROOT / "abide_cmc_combined.csv")
 
     print(df)
-    sys.exit()
+
+
+if __name__ == "__main__":
+    # collect_all_names()
+    # make_combined_table()
+    make_separate_tables()
