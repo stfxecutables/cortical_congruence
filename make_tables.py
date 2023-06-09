@@ -45,6 +45,7 @@ from src.freesurfer import (
     bilateral_stats_to_row,
     collect_struct_names,
     compute_bilateral_stats,
+    get_subject_meta,
     merge_stats,
 )
 
@@ -99,31 +100,36 @@ def collect_all_names() -> None:
     print(sorted(set().union(*names_ii_extra)))
 
 
-def load_row_no_extra(root: Path) -> DataFrame | None:
+def load_row_no_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
     try:
         abide = 2 if "ABIDE-II" in str(root) else 1
         df = merge_stats(root)
         if df is None:
             return None
-        df = compute_bilateral_stats(df, abide=abide, extra=False)
-        df = bilateral_stats_to_row(df)
-        return df
+
+        stats = compute_bilateral_stats(df, abide=abide, extra=False)
+        meta = get_subject_meta(int(stats.iloc[0, 0]))  # type: ignore
+        for col in meta.columns.to_list():
+            stats.insert(2, col, meta[col].item())
+
+        df = bilateral_stats_to_row(stats)
+        return df, stats
     except Exception as e:
         traceback.print_exc()
         print(f"Got error processing stats files at {root}: {e}")
         return None
 
 
-def load_row_extra(root: Path) -> DataFrame | None:
+def load_row_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
     try:
         extra = "ABIDE-II" in str(root)
         abide = 2 if extra else 1
         df = merge_stats(root, abide2_extra=extra)
         if df is None:
             return None
-        df = compute_bilateral_stats(df, abide=abide, extra=extra)
-        df = bilateral_stats_to_row(df)
-        return df
+        stats = compute_bilateral_stats(df, abide=abide, extra=extra)
+        df = bilateral_stats_to_row(stats)
+        return df, stats
     except Exception as e:
         traceback.print_exc()
         print(f"Got error processing stats files at {root}: {e}")
@@ -174,23 +180,35 @@ def make_combined_table() -> None:
     df_abide_iis = process_map(
         load_row_no_extra, abide_ii_roots, desc="Loading and parsing ABIDE-II stats"
     )
+    df_abide_is = [df for df in df_abide_is if df is not None]
+    df_abide_iis = [df for df in df_abide_iis if df is not None]
 
-    df_abide_i = pd.concat(
-        [df for df in df_abide_is if df is not None], axis=0, ignore_index=True
-    )
-    df_abide_ii = pd.concat(
-        [df for df in df_abide_iis if df is not None], axis=0, ignore_index=True
-    )
+    df_is, stats_is = list(zip(*df_abide_is))
+    df_iis, stats_iis = list(zip(*df_abide_is))
 
-    df = pd.concat([df_abide_i, df_abide_ii], axis=0, ignore_index=True)
+    df_i = pd.concat(df_is, axis=0, ignore_index=True)
+    df_ii = pd.concat(df_iis, axis=0, ignore_index=True)
+    stats_i = pd.concat(stats_is, axis=0, ignore_index=True)
+    stats_ii = pd.concat(stats_iis, axis=0, ignore_index=True)
+
+    df_i.insert(5, "abide", "I")
+    df_ii.insert(5, "abide", "II")
+    stats_i.insert(2, "abide", "I")
+    stats_ii.insert(2, "abide", "II")
+
+    df = pd.concat([df_i, df_ii], axis=0, ignore_index=True)
     df.to_json(ROOT / "abide_cmc_combined.json")
     df.to_parquet(ROOT / "abide_cmc_combined.parquet")
     df.to_csv(ROOT / "abide_cmc_combined.csv")
 
+    stats = pd.concat([stats_i, stats_ii], axis=0, ignore_index=True)
+    stats.to_json(ROOT / "abide_stats_combined.json")
+    stats.to_parquet(ROOT / "abide_stats_combined.parquet")
+    stats.to_csv(ROOT / "abide_stats_combined.csv")
     print(df)
 
 
 if __name__ == "__main__":
     # collect_all_names()
-    # make_combined_table()
-    make_separate_tables()
+    make_combined_table()
+    # make_separate_tables()

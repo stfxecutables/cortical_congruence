@@ -65,7 +65,7 @@ STATFILES = [
     "rh.aparc.stats",
 ]
 ABIDE_II_EXTRA = [
-    "lh.aparc.DKTatlas.stats",
+    "lh.aparc.DKTatlas.stats",  # identical StructNames to lh.aparc.pial.stats
     "lh.aparc.pial.stats",
 ]
 
@@ -157,7 +157,9 @@ class FreesurferStats:
             pass
 
         if "DKTatlas" in str(fname):
-            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-DKT")
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-dkt")
+        if "pial" in str(fname):
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-pial")
 
         df["Struct"] = df["StructName"].str.replace("wm-lh-", "")
         df["Struct"] = df["Struct"].str.replace("wm-rh-", "")
