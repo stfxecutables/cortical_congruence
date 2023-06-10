@@ -197,6 +197,10 @@ def make_combined_table() -> None:
     stats_ii.insert(2, "abide", "II")
 
     df = pd.concat([df_i, df_ii], axis=0, ignore_index=True)
+    # remove redundant columns
+    meta_cols = ["sid", "sname", "autism", "dsm_iv", "sex", "age", "abide", "site"]
+    cmc_cols = list(filter(lambda col: "CMC" in col, df.columns))
+    df = df.loc[:, meta_cols + cmc_cols]
     df.to_json(ROOT / "abide_cmc_combined.json")
     df.to_parquet(ROOT / "abide_cmc_combined.parquet")
     df.to_csv(ROOT / "abide_cmc_combined.csv")
