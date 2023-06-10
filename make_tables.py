@@ -190,7 +190,7 @@ def make_combined_table() -> None:
     df_abide_iis = [df for df in df_abide_iis if df is not None]
 
     df_is, stats_is = list(zip(*df_abide_is))
-    df_iis, stats_iis = list(zip(*df_abide_is))
+    df_iis, stats_iis = list(zip(*df_abide_iis))
 
     df_i = pd.concat(df_is, axis=0, ignore_index=True)
     df_ii = pd.concat(df_iis, axis=0, ignore_index=True)

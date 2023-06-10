@@ -37,7 +37,7 @@ from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC, SVR
 from tqdm import tqdm
@@ -59,22 +59,27 @@ def load_x_y() -> tuple[DataFrame, Series]:
 
 def test_cmc_accuracy(
     standardize: bool = False,
+    abide: Literal["I", "II", "both"] = "I",
     target: Literal["autism", "age", "sex", "fiq", "viq", "piq"] = "autism",
 ) -> DataFrame:
     df = pd.read_parquet(TABLE)
+    if abide != "both":
+        df = df.loc[df["abide"] == abide]
     df = pd.concat([df[target], df.filter(regex="CMC_mesh")], axis=1)
-    df = df.dropna(axis=0, how="any")
+    # df = df.dropna(axis=0, how="any")
     cmc = df.filter(regex="CMC_mesh")
     y = df[target]
     keep_idx = df.isnull().sum() == 0
     cmc = cmc.loc[:, keep_idx]
+    keep_idx = ~y.isnull()
+    cmc = cmc.loc[keep_idx]
+    y = y.loc[keep_idx]
 
     x = (
         DataFrame(StandardScaler().fit_transform(cmc), columns=cmc.columns)
         if standardize
         else cmc
     )
-    y = df[target]
     regression = ["age", "fiq", "viq", "piq"]
     if target in regression:
         predictors = [LGBMRegressor, LinearRegression, SVR]
@@ -82,17 +87,22 @@ def test_cmc_accuracy(
         metric = "MAE (mean)"
     else:
         predictors = [LGBMClassifier, SVC]
-        scoring = "accuracy"
-        metric = "acc (mean)"
+        scoring = "roc_auc"
+        metric = "AUROC (mean)"
 
     rows = []
     predictor: Type
     for predictor in predictors:
         if predictor in [SVR, SVC, LogisticRegression]:
-            for C in [1e3, 1e4, 1e5]:
+            for C in [1.0]:
                 args = dict(C=C)
                 accs = cross_val_score(
-                    predictor(**args), x, y, cv=5, scoring=scoring, n_jobs=5
+                    predictor(**args),
+                    x,
+                    y,
+                    cv=5 if target in regression else StratifiedKFold(),
+                    scoring=scoring,
+                    n_jobs=5,
                 )
                 if target in regression:
                     accs = -np.array(accs)
@@ -102,6 +112,7 @@ def test_cmc_accuracy(
                         {
                             **{
                                 "algorithm": f"{predictor.__name__}@C={C:1.0e}",
+                                "abide": abide,
                                 "standardized": standardize,
                                 "target": target,
                                 metric: np.mean(accs),
@@ -112,13 +123,21 @@ def test_cmc_accuracy(
                     ),
                 )
         else:
-            accs = cross_val_score(predictor(), x, y, cv=5, scoring=scoring, n_jobs=5)
+            accs = cross_val_score(
+                predictor(),
+                x,
+                y,
+                cv=5 if target in regression else StratifiedKFold(),
+                scoring=scoring,
+                n_jobs=5,
+            )
             folds = {f"fold{i + 1}": acc for i, acc in enumerate(accs)}
             rows.append(
                 DataFrame(
                     {
                         **{
                             "algorithm": predictor.__name__,
+                            "abide": abide,
                             "standardized": standardize,
                             "target": target,
                             metric: np.mean(accs),
@@ -147,14 +166,28 @@ def check_single_feature_accs() -> None:
 if __name__ == "__main__":
     dfs = []
     for target in ["autism", "age", "sex", "fiq", "viq", "piq"]:
-        for standardize in [True, False]:
-            df = test_cmc_accuracy(standardize=standardize, target=target)  # type: ignore
-            print(df)
-            dfs.append(df)
+        for abide in ["I", "II", "both"]:
+            for standardize in [False]:
+                df = test_cmc_accuracy(standardize=standardize, target=target, abide=abide)  # type: ignore
+                print(df)
+                dfs.append(df)
     df = pd.concat(dfs, axis=0, ignore_index=True)
     df.to_parquet("suspicious_results.parquet")
     print("Saved data to suspicious_results.parquet")
-    print(df.to_markdown(tablefmt="simple", floatfmt="0.3f"))
+    cols = [
+        "algorithm",
+        "abide",
+        "standardized",
+        "target",
+        "AUROC (mean)",
+        "MAE (mean)",
+        "fold1",
+        "fold2",
+        "fold3",
+        "fold4",
+        "fold5",
+    ]
+    print(df[cols].to_markdown(tablefmt="simple", floatfmt="0.3f"))
 
     sys.exit()
 
