@@ -523,7 +523,7 @@ def load_abide_i_pheno() -> DataFrame:
         1: 1,  # 1 in their table is Male
         2: 0,  # 2 in their table is Female
     }
-    keep_cols = ["sid", "site", "autism", "dsm_iv", "age", "sex"]
+    keep_cols = ["sid", "site", "autism", "dsm_iv", "age", "sex", "fiq", "viq", "piq"]
 
     df = pd.read_csv(ABIDE_I_PHENO)
     df.rename(
@@ -534,13 +534,20 @@ def load_abide_i_pheno() -> DataFrame:
             "DSM_IV_TR": "dsm_iv",
             "AGE_AT_SCAN": "age",
             "SEX": "sex",
+            "FIQ": "fiq",
+            "VIQ": "viq",
+            "PIQ": "piq",
         },
         inplace=True,
     )
+    # test types
 
     df["autism"] = df["autism"].apply(lambda x: dx[x])
     df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_diagnoses[x])
     df["sex"] = df["sex"].apply(lambda x: sex[x])
+    df["fiq"].replace(-9999.0, np.nan, inplace=True)
+    df["viq"].replace(-9999.0, np.nan, inplace=True)
+    df["piq"].replace(-9999.0, np.nan, inplace=True)
 
     return df.loc[:, keep_cols].copy()
 
@@ -567,7 +574,7 @@ def load_abide_ii_pheno() -> DataFrame:
         1: 1,  # 1 in their table is Male
         2: 0,  # 2 in their table is Female
     }
-    keep_cols = ["sid", "site", "autism", "dsm_iv", "age", "sex"]
+    keep_cols = ["sid", "site", "autism", "dsm_iv", "age", "sex", "fiq", "viq", "piq"]
 
     df = pd.read_csv(ABIDE_II_PHENO, encoding=ABIDE_II_ENCODING)
     df.rename(
@@ -578,6 +585,9 @@ def load_abide_ii_pheno() -> DataFrame:
             "PDD_DSM_IV_TR": "dsm_iv",
             "AGE_AT_SCAN ": "age",  # note space!
             "SEX": "sex",
+            "FIQ": "fiq",
+            "VIQ": "viq",
+            "PIQ": "piq",
         },
         inplace=True,
     )
@@ -587,10 +597,15 @@ def load_abide_ii_pheno() -> DataFrame:
     df["autism"] = df["autism"].apply(lambda x: dx[x])
     df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_iv_diagnoses[x])
     df["sex"] = df["sex"].apply(lambda x: sex[x])
+    df["fiq"].replace(-9999.0, np.nan, inplace=True)
+    df["viq"].replace(-9999.0, np.nan, inplace=True)
+    df["piq"].replace(-9999.0, np.nan, inplace=True)
 
     return df.loc[:, keep_cols].copy()
 
 
 if __name__ == "__main__":
-    print(load_abide_i_pheno())
-    print(load_abide_ii_pheno())
+    df_i = load_abide_i_pheno()
+    df_ii = load_abide_ii_pheno()
+    print(df_i)
+    print(df_ii)

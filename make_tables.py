@@ -109,7 +109,8 @@ def load_row_no_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
 
         stats = compute_bilateral_stats(df, abide=abide, extra=False)
         meta = get_subject_meta(int(stats.iloc[0, 0]))  # type: ignore
-        for col in meta.columns.to_list():
+        meta_cols = meta.columns.to_list()
+        for col in meta_cols:
             stats.insert(2, col, meta[col].item())
 
         df = bilateral_stats_to_row(stats)
@@ -128,6 +129,11 @@ def load_row_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
         if df is None:
             return None
         stats = compute_bilateral_stats(df, abide=abide, extra=extra)
+        meta = get_subject_meta(int(stats.iloc[0, 0]))  # type: ignore
+        meta_cols = meta.columns.to_list()
+
+        for col in meta_cols:
+            stats.insert(2, col, meta[col].item())
         df = bilateral_stats_to_row(stats)
         return df, stats
     except Exception as e:
@@ -198,7 +204,19 @@ def make_combined_table() -> None:
 
     df = pd.concat([df_i, df_ii], axis=0, ignore_index=True)
     # remove redundant columns
-    meta_cols = ["sid", "sname", "autism", "dsm_iv", "sex", "age", "abide", "site"]
+    meta_cols = [
+        "sid",
+        "sname",
+        "autism",
+        "abide",
+        "site",
+        "sex",
+        "age",
+        "dsm_iv",
+        "fiq",
+        "viq",
+        "piq",
+    ]
     cmc_cols = list(filter(lambda col: "CMC" in col, df.columns))
     df = df.loc[:, meta_cols + cmc_cols]
     df.to_json(ROOT / "abide_cmc_combined.json")
