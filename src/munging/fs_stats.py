@@ -3,56 +3,23 @@ from __future__ import annotations
 # fmt: off
 import sys  # isort: skip
 from pathlib import Path  # isort: skip
-ROOT = Path(__file__).resolve().parent.parent  # isort: skip
+ROOT = Path(__file__).resolve().parent.parent.parent  # isort: skip
 sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
-import os
 import re
 import sys
-from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
-from enum import Enum
 from io import StringIO
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    TextIO,
-    Tuple,
-    Union,
-    cast,
-    no_type_check,
-)
-from warnings import warn
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from numpy import ndarray
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from pandas.errors import ParserError
+from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_I_ALL_ROIS,
-    ABIDE_II_ALL_EXTRA_ROIS,
-    ABIDE_II_ALL_ROIS,
-    ABIDE_II_ENCODING,
-    ABIDE_II_EXTRA_REMOVE,
-    ADHD200,
-    ADHD200_ALL_ROIS,
-    DATA,
-    load_abide_i_pheno,
-    load_abide_ii_pheno,
-    load_adhd200_pheno,
-)
+from src.constants import ABIDE_II_ENCODING, ALL_STATSFILES, CACHED_RESULTS, DATA
 from src.enumerables import FreesurferStatsDataset
 
 
@@ -112,6 +79,17 @@ class FreesurferStats:
         )
 
     def to_subject_table(self) -> DataFrame:
+        """Makes the stats file into a consistent table with rows for each ROI in the
+        stats file, and columns:
+
+            sid, sname, parent, fname, Struct, StructName, hemi
+
+        plus whatever other columns exist in the actual file.
+
+        The `Struct` column is the unadorned structure name, e.g. with "wm-" and "lh-"
+        indicators removed. The "StructName" column removes any useless indicators (e.g
+        wm-) and changes inconsistent indicators (e.g. "Left-") to be the same (e.g. "lh-).
+        """
         # below make table with columns
         df = self.data.copy()
         if "Index" in df.columns:
@@ -253,3 +231,49 @@ def parse_table_metadata_lines(triple: tuple[str, str, str]) -> ColumnInfo:
         else:
             raise ValueError(f"Unrecognized table header line: `{line}`")
     return ColumnInfo(shortname=shortname, name=name, unit=unit, index=int(index))
+
+
+def to_frame(stat: Path) -> DataFrame:
+    return FreesurferStats.from_statsfile(stat).to_subject_table()
+
+
+def tabularize_all_stats_files(dataset: FreesurferStatsDataset) -> DataFrame:
+    if dataset not in [
+        FreesurferStatsDataset.ABIDE_I,
+        FreesurferStatsDataset.ABIDE_II,
+        FreesurferStatsDataset.ADHD_200,
+        FreesurferStatsDataset.HBN,
+    ]:
+        raise FileNotFoundError(
+            f"Dataset {dataset} does not have FreeSurfer data in *.stats files."
+        )
+
+    out = CACHED_RESULTS / f"{dataset.value}__stats.parquet"
+    if out.exists():
+        return pd.read_parquet(out)
+    root = dataset.root()
+    stats = sorted(list(root.rglob("*.stats")))
+    stats = [p for p in stats if p.name in ALL_STATSFILES]
+    dfs = process_map(
+        to_frame, stats, desc=f"Parsing *.stats files from {root}", chunksize=1
+    )
+
+    df = pd.concat(dfs, axis=0, ignore_index=True)
+    df["GrayVol"] = df["GrayVol"].astype(np.float64)
+    df["SurfArea"] = df["SurfArea"].astype(np.float64)
+    df["parent"] = df["parent"].apply(str)
+
+    df.to_parquet(out)
+    print(f"Cached stats DataFrame at {out}")
+    return df
+
+
+if __name__ == "__main__":
+    for dataset in [
+        FreesurferStatsDataset.ABIDE_I,
+        FreesurferStatsDataset.ABIDE_II,
+        FreesurferStatsDataset.ADHD_200,
+        FreesurferStatsDataset.HBN,
+    ]:
+        df = tabularize_all_stats_files(dataset=dataset)
+        print(df)

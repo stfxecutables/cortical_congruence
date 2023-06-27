@@ -55,7 +55,7 @@ from src.constants import (
     load_adhd200_pheno,
 )
 from src.enumerables import FreesurferStatsDataset
-from src.fs_stats import FreesurferStats, MetaData
+from src.munging.fs_stats import FreesurferStats, MetaData
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py
@@ -77,10 +77,6 @@ class Subject:
     @staticmethod
     def from_root(root: Path) -> Subject:
         stats = root.rglob("*.stats")
-
-
-PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
-TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
 
 
 def is_standard(file: Path) -> bool:
@@ -335,6 +331,9 @@ def bilateral_stats_to_row(stats: DataFrame) -> DataFrame:
 
 
 if __name__ == "__main__":
+    PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
+    TEST = ROOT / "data/ABIDE-I/Caltech_0051457/stats/lh.aparc.stats"
+
     collect_struct_names(ADHD200)
     df = merge_stats(PARENT)
     pd.options.display.max_rows = 300

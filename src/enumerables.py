@@ -8,6 +8,7 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 from enum import Enum
+from pandas import DataFrame
 
 from src.constants import DATA
 
@@ -87,3 +88,22 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.QTAB: False,  # not currently
             FreesurferStatsDataset.QTIM: False,  # not currently
         }[self]
+
+    def load_stats_table(self) -> DataFrame:
+        """Depending on data structure, either loop over stats files and build
+        stats tables for each subject, or convert HCP and other pre-made table
+        data to a common form, described below
+
+        Notes
+        -----
+        Common table structure is as follows:
+
+        """
+        # TODO: save table in cached_results
+        if self in [
+            FreesurferStatsDataset.ABIDE_I,
+            FreesurferStatsDataset.ABIDE_II,
+            FreesurferStatsDataset.ADHD_200,
+        ]:
+            root = self.root()
+        raise NotImplementedError()
