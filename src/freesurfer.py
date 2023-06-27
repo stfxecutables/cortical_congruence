@@ -46,6 +46,7 @@ from src.constants import (
     ABIDE_II_ALL_ROIS,
     ABIDE_II_ENCODING,
     ABIDE_II_EXTRA_REMOVE,
+    BASE_STATFILES,
     ADHD200,
     ADHD200_ALL_ROIS,
     DATA,
@@ -61,19 +62,10 @@ See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/
 for motivation and reasoning behind code below.
 """
 
-STATFILES = [
-    "aseg.stats",
-    "wmparc.stats",
-    "lh.aparc.a2009s.stats",
-    "lh.aparc.stats",
-    "rh.aparc.a2009s.stats",
-    "rh.aparc.stats",
-]
 ABIDE_II_EXTRA = [
     "lh.aparc.DKTatlas.stats",  # identical StructNames to lh.aparc.pial.stats
     "lh.aparc.pial.stats",
 ]
-
 
 
 @dataclass
@@ -85,8 +77,6 @@ class Subject:
     @staticmethod
     def from_root(root: Path) -> Subject:
         stats = root.rglob("*.stats")
-
-
 
 
 PARENT = ROOT / "data/ABIDE-I/Caltech_0051457/stats"
