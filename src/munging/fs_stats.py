@@ -79,16 +79,17 @@ class FreesurferStats:
         )
 
     def to_subject_table(self) -> DataFrame:
-        """Makes the stats file into a consistent table with rows for each ROI in the
-        stats file, and columns:
+        """Makes the stats file into a consistent table with rows for each ROI
+        in the stats file, and columns:
 
             sid, sname, parent, fname, Struct, StructName, hemi
 
         plus whatever other columns exist in the actual file.
 
-        The `Struct` column is the unadorned structure name, e.g. with "wm-" and "lh-"
-        indicators removed. The "StructName" column removes any useless indicators (e.g
-        wm-) and changes inconsistent indicators (e.g. "Left-") to be the same (e.g. "lh-).
+        The `Struct` column is the unadorned structure name, e.g. with "wm-"
+        and "lh-" indicators removed. The "StructName" column removes any
+        useless indicators (e.g wm-) and changes inconsistent indicators (e.g.
+        "Left-") to be the same (e.g. "lh-).
         """
         # below make table with columns
         df = self.data.copy()
@@ -191,9 +192,11 @@ def parse_table(lines: list[str]) -> DataFrame:
     text = "\n".join(lines)
 
     try:
-        return pd.read_table(StringIO(text), sep="\s+")
+        return pd.read_table(StringIO(text), sep="\s+")  # noqa # type: ignore
     except ParserError:
-        return pd.read_table(StringIO(text), sep="\s+", encoding=ABIDE_II_ENCODING)
+        return pd.read_table(
+            StringIO(text), sep="\s+", encoding=ABIDE_II_ENCODING  # noqa # type: ignore
+        )
 
 
 def parse_table_metadata(lines: list[str]) -> list[ColumnInfo]:
@@ -206,7 +209,7 @@ def parse_table_metadata(lines: list[str]) -> list[ColumnInfo]:
         triples.append(tuple(lines[start:stop]))
     infos = []
     for triple in triples:
-        infos.append(parse_table_metadata_lines(triple))
+        infos.append(parse_table_metadata_lines(triple))  # type: ignore
     return infos
 
 
