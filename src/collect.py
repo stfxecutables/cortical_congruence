@@ -8,49 +8,24 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
-import os
+import json
 import re
 import sys
-import json
-from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-    no_type_check,
-)
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from numpy import ndarray
-from pandas import DataFrame, Series
-from typing_extensions import Literal
-from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 from typing import Iterable
 
+from tqdm.contrib.concurrent import process_map
 
-from src.enumerables import ROISource
 from src.constants import (
-    CACHED_RESULTS,
-    BASE_STATFILES,
-    DATA,
     ALL_STATSFILES,
-    PIAL_STATFILES,
+    BASE_STATFILES,
+    CACHED_RESULTS,
+    DATA,
     DKT_STATFILES,
+    PIAL_STATFILES,
 )
+from src.enumerables import ROISource
 from src.fs_stats import FreesurferStats
 
 
@@ -101,7 +76,7 @@ def collect_struct_names(
     strip_lh_rh: bool = False,
 ) -> tuple[ROINames, ROINames]:
     s = source.value
-    l = "_lateral-only" if lateral_only else ""
+    l = "_lateral-only" if lateral_only else ""  # noqa
     n = "_no-lh-rh" if strip_lh_rh else ""
     out = CACHED_RESULTS / f"roi_names__{s}{l}{n}.json"
     out_no_area = CACHED_RESULTS / f"roi_names__{s}{l}{n}_no-area.json"
