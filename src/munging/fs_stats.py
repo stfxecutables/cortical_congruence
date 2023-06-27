@@ -16,8 +16,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from typing import Callable
 from pandas.errors import ParserError
 from tqdm.contrib.concurrent import process_map
+from tqdm import tqdm
 
 from src.constants import ABIDE_II_ENCODING, ALL_STATSFILES, CACHED_RESULTS, DATA
 from src.enumerables import FreesurferStatsDataset
@@ -105,22 +107,33 @@ class FreesurferStats:
 
         if fname.startswith("lh.") or fname.startswith("rh."):
             reg = r"([lr]h)."
-            hemi = df["fname"].apply(lambda s: f"wm-{re.search(reg, s)[1]}-")  # type: ignore # noqa
+            hemi = df["fname"].apply(lambda s: f"{re.search(reg, s)[1]}-")  # type: ignore # noqa
             df["StructName"] = hemi + df["StructName"]
-        else:
-            pass
 
-        if "DKTatlas" in str(fname):
+        sfname = str(fname)
+        if "DKTatlas" in sfname:
             df["StructName"] = df["StructName"].apply(lambda s: f"{s}-dkt")
-        if "pial" in str(fname):
+        if "a2009s" in sfname:
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-a2009kt")
+        if "pial" in sfname:
             df["StructName"] = df["StructName"].apply(lambda s: f"{s}-pial")
+
+        # NOTE: this is to prevent duplicate structnames! in e.g. wmparc.stats
+        # and *h.aparc.stats files, or similar which can happen sometimes for
+        # some reason
+        if sfname == "wmparc.stats":
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-wmparc")
+        elif sfname == "aseg.stats":
+            df["StructName"] = df["StructName"].apply(lambda s: f"{s}-aseg")
 
         df["Struct"] = df["StructName"].str.replace("wm-lh-", "")
         df["Struct"] = df["Struct"].str.replace("wm-rh-", "")
         df["Struct"] = df["Struct"].str.lower()
-        df["StructName"] = df["StructName"].str.replace("wm-", "")
-        df["StructName"] = df["StructName"].str.replace("Left-", "lh-")
-        df["StructName"] = df["StructName"].str.replace("Right-", "rh-")
+        df["Struct"] = df["Struct"].str.replace("left-", "")
+        df["Struct"] = df["Struct"].str.replace("right-", "")
+        # df["StructName"] = df["StructName"].str.replace("wm-", "")
+        # df["StructName"] = df["StructName"].str.replace("Left-", "lh-")
+        # df["StructName"] = df["StructName"].str.replace("Right-", "rh-")
         df["StructName"] = df["StructName"].str.lower()
 
         df["hemi"] = df["StructName"].apply(
@@ -131,6 +144,10 @@ class FreesurferStats:
         df = df.loc[
             :, ["sid", "sname", "parent", "fname", "StructName", "Struct", "hemi"] + cols
         ]
+
+        # Handle trash HBN data not having unique SIDs
+        if "HBN" in str(self.meta.filename.parent):
+            df["sid"] = df["sname"]
         return df
 
     @property
@@ -264,6 +281,7 @@ def tabularize_all_stats_files(dataset: FreesurferStatsDataset) -> DataFrame:
     df = pd.concat(dfs, axis=0, ignore_index=True)
     df["GrayVol"] = df["GrayVol"].astype(np.float64)
     df["SurfArea"] = df["SurfArea"].astype(np.float64)
+    df["pseudoVolume"] = df["ThickAvg"] * df["SurfArea"]
     df["parent"] = df["parent"].apply(str)
 
     df.to_parquet(out)
@@ -271,12 +289,151 @@ def tabularize_all_stats_files(dataset: FreesurferStatsDataset) -> DataFrame:
     return df
 
 
+def add_bilateral_stats(stats_df: DataFrame) -> DataFrame:
+    vols = ["Volume_mm3", "GrayVol", "pseudoVolume"]
+    meta_cols = ["sid", "sname", "parent", "fname"]
+
+    df = stats_df.copy()
+
+    df_bi = (
+        df[df.hemi != "both"][["sid", "Struct"] + vols]
+        .groupby(["sid", "Struct"])
+        .sum()
+        .reset_index()
+    )
+    df_bi["hemi"] = "both"
+    df_bi["StructName"] = df_bi["Struct"].apply(lambda s: f"bh-{s}")
+    df_bi.sort_values(by=["sid", "Struct"], inplace=True)
+
+    df_meta = (
+        df[df.hemi != "both"][["Struct"] + meta_cols]
+        .groupby(["sid", "Struct"])
+        .nth(0)
+        .reset_index(drop=True)
+        .sort_values(by=["sid", "Struct"])
+        .drop(columns=["sid", "Struct"])
+    )
+
+    df_bi = pd.concat([df_meta, df_bi], axis=1)
+    df_bi.reset_index(drop=True, inplace=True)
+
+    missing_cols = set(df.columns).difference(df_bi.columns)
+    for col in missing_cols:
+        df_bi[col] = np.nan
+    df = pd.concat([df, df_bi], axis=0)
+
+    return df
+
+
+def detect_duplicate_structnames(df: DataFrame) -> tuple[bool, DataFrame | None]:
+    dfs = [d for _, d in df.groupby("sid")]
+    for df in dfs:
+        dupes = df["StructName"][df["StructName"].duplicated()]
+        if len(dupes) > 0:
+            print(sorted(dupes))
+            return True, df[df["StructName"].isin(dupes)].sort_values(by="StructName")
+    return False, None
+
+
+def _add_missing_rows(names: list[str]) -> Callable[[DataFrame], DataFrame]:
+    def closure(df: DataFrame) -> DataFrame:
+        if len(df) > len(names):
+            detect_duplicate_structnames(df)
+            raise ValueError("Complete and utter BS due to dupes above.")
+
+        assert len(df) <= len(names), "Complete and utter tomfoolery"
+        existing = df["StructName"].unique().tolist()
+        missing = sorted(set(names).difference(existing))
+        if len(missing) == 0:
+            assert len(df) == len(names), "Utter bullshit"
+            return df.copy()
+        n_rows = len(missing)
+        n_cols = len(df.columns)
+        df2 = DataFrame(
+            data=np.full([n_rows, n_cols], fill_value=np.nan), columns=df.columns
+        )
+        df2["StructName"] = missing
+        df2["Struct"] = df2["StructName"].copy()
+        df2["Struct"] = df2["Struct"].apply(lambda s: re.sub("[rlb]h-", "", s))
+        df2["sid"] = df["sid"].iloc[0]
+        df2["sname"] = df["sname"].iloc[0]
+        df2["hemi"] = df2["StructName"].apply(
+            lambda s: "left"
+            if s.startswith("lh-")
+            else "right"
+            if s.startswith("rh-")
+            else "both"
+        )
+        df_filled = pd.concat([df, df2], axis=0, ignore_index=True)
+        if len(df_filled) != len(names):
+            dupe = df_filled["StructName"][df_filled["StructName"].duplicated()].item()
+            raise ValueError(
+                f"Duplicates:\n{df_filled[df_filled['StructName'].isin([dupe])]}"
+            )
+
+        return df
+
+    return closure
+
+
+def fill_missing_rois(bilateral_df: DataFrame) -> DataFrame:
+    df = bilateral_df.copy()
+    if detect_duplicate_structnames(df)[0]:
+        raise ValueError("Duplicates.")
+    unq_names = df["StructName"].unique().tolist()
+    # weirdos = sorted(
+    #     filter(
+    #         lambda name: not (
+    #             name.startswith("lh-") or name.startswith("rh-") or name.startswith("bh-")
+    #         ),
+    #         unq_names,
+    #     )
+    # )
+    # # some subjects missing some lh or rh structures
+    # structs = set([re.sub("[rlb]h-", "", n) for n in unq_names])
+    # all_names = []
+    # for name in structs:
+    #     all_names.extend([f"rh-{name}", f"lh-{name}", f"bh-{name}"])
+    # all_names = sorted(all_names)
+
+    df = df.groupby("sid").apply(_add_missing_rows(unq_names))
+    df.index = range(len(df))  # type: ignore
+    return df
+    # missings = [df for _, df in df.groupby(["sid"])]
+    # # dfs = []
+    # # for missing in tqdm(missings):
+    # #     dfs.append(_add_missing_rows(unq_names)(missing))
+    # dfs = process_map(_add_missing_rows(unq_names), missings)
+    # df = pd.concat(dfs, axis=0)
+
+
+def compute_cmcs(bilateral_df: DataFrame) -> DataFrame:
+    df = bilateral_df.copy()
+
+    df["CMC_mesh"] = df["GrayVol"] / df["pseudoVolume"]
+    df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
+    df["CMC_vox"].replace(np.inf, np.nan, inplace=True)
+
+    left = df[df["hemi"] == "left"].sort_values(by=["sid", "StructName"])
+    right = df[df["hemi"] == "right"].sort_values(by=["sid", "StructName"])
+    left.index = left["sid"]  # type: ignore
+    right.index = right["sid"]  # type: ignore
+    cmc_asyms = left.filter(regex="CMC") - right.filter(regex="CMC")
+    return df
+
+
 if __name__ == "__main__":
     for dataset in [
-        FreesurferStatsDataset.ABIDE_I,
-        FreesurferStatsDataset.ABIDE_II,
-        FreesurferStatsDataset.ADHD_200,
+        # FreesurferStatsDataset.ABIDE_I,
+        # FreesurferStatsDataset.ABIDE_II,
+        # FreesurferStatsDataset.ADHD_200,
         FreesurferStatsDataset.HBN,
     ]:
         df = tabularize_all_stats_files(dataset=dataset)
+        is_duped, dupes = detect_duplicate_structnames(df)
+        if is_duped:
+            raise ValueError("Dupes already in base table")
+        df = add_bilateral_stats(df)
+        df = fill_missing_rois(df)
+        df = compute_cmcs(df)
         print(df)
