@@ -40,7 +40,8 @@ from pandas import DataFrame, Series
 from tqdm.contrib.concurrent import process_map
 from typing_extensions import Literal
 
-from src.constants import ABIDE_I, ABIDE_II
+from src.constants import ABIDE_I, ABIDE_II, ADHD200
+from src.enumerables import FreesurferStatsDataset
 from src.freesurfer import (
     bilateral_stats_to_row,
     collect_struct_names,
@@ -63,6 +64,7 @@ def collect_all_names() -> None:
     abide_ii_roots = sorted(
         filter(lambda s: not ("fsaverage" in str(s)), ABIDE_II.rglob("stats"))
     )
+    adhd_roots = sorted(ADHD200.rglob("stats"))
 
     names_i = process_map(
         collect_names,
@@ -79,9 +81,15 @@ def collect_all_names() -> None:
         abide_ii_roots,
         desc="Loading and parsing ABIDE-II extra StructNames",
     )
+    names_adhd = process_map(
+        collect_names,
+        adhd_roots,
+        desc="Loading and parsing ADHD-200 StructNames",
+    )
     names_i = [n for n in names_i if n is not None]
     names_ii = [n for n in names_ii if n is not None]
     names_ii_extra = [n for n in names_ii_extra if n is not None]
+    names_adhd = [n for n in names_adhd if n is not None]
 
     sep = "=" * 80
     print(sep)
@@ -99,15 +107,26 @@ def collect_all_names() -> None:
     print(sep)
     print(sorted(set().union(*names_ii_extra)))
 
+    print(sep)
+    print("ADHD-200 names")
+    print(sep)
+    print(sorted(set().union(*names_adhd)))
+
 
 def load_row_no_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
     try:
-        abide = 2 if "ABIDE-II" in str(root) else 1
+        dataset = (
+            FreesurferStatsDataset.ABIDE_II
+            if "ABIDE-II" in str(root)
+            else FreesurferStatsDataset.ADHD_200
+            if "ADHD" in str(root)
+            else FreesurferStatsDataset.ABIDE_I
+        )
         df = merge_stats(root)
         if df is None:
             return None
 
-        stats = compute_bilateral_stats(df, abide=abide, extra=False)
+        stats = compute_bilateral_stats(df, dataset=dataset, extra=False)
         meta = get_subject_meta(int(stats.iloc[0, 0]))  # type: ignore
         meta_cols = meta.columns.to_list()
         for col in meta_cols:
@@ -128,7 +147,7 @@ def load_row_extra(root: Path) -> tuple[DataFrame, DataFrame] | None:
         df = merge_stats(root, abide2_extra=extra)
         if df is None:
             return None
-        stats = compute_bilateral_stats(df, abide=abide, extra=extra)
+        stats = compute_bilateral_stats(df, dataset=abide, extra=extra)
         meta = get_subject_meta(int(stats.iloc[0, 0]))  # type: ignore
         meta_cols = meta.columns.to_list()
 
@@ -230,7 +249,49 @@ def make_combined_table() -> None:
     print(df)
 
 
+def make_adhd200_table() -> None:
+    roots = sorted(ADHD200.rglob("stats"))
+
+    results = process_map(
+        load_row_no_extra, roots, desc="Loading and parsing ADHD-200 stats"
+    )
+    results = [r for r in results if r is not None]
+
+    all_dfs, all_stats = list(zip(*results))
+
+    df = pd.concat(all_dfs, axis=0, ignore_index=True)
+    stats = pd.concat(all_stats, axis=0, ignore_index=True)
+
+    # remove redundant columns
+    meta_cols = [
+        "sid",
+        "site",
+        "sex",
+        "age",
+        "diagnosis",
+        "adhd_scale",
+        "adhd_score",
+        "adhd_score_inattentive",
+        "adhd_score_hyper",
+        "iq_scale",
+        "fiq",
+        "viq",
+        "piq",
+    ]
+    cmc_cols = list(filter(lambda col: "CMC" in col, df.columns))
+    df = df.loc[:, meta_cols + cmc_cols]
+    df.to_json(ROOT / "adhd200_wide.json")
+    df.to_parquet(ROOT / "adhd200_wide.parquet")
+    df.to_csv(ROOT / "ahd200_wide.csv", encoding="utf-8")
+
+    stats.to_json(ROOT / "adhd200_tall.json")
+    stats.to_parquet(ROOT / "adhd200_tall.parquet")
+    stats.to_csv(ROOT / "adhd200_tall.csv", encoding="utf-8")
+    print(df)
+
+
 if __name__ == "__main__":
     # collect_all_names()
-    make_combined_table()
+    # make_combined_table()
+    make_adhd200_table()
     # make_separate_tables()

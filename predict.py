@@ -43,11 +43,12 @@ from sklearn.svm import SVC, SVR
 from tqdm import tqdm
 from typing_extensions import Literal
 
-TABLE = ROOT / "abide_cmc_combined.parquet"
+from src.constants import CMC_TABLE
+from src.loading import load_abide_data
 
 
 def load_x_y() -> tuple[DataFrame, Series]:
-    df = pd.read_parquet(TABLE).dropna(axis=1, how="any")
+    df = pd.read_parquet(CMC_TABLE).dropna(axis=1, how="any")
     cmc: DataFrame = df.filter(regex="CMC")
     y = df["autism"]
     return cmc, y
@@ -62,24 +63,8 @@ def test_cmc_accuracy(
     abide: Literal["I", "II", "both"] = "I",
     target: Literal["autism", "age", "sex", "fiq", "viq", "piq"] = "autism",
 ) -> DataFrame:
-    df = pd.read_parquet(TABLE)
-    if abide != "both":
-        df = df.loc[df["abide"] == abide]
-    df = pd.concat([df[target], df.filter(regex="CMC_mesh")], axis=1)
-    # df = df.dropna(axis=0, how="any")
-    cmc = df.filter(regex="CMC_mesh")
-    y = df[target]
-    keep_idx = df.isnull().sum() == 0
-    cmc = cmc.loc[:, keep_idx]
-    keep_idx = ~y.isnull()
-    cmc = cmc.loc[keep_idx]
-    y = y.loc[keep_idx]
+    x = load_abide_data(standardize=standardize, abide=abide, regex=regex, target=target)
 
-    x = (
-        DataFrame(StandardScaler().fit_transform(cmc), columns=cmc.columns)
-        if standardize
-        else cmc
-    )
     regression = ["age", "fiq", "viq", "piq"]
     if target in regression:
         predictors = [LGBMRegressor, LinearRegression, SVR]

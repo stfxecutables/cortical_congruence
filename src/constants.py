@@ -36,13 +36,52 @@ from numpy import ndarray
 from pandas import DataFrame, Series
 from typing_extensions import Literal
 
-DATA = ROOT / "data"
+
+def ensure_dir(path: Path) -> Path:
+    path.mkdir(exist_ok=True, parents=True)
+    return path
+
+
+DATA = ensure_dir(ROOT / "data")
+CACHED_RESULTS = ensure_dir(ROOT / "cached_results")
+
 ABIDE_I = DATA / "ABIDE-I"
 ABIDE_II = DATA / "ABIDE-II"
+ADHD200 = DATA / "ADHD-200"
+
 ABIDE_II_ENCODING = "iso8859_2"
 
 ABIDE_I_PHENO = DATA / "ABIDE_I_Phenotypic_V1_0b.csv"
 ABIDE_II_PHENO = DATA / "ABIDEII_Composite_Phenotypic.csv"
+ADHD200_PHENO = DATA / "ADHD200_preprocessed_phenotypics.tsv"
+
+CMC_TABLE = ROOT / "abide_cmc_combined.parquet"
+
+"""
+Notes
+-----
+We ignore exvivo data (e.g. *.BA_exvivo*.stats) and curv (e.g. *.curv.stats) data.
+
+
+"""
+BASE_STATFILES = [
+    "aseg.stats",
+    "wmparc.stats",
+    "lh.aparc.a2009s.stats",
+    "lh.aparc.stats",
+    "rh.aparc.a2009s.stats",
+    "rh.aparc.stats",
+]
+
+PIAL_STATFILES = [
+    "lh.aparc.pial.stats",
+    "rh.aparc.pial.stats",
+]
+DKT_STATFILES = [
+    "lh.aparc.DKTatlas.stats",
+    "rh.aparc.DKTatlas.stats",
+]
+ALL_STATSFILES = BASE_STATFILES + PIAL_STATFILES + DKT_STATFILES
 
 COMMON_MISSING_ROIS = [
     "transversetemporal",
@@ -202,6 +241,133 @@ ABIDE_I_ALL_ROIS = [
 ]
 
 ABIDE_II_ALL_ROIS = [
+    "accumbens-area",
+    "amygdala",
+    "bankssts",
+    "caudalanteriorcingulate",
+    "caudalmiddlefrontal",
+    "caudate",
+    "cerebellum-cortex",
+    "cerebellum-white-matter",
+    "choroid-plexus",
+    "cuneus",
+    "entorhinal",
+    "frontalpole",
+    "fusiform",
+    "g&s_cingul-ant",
+    "g&s_cingul-mid-ant",
+    "g&s_cingul-mid-post",
+    "g&s_frontomargin",
+    "g&s_occipital_inf",
+    "g&s_paracentral",
+    "g&s_subcentral",
+    "g&s_transv_frontopol",
+    "g_cingul-post-dorsal",
+    "g_cingul-post-ventral",
+    "g_cuneus",
+    "g_front_inf-opercular",
+    "g_front_inf-orbital",
+    "g_front_inf-triangul",
+    "g_front_middle",
+    "g_front_sup",
+    "g_ins_lg&s_cent_ins",
+    "g_insular_short",
+    "g_oc-temp_lat-fusifor",
+    "g_oc-temp_med-lingual",
+    "g_oc-temp_med-parahip",
+    "g_occipital_middle",
+    "g_occipital_sup",
+    "g_orbital",
+    "g_pariet_inf-angular",
+    "g_pariet_inf-supramar",
+    "g_parietal_sup",
+    "g_postcentral",
+    "g_precentral",
+    "g_precuneus",
+    "g_rectus",
+    "g_subcallosal",
+    "g_temp_sup-g_t_transv",
+    "g_temp_sup-lateral",
+    "g_temp_sup-plan_polar",
+    "g_temp_sup-plan_tempo",
+    "g_temporal_inf",
+    "g_temporal_middle",
+    "hippocampus",
+    "inf-lat-vent",
+    "inferiorparietal",
+    "inferiortemporal",
+    "insula",
+    "isthmuscingulate",
+    "lat_fis-ant-horizont",
+    "lat_fis-ant-vertical",
+    "lat_fis-post",
+    "lateral-ventricle",
+    "lateraloccipital",
+    "lateralorbitofrontal",
+    "lingual",
+    "medialorbitofrontal",
+    "middletemporal",
+    "non-wm-hypointensities",
+    "pallidum",
+    "paracentral",
+    "parahippocampal",
+    "parsopercularis",
+    "parsorbitalis",
+    "parstriangularis",
+    "pericalcarine",
+    "pole_occipital",
+    "pole_temporal",
+    "postcentral",
+    "posteriorcingulate",
+    "precentral",
+    "precuneus",
+    "putamen",
+    "rostralanteriorcingulate",
+    "rostralmiddlefrontal",
+    "s_calcarine",
+    "s_central",
+    "s_cingul-marginalis",
+    "s_circular_insula_ant",
+    "s_circular_insula_inf",
+    "s_circular_insula_sup",
+    "s_collat_transv_ant",
+    "s_collat_transv_post",
+    "s_front_inf",
+    "s_front_middle",
+    "s_front_sup",
+    "s_interm_prim-jensen",
+    "s_intrapariet&p_trans",
+    "s_oc-temp_lat",
+    "s_oc-temp_med&lingual",
+    "s_oc_middle&lunatus",
+    "s_oc_sup&transversal",
+    "s_occipital_ant",
+    "s_orbital-h_shaped",
+    "s_orbital_lateral",
+    "s_orbital_med-olfact",
+    "s_parieto_occipital",
+    "s_pericallosal",
+    "s_postcentral",
+    "s_precentral-inf-part",
+    "s_precentral-sup-part",
+    "s_suborbital",
+    "s_subparietal",
+    "s_temporal_inf",
+    "s_temporal_sup",
+    "s_temporal_transverse",
+    "superiorfrontal",
+    "superiorparietal",
+    "superiortemporal",
+    "supramarginal",
+    "temporalpole",
+    "thalamus-proper",
+    "transversetemporal",
+    "unsegmentedwhitematter",
+    "ventraldc",
+    "vessel",
+    "wm-hypointensities",
+]
+ADHD200_ALL_ROIS = [
     "accumbens-area",
     "amygdala",
     "bankssts",
@@ -604,8 +770,54 @@ def load_abide_ii_pheno() -> DataFrame:
     return df.loc[:, keep_cols].copy()
 
 
+@lru_cache
+def load_adhd200_pheno() -> DataFrame:
+    renames = {
+        "ScanDir ID": "sid",
+        "Site": "site",
+        "Gender": "sex",
+        "DX": "diagnosis",
+        "Age": "age",
+        "ADHD Measure": "adhd_scale",
+        "ADHD Index": "adhd_score",
+        "Inattentive": "adhd_score_inattentive",
+        "Hyper/Impulsive": "adhd_score_hyper",
+        "IQ Measure": "iq_scale",
+        "Full4 IQ": "fiq",
+        "Verbal IQ": "viq",
+        "Performance IQ": "piq",
+    }
+    keep_cols = list(renames.values())
+
+    df = pd.read_csv(ADHD200_PHENO, sep="\t")
+    df.rename(columns=renames, inplace=True)
+    print(df)
+    # Diagnosis:
+    #     0 Typically Developing Children
+    #     1 ADHD-Combined
+    #     2 ADHD-Hyperactive/Impulsive
+    #     3 ADHD-Inattentive
+
+    site = {
+        1: "Peking University",
+        2: "Bradley Hospital/Brown University",
+        3: "Kennedy Krieger Institute",
+        4: "NeuroIMAGE Sample",
+        5: "New York University Child Study Center",
+        6: "Oregon Health & Science University",
+        7: "University of Pittsburgh",
+        8: "Washington University in St. Louis",
+    }
+
+    df["site"] = df["site"].apply(lambda x: site[x])
+
+    return df.loc[:, keep_cols].copy()
+
+
 if __name__ == "__main__":
-    df_i = load_abide_i_pheno()
-    df_ii = load_abide_ii_pheno()
-    print(df_i)
-    print(df_ii)
+    # df_i = load_abide_i_pheno()
+    # df_ii = load_abide_ii_pheno()
+    df_adhd = load_adhd200_pheno()
+    # print(df_i)
+    # print(df_ii)
+    print(df_adhd)
