@@ -563,18 +563,28 @@ def compute_cmcs(bilateral_df: DataFrame) -> DataFrame:
     )
 
     cmc_asym = left["CMC"] - right["CMC"]
-    cmc_asym.name = "CMC_asym"
     cmc_asym_abs = cmc_asym.abs()
-    cmc_asym_abs.name = "CMC_asym_abs"
+    cmc_asym_div = left["CMC"] / right["CMC"]
 
-    left["CMC_asym"] = cmc_asym
-    left["CMC_asym_abs"] = cmc_asym_abs
-    right["CMC_asym"] = cmc_asym
-    right["CMC_asym_abs"] = cmc_asym_abs
-    both_lr["CMC_asym"] = cmc_asym
-    both_lr["CMC_asym_abs"] = cmc_asym_abs
-    both_only["CMC_asym"] = np.nan
-    both_only["CMC_asym_abs"] = np.nan
+    cmc_asym.name = "CMC_asym"
+    cmc_asym_abs.name = "CMC_asym_abs"
+    cmc_asym_div.name = "CMC_asym_div"
+
+    left["CMC__asym"] = cmc_asym
+    left["CMC__asym_abs"] = cmc_asym_abs
+    left["CMC__asym_div"] = cmc_asym_div
+
+    right["CMC__asym"] = cmc_asym
+    right["CMC__asym_abs"] = cmc_asym_abs
+    right["CMC__asym_div"] = cmc_asym_div
+
+    both_lr["CMC__asym"] = cmc_asym
+    both_lr["CMC__asym_abs"] = cmc_asym_abs
+    both_lr["CMC__asym_div"] = cmc_asym_div
+
+    both_only["CMC__asym"] = np.nan
+    both_only["CMC__asym_abs"] = np.nan
+    both_only["CMC__asym_div"] = np.nan
 
     df_cmc = pd.concat([left, right, both_lr, both_only], axis=0, ignore_index=True)
 
@@ -713,16 +723,16 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
         df.drop(columns=drop_cols)
         .rename(
             columns={
-                "ThickAvg": "__thick",
-                "SurfArea": "__area",
-                "GrayVol": "__vol",
-                "pseudoVolume": "__pvol",
+                "ThickAvg": "thick__",
+                "SurfArea": "area__",
+                "GrayVol": "vol__",
+                "pseudoVolume": "pvol__",
             }
         )
-        .rename(columns=lambda s: f"__{s}" if "CMC" in s else s)
+        .rename(columns=lambda s: f"{s}__" if "CMC" in s else s)
         .melt(id_vars=["sid", "StructName"], var_name="metric")
     )
-    df_long["feature"] = df_long["StructName"] + df_long["metric"]
+    df_long["feature"] = df_long["metric"] + df_long["StructName"]
     df_long.drop(columns=["StructName", "metric"], inplace=True)
     df_wide = df_long.pivot(index="sid", columns="feature")["value"].copy()
     if isinstance(df_wide, Series):
@@ -730,19 +740,99 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
     return df_wide
 
 
-if __name__ == "__main__":
-    # pd.options.display.max_rows = 500
-    for dataset in [
-        FreesurferStatsDataset.ABIDE_I,
-        FreesurferStatsDataset.ABIDE_II,
-        FreesurferStatsDataset.ADHD_200,
-        FreesurferStatsDataset.HBN,
-    ]:
-        df = compute_CMC_table(dataset)
-        df = to_wide_subject_table(df)
-        print(df)
+def format_HCP_phenotypic(df: DataFrame, extra: DataFrame) -> DataFrame:
+    df = df.rename(
+        columns={"Subject": "sid", "Gender": "sex", "Age": "age_range"}
+    ).rename(columns=str.lower)
+    feats = extra["columnHeader"].str.lower()
+    available = list(set(feats).intersection(df.columns))
+    fs_keeps = [
+        "fs_intracranial_vol",  # Estimated intra-cranial volume
+        "fs_brainseg_vol",  # Brain segmentation volume
+        "fs_brainseg_vol_no_vent",  # Brain segvolume w/o ventricles
+        "fs_brainseg_vol_no_vent_surf",  # Brain seg volume w/o ventricles from surface  # noqa
+        "fs_lcort_gm_vol",  # Left hemisphere cortical gray matter volume
+        "fs_rcort_gm_vol",  # Right hemisphere cortical gray matter volume
+        "fs_totcort_gm_vol",  # Total cortical gray matter volume
+        "fs_subcort_gm_vol",  # Total subcortical gray matter volume
+        "fs_total_gm_vol",  # Total gray matter volume
+        "fs_supratentorial_vol",  # Supratentorial volume
+        "fs_l_wm_vol",  # Left hemisphere cortical white matter volume
+        "fs_r_wm_vol",  # Right hemisphere cortical white matter volume
+        "fs_tot_wm_vol",  # Total cortical white matter volume
+        "fs_mask_vol",  # Mask volume
+        "fs_brainsegvol_etiv_ratio",  # Ratio of BrainSegVol to eTIV
+        "fs_maskvol_etiv_ratio",  # Ratio of MaskVol to eTIV
+        "fs_lh_defect_holes",  # Number of defect holes in LH prior to fixing
+        "fs_rh_defect_holes",  # Number of defect holes in RH prior to fixing
+        "fs_total_defect_holes",  # Total number of defect holes in surfaces prior to fixing  # noqa
+    ]
+    demo_cols = ["sex", "age_range"]
+    always_keep = ["sid"] + demo_cols + fs_keeps + available
+    target_cols = available.copy()
+    df = df[always_keep].copy()
+    df = df.rename(columns=lambda col: f"target__{col}" if col in target_cols else col)
+    df = df.rename(
+        columns=lambda col: f"fs__{col.replace('fs_', '')}" if col in fs_keeps else col
+    )
+    df = df.rename(columns=lambda col: f"pheno__{col}" if col in demo_cols else col)
+    df["sid"] = df["sid"].astype(str)
+    df["pheno__sex"] = (
+        df["pheno__sex"].apply(lambda s: 0 if s == "F" else 1).astype(np.float64)
+    )
+    return df
 
+
+def load_phenotypic_data(dataset: FreesurferStatsDataset) -> DataFrame:
+    """Get: site, dx, dx_dsm_iv, age, sex"""
+
+    source = dataset.phenotypic_file()
+    sep = "," if source.suffix == ".csv" else "\t"
+    df = pd.read_csv(source, sep=sep)
+    if dataset is FreesurferStatsDataset.HCP:
+        extra = source.parent / "priority_features_of_interest.csv"
+        feats = pd.read_csv(extra)
+        return format_HCP_phenotypic(df, extra=feats)
+
+    abidei = load_abide_i_pheno()
+    abide2 = load_abide_ii_pheno()
+    adhd = load_adhd200_pheno()
+
+    df = pd.concat([abidei, abide2, adhd], axis=0, ignore_index=True)
+    meta = df[df["sid"].isin([int(sid)])]
+    if isinstance(meta, Series):
+        meta = meta.to_frame()
+    if len(meta) == 0:
+        raise ValueError(f"SID {sid} not found in ABIDE-I or ABIDE-II phenotypic data")
+    if len(meta) > 1:
+        raise ValueError(f"Duplicate SIDs in ABIDE-I and ABIDE-II for sid: {sid}\n{meta}")
+    return meta.drop(columns="sid")
+
+
+def load_HCP_complete() -> DataFrame:
     df = load_HCP_CMC_table()
     df = to_wide_subject_table(df)
+    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP)
+    df = pd.merge(df, pheno, how="inner", on="sid")
+    return df
 
+
+if __name__ == "__main__":
+    # pd.options.display.max_rows = 500
+    df = load_HCP_complete()
     print(df)
+
+    # for dataset in [
+    #     FreesurferStatsDataset.ABIDE_I,
+    #     FreesurferStatsDataset.ABIDE_II,
+    #     FreesurferStatsDataset.ADHD_200,
+    #     FreesurferStatsDataset.HBN,
+    # ]:
+    #     df = compute_CMC_table(dataset)
+    #     df = to_wide_subject_table(df)
+    #     print(df)
+
+    # df = load_HCP_CMC_table()
+    # df = to_wide_subject_table(df)
+
+    # print(df)
