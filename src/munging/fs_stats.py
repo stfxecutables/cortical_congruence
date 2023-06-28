@@ -497,11 +497,17 @@ def _add_missing_rows(names: list[str]) -> Callable[[DataFrame], DataFrame]:
 
 
 def fill_missing_rois(df_stats: DataFrame) -> DataFrame:
+    """
+    Make sure every right- and left- hemisphere ROI has an ROI on corresponding
+    side, and that each subject has an entry for all left, right, and bilateral
+    ROIs that appear in the data
+    """
     df = df_stats.copy()
     is_corrupt, dupes, bad_names = detect_table_issues(df)
     if is_corrupt:
         print(dupes)
-        raise ValueError("Duplicates.")
+        raise ValueError("Duplicates in table. See above.")
+
     left = df[df["hemi"] == "left"]
     right = df[df["hemi"] == "right"]
     both = df[df["hemi"] == "both"]
@@ -510,12 +516,10 @@ def fill_missing_rois(df_stats: DataFrame) -> DataFrame:
     right_unq = right["StructName"].unique().tolist()
     both_unq = both["StructName"].unique().tolist()
 
+    # ensure any left- and right- ROIs don't have missing opposite / paired ROIs
     lrs = [l.replace("lh-", "rh-") for l in left_unq]
     rls = [r.replace("rh-", "lh-") for r in right_unq]
     unq_names = sorted(set(both_unq + left_unq + right_unq + lrs + rls))
-
-    # lefts = sorted(filter(lambda name: "lh-" in name, unq_names))
-    # rights = sorted(filter(lambda name: "rh-" in name, unq_names))
 
     df = df.groupby("sid").apply(_add_missing_rows(unq_names))
     df.index = range(len(df))  # type: ignore
@@ -527,45 +531,90 @@ def fill_missing_rois(df_stats: DataFrame) -> DataFrame:
 
 def compute_cmcs(bilateral_df: DataFrame) -> DataFrame:
     df = bilateral_df.copy()
+    detect_table_symmetry(df)
 
-    df["CMC_mesh"] = df["GrayVol"] / df["pseudoVolume"]
-    df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
-    df["CMC_vox"].replace(np.inf, np.nan, inplace=True)
+    df["CMC"] = df["GrayVol"] / df["pseudoVolume"]
+    # NOTE: It seems that pseudoVolume is undefined exactly when Volume_mm3
+    # is defined, so we can't ever compute CMC_vox...
+    # df["CMC_vox"] = df["Volume_mm3"] / df["pseudoVolume"]
+    # df["CMC_vox"].replace(np.inf, np.nan, inplace=True)
 
-    left = df[df["hemi"] == "left"].sort_values(by=["sid", "StructName"])
-    right = df[df["hemi"] == "right"].sort_values(by=["sid", "StructName"])
-    if len(left) != len(right):
-        raise ValueError("Invalid")
-    left.index = range(len(left))
-    right.index = range(len(right))
-    cmc_asyms = left.filter(regex="CMC") - right.filter(regex="CMC")
+    left = (
+        df[df["hemi"] == "left"]
+        .sort_values(by=["sid", "StructName"])
+        .reset_index(drop=True)
+    )
+    right = (
+        df[df["hemi"] == "right"]
+        .sort_values(by=["sid", "StructName"])
+        .reset_index(drop=True)
+    )
+
+    bnames = left["StructName"].str.replace("lh-", "bh-")
+    both = (
+        df[df["hemi"] == "both"]
+        .sort_values(by=["sid", "StructName"])
+        .reset_index(drop=True)
+    )
+    both_lr = both[both["StructName"].isin(bnames)].sort_values(by=["sid", "StructName"])
+    both_only = both[~both["StructName"].isin(bnames)].sort_values(
+        by=["sid", "StructName"]
+    )
+
+    cmc_asym = left["CMC"] - right["CMC"]
+    cmc_asym.name = "CMC_asym"
+    cmc_asym_abs = cmc_asym.abs()
+    cmc_asym_abs.name = "CMC_asym_abs"
+
+    left["CMC_asym"] = cmc_asym
+    left["CMC_asym_abs"] = cmc_asym_abs
+    right["CMC_asym"] = cmc_asym
+    right["CMC_asym_abs"] = cmc_asym_abs
+    both_lr["CMC_asym"] = cmc_asym
+    both_lr["CMC_asym_abs"] = cmc_asym_abs
+    both_only["CMC_asym"] = np.nan
+    both_only["CMC_asym_abs"] = np.nan
+
+    df_cmc = pd.concat([left, right, both_lr, both_only], axis=0, ignore_index=True)
+
+    return df_cmc
+
+
+def compute_CMC_table(dataset: FreesurferStatsDataset) -> DataFrame:
+    out = CACHED_RESULTS / f"{dataset.value}__CMC_stats.parquet"
+    if out.exists():
+        return pd.read_parquet(out)
+
+    df = tabularize_all_stats_files(dataset=dataset)
+    is_bad, dupes, bad_names = detect_table_issues(df)
+    if is_bad:
+        print(dupes)
+        raise ValueError("Dupes already in base table")
+
+    df = fill_missing_rois(df)
+    is_bad, dupes, bad_names = detect_table_issues(df)
+    if is_bad:
+        print(dupes)
+        raise ValueError("Dupes in filled table")
+
+    df = add_bilateral_stats(df)
+    is_bad, dupes, bad_names = detect_table_issues(df)
+    if is_bad:
+        print(dupes)
+        raise ValueError("Dupes in bilateral stats")
+    df = compute_cmcs(df)
+    print(df.iloc[:, :10])
+    df.to_parquet(out)
+    print(f"Cached CMC stats table to {out}")
     return df
 
 
 if __name__ == "__main__":
+    pd.options.display.max_rows = 500
     for dataset in [
         FreesurferStatsDataset.ABIDE_I,
         FreesurferStatsDataset.ABIDE_II,
         FreesurferStatsDataset.ADHD_200,
         FreesurferStatsDataset.HBN,
     ]:
-        df = tabularize_all_stats_files(dataset=dataset)
-        print(df.iloc[:, :10])
-        is_bad, dupes, bad_names = detect_table_issues(df)
-        if is_bad:
-            print(dupes)
-            raise ValueError("Dupes already in base table")
-
-        df = fill_missing_rois(df)
-        is_bad, dupes, bad_names = detect_table_issues(df)
-        if is_bad:
-            print(dupes)
-            raise ValueError("Dupes in filled table")
-
-        df = add_bilateral_stats(df)
-        is_bad, dupes, bad_names = detect_table_issues(df)
-        if is_bad:
-            print(dupes)
-            raise ValueError("Dupes in bilateral stats")
-        df = compute_cmcs(df)
-        print(df)
+        compute_CMC_table(dataset)
