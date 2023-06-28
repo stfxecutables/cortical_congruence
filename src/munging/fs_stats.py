@@ -780,17 +780,29 @@ def format_HCP_phenotypic(df: DataFrame, extra: DataFrame) -> DataFrame:
     df["pheno__sex"] = (
         df["pheno__sex"].apply(lambda s: 0 if s == "F" else 1).astype(np.float64)
     )
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    drops = []
+    for col in df.filter(regex="target__").columns:
+        if df[col].std() <= 0.0 or df[col].isna().all():
+            drops.append(col)
+    df = df.drop(columns=drops)
     return df
 
 
-def load_phenotypic_data(dataset: FreesurferStatsDataset) -> DataFrame:
+def load_phenotypic_data(
+    dataset: FreesurferStatsDataset, focused_pheno: bool = True
+) -> DataFrame:
     """Get: site, dx, dx_dsm_iv, age, sex"""
 
     source = dataset.phenotypic_file()
     sep = "," if source.suffix == ".csv" else "\t"
     df = pd.read_csv(source, sep=sep)
     if dataset is FreesurferStatsDataset.HCP:
-        extra = source.parent / "priority_features_of_interest.csv"
+        if focused_pheno:
+            extra = source.parent / "priority_features_of_interest.csv"
+        else:
+            extra = source.parent / "features_of_interest.csv"
         feats = pd.read_csv(extra)
         return format_HCP_phenotypic(df, extra=feats)
 
@@ -809,10 +821,10 @@ def load_phenotypic_data(dataset: FreesurferStatsDataset) -> DataFrame:
     return meta.drop(columns="sid")
 
 
-def load_HCP_complete() -> DataFrame:
+def load_HCP_complete(focused_pheno: bool = True) -> DataFrame:
     df = load_HCP_CMC_table()
     df = to_wide_subject_table(df)
-    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP)
+    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP, focused_pheno)
     df = pd.merge(df, pheno, how="inner", on="sid")
     return df
 

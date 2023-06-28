@@ -44,6 +44,8 @@ def ensure_dir(path: Path) -> Path:
 
 DATA = ensure_dir(ROOT / "data")
 CACHED_RESULTS = ensure_dir(ROOT / "cached_results")
+RESULTS = ensure_dir(ROOT / "results")
+PLOTS = ensure_dir(RESULTS / "plots")
 
 ABIDE_I = DATA / "ABIDE-I"
 ABIDE_II = DATA / "ABIDE-II"
