@@ -53,6 +53,33 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.QTIM: root / "participants.tsv",
         }[self]
 
+    def freesurfer_files(self, ses2: bool = False) -> tuple[Path, Path] | Path | None:
+        root = self.root()
+
+        file = {
+            FreesurferStatsDataset.ABIDE_I: None,
+            FreesurferStatsDataset.ABIDE_II: None,
+            FreesurferStatsDataset.ADHD_200: None,
+            FreesurferStatsDataset.HBN: None,
+            FreesurferStatsDataset.HCP: root / "unrestricted_hcp_freesurfer.csv",
+            FreesurferStatsDataset.QTAB: None,
+            FreesurferStatsDataset.QTIM: (
+                (
+                    root / "stats/fs5.3_ses-01.tsv",
+                    root / "stats/fs5.3_subfields6_ses-01.tsv",
+                ),
+                (
+                    root / "stats/fs5.3_ses-02.tsv",
+                    root / "stats/fs5.3_subfields6_ses-02.tsv",
+                ),
+            ),
+        }[self]
+        if not isinstance(file, tuple):
+            return file
+
+        files = file[1] if ses2 else file[0]
+        return files
+
     def has_pial_stats(self) -> bool:
         """
         Returns

@@ -15,8 +15,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
-from typing import Callable
+from pandas import DataFrame, Series
+from typing import Callable, cast
 from pandas.errors import ParserError
 from tqdm.contrib.concurrent import process_map
 from tqdm import tqdm
@@ -361,6 +361,7 @@ def tabularize_all_stats_files(dataset: FreesurferStatsDataset) -> DataFrame:
 def add_bilateral_stats(stats_df: DataFrame) -> DataFrame:
     vols = ["Volume_mm3", "GrayVol", "pseudoVolume"]
     other = stats_df.columns.to_list()
+    vols = [vol for vol in vols if vol in other]
     for vol in vols:
         other.remove(vol)
     meta_cols = ["sid", "sname", "parent", "fname"]
@@ -581,6 +582,14 @@ def compute_cmcs(bilateral_df: DataFrame) -> DataFrame:
 
 
 def compute_CMC_table(dataset: FreesurferStatsDataset) -> DataFrame:
+    if dataset not in [
+        FreesurferStatsDataset.ABIDE_I,
+        FreesurferStatsDataset.ABIDE_II,
+        FreesurferStatsDataset.ADHD_200,
+        FreesurferStatsDataset.HBN,
+    ]:
+        raise NotImplementedError()
+
     out = CACHED_RESULTS / f"{dataset.value}__CMC_stats.parquet"
     if out.exists():
         return pd.read_parquet(out)
@@ -609,12 +618,131 @@ def compute_CMC_table(dataset: FreesurferStatsDataset) -> DataFrame:
     return df
 
 
+def reformat_HPC(df: DataFrame) -> DataFrame:
+    path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
+    df = pd.read_csv(path)
+    df.rename(
+        columns={"Subject": "sid", "Gender": "sex", "Release": "release"}, inplace=True
+    )
+    df.rename(columns=str.lower, inplace=True)
+    df.rename(columns=lambda s: s.replace("fs_r_", "rh-"), inplace=True)
+    df.rename(columns=lambda s: s.replace("fs_l_", "lh-"), inplace=True)
+    drop_reg = "curv|foldind|thckstd|numvert|_range|_min|_max|_std|intens_mean|_vox"
+    keep_reg = "sid|gender|_grayvol|_area|_thck"
+    df = df.filter(regex=keep_reg).copy()
+    df["sid"] = df["sid"].astype(str)
+    df["sname"] = df["sid"].astype(str)
+    df["parent"] = str(path.parent)
+    df["fname"] = path.name
+    meta_cols = ["sid", "sname", "parent", "fname"]
+    cols = list(set(df.columns).difference(meta_cols))
+    df = df.loc[:, meta_cols + cols].copy()
+    df = df.melt(id_vars=meta_cols, var_name="metric").sort_values(by=["sid", "metric"])
+
+    vols = (
+        df[df["metric"].str.contains("grayvol")]
+        .sort_values(by=["sid", "metric"])
+        .reset_index(drop=True)
+    )
+    areas = (
+        df[df["metric"].str.contains("area")]
+        .copy()
+        .sort_values(by=["sid", "metric"])
+        .reset_index(drop=True)
+    )
+    thick = (
+        df[df["metric"].str.contains("thck")]
+        .copy()
+        .sort_values(by=["sid", "metric"])
+        .reset_index(drop=True)
+    )
+    vols.loc[:, "StructName"] = vols["metric"].str.replace("_grayvol", "")
+    areas.loc[:, "StructName"] = areas["metric"].str.replace("_area", "")
+    thick.loc[:, "StructName"] = thick["metric"].str.replace("_thck", "")
+
+    vols.drop(columns="metric", inplace=True)
+    areas.drop(columns="metric", inplace=True)
+    thick.drop(columns="metric", inplace=True)
+
+    vols.rename(columns={"value": "GrayVol"}, inplace=True)
+    areas.rename(columns={"value": "SurfArea"}, inplace=True)
+    thick.rename(columns={"value": "ThickAvg"}, inplace=True)
+    vols["SurfArea"] = areas["SurfArea"]
+    vols["ThickAvg"] = thick["ThickAvg"]
+
+    df = vols.copy()
+    df["Struct"] = df["StructName"].str.replace("lh-", "")
+    df["Struct"] = df["Struct"].str.replace("rh-", "")
+    df["hemi"] = df["StructName"].apply(
+        lambda s: "left" if s.startswith("lh") else "right"
+    )
+    df = df.loc[
+        :, meta_cols + ["StructName", "Struct", "hemi", "GrayVol", "SurfArea", "ThickAvg"]
+    ].copy()
+    return df
+
+
+def load_HCP_CMC_table() -> DataFrame:
+    path: Path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
+    df = pd.read_csv(path)
+    df = reformat_HPC(df)
+    df["pseudoVolume"] = df["ThickAvg"] * df["SurfArea"]
+    df = add_bilateral_stats(df)
+    df = compute_cmcs(df)
+    return df
+
+
+def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
+    df = df_cmc.copy()
+    meta_cols = [
+        "sid",
+        "sname",
+        "hemi",
+        "SegId",
+        "Volume_mm3",
+        "GrayVol",
+        "SurfArea",
+        "ThickAvg",
+        "pseudoVolume",
+    ]
+    drop_cols = ["Struct", "parent", "fname", "SegId", "hemi", "sname"]
+
+    meta_cols = [c for c in meta_cols if c in df.columns]
+    drop_cols = [c for c in drop_cols if c in df.columns]
+    df_long = (
+        df.drop(columns=drop_cols)
+        .rename(
+            columns={
+                "ThickAvg": "__thick",
+                "SurfArea": "__area",
+                "GrayVol": "__vol",
+                "pseudoVolume": "__pvol",
+            }
+        )
+        .rename(columns=lambda s: f"__{s}" if "CMC" in s else s)
+        .melt(id_vars=["sid", "StructName"], var_name="metric")
+    )
+    df_long["feature"] = df_long["StructName"] + df_long["metric"]
+    df_long.drop(columns=["StructName", "metric"], inplace=True)
+    df_wide = df_long.pivot(index="sid", columns="feature")["value"].copy()
+    if isinstance(df_wide, Series):
+        df_wide = df_wide.to_frame()
+    return df_wide
+
+
 if __name__ == "__main__":
-    pd.options.display.max_rows = 500
+    # pd.options.display.max_rows = 500
     for dataset in [
         FreesurferStatsDataset.ABIDE_I,
         FreesurferStatsDataset.ABIDE_II,
         FreesurferStatsDataset.ADHD_200,
         FreesurferStatsDataset.HBN,
     ]:
-        compute_CMC_table(dataset)
+        df = compute_CMC_table(dataset)
+        df = to_wide_subject_table(df)
+        print(df)
+
+    df = load_HCP_CMC_table()
+    df = to_wide_subject_table(df)
+
+    print(df)
