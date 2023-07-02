@@ -26,28 +26,37 @@ from src.constants import MEMORY
 class Cluster:
     def __init__(self, data: DataFrame) -> None:
         self.data: DataFrame = data
+        self._name: str | None = None
 
     @property
     def name(self) -> str:
         # we can cheat and solve this well because we mostly have common suffixes
+        if self._name is not None:
+            return self._name
         names = np.unique(self.data.iloc[:, :-1].to_numpy()).tolist()
         names_r = ["".join(reversed(name)) for name in names]
         common = "".join(reversed(commonprefix(names_r)))
         count = sum(1 if common in name else 0 for name in names)
         if count / len(names) >= 0.9:
-            final = f"CLUST__{common}"
+            final = f"CLUST__{common}__{count}/{len(names)}"
             # remove redundant "hemisphere" label in CMC and FS labels
             if "CLUST__h-" in final:
-                return final.replace("CLUST__h-", "CLUST__")
+                self._name = final.replace("CLUST__h-", "CLUST__")
+                return self._name
 
         names: list[str] = sorted(self.data.iloc[0, :-1].to_list())
         if len(names[0]) <= len(names[1]):
-            return names[0]
-        return f"CLUST__{names[1]}"
+            self._name = f"CLUST__{names[0]}__{len(names)}"
+            return self._name
+        self._name = f"CLUST__{names[1]}__{len(names)}"
+        return self._name
 
     @property
     def names(self) -> list[str]:
         return sorted(set(self.data.x.to_list() + self.data.y.to_list()))
+
+    def rename(self, name: str) -> None:
+        self._name = name
 
     def __str__(self) -> str:
         return (

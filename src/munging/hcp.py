@@ -45,15 +45,21 @@ def reduce_HCP_clusters(data: DataFrame, clusters: list[Cluster]) -> DataFrame:
         "sadness_unadj": "neg_emotionality",
         "wm_task_0bk_body_median_rt": "wm_rt",
     }
+
+    def shortname(cluster: Cluster) -> str:
+        name = cluster.name.replace("CLUST__", "")
+        name = name[: name.find("__")]
+        return name
+
     for cluster in clusters:
-        if not (cluster.name.replace("CLUST__", "") in mappings):
+        if not (shortname(cluster) in mappings):
             raise ValueError(
                 f"Missing a cluster name for cluster with main feature: {cluster.name}"
             )
 
     reductions = []
     for cluster in tqdm(clusters, desc="Factor reducing..."):
-        name = mappings[cluster.name.replace("CLUST__", "")]
+        name = mappings[shortname(cluster)]
         df = cluster.data
         feat_names = sorted(set(df.x.to_list() + df.y.to_list()))
         feats = data[feat_names]
