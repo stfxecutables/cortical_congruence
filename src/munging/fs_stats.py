@@ -30,7 +30,7 @@ from src.constants import (
     MEMORY,
 )
 from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
-from src.munging.clustering import get_cluster_corrs
+from src.munging.clustering import get_cluster_corrs, reduce_CMC_clusters
 from src.munging.hcp import cleanup_HCP_phenotypic, reduce_HCP_clusters
 
 
@@ -802,16 +802,17 @@ def load_HCP_complete(
         targs_reduced = reduce_HCP_clusters(data=targs, clusters=clusters)
         targs_reduced.rename(columns=lambda s: f"TARGET__{s}", inplace=True)
         others = df.drop(columns=cols, errors="ignore")
-        return pd.concat([others, targs_reduced], axis=1)
+        df = pd.concat([others, targs_reduced], axis=1)
     if reduce_cmc:
-        cmcs = df.filter(regex="CMC__|sid").rename(
-            columns=lambda s: s.replace("CMC__", "")
-        )
-        corrs = cmcs.drop(columns="sid").corr()
-        clusters = get_cluster_corrs(corrs)
-        cmc_reduced = reduce_HCP_clusters(data=cmcs, clusters=clusters)
-        others = df.drop(columns=cmcs.columns)
-        return pd.concat([others, cmc_reduced], axis=1)
+        cmcs = df.filter(regex="CMC__")
+        cols = cmcs.columns
+        cmcs = cmcs.rename(columns=lambda s: s.replace("CMC__", ""))
+        corrs = cmcs.corr()
+        clusters = get_cluster_corrs(corrs, min_cluster_size=3, epsilon=0.2)
+        cmc_reduced = reduce_CMC_clusters(data=cmcs, clusters=clusters)
+        others = df.drop(columns=cols)
+        cmc_reduced.rename(columns=lambda s: f"CMC__{s}", inplace=True)
+        df = pd.concat([others, cmc_reduced], axis=1)
 
     return df
 
@@ -820,8 +821,22 @@ if __name__ == "__main__":
     # pd.options.display.max_rows = 500
     # load_HCP_complete.clear()
     df = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=True
     )
+    dfr = df.filter(regex="CMC|TARGET|DEMO")
+    corrs = (
+        dfr.corr()
+        .stack()
+        .reset_index()
+        .rename(columns={"level_0": "x", "level_1": "y", 0: "r"})
+    )
+    corrs["abs"] = corrs["r"].abs()
+    corrs = corrs.sort_values(by="abs", ascending=False).drop(columns="abs")
+    corrs = corrs[corrs["r"] < 1.0]
+    cmc_corrs = corrs[
+        (corrs.x.str.contains("CMC") & corrs.y.str.contains("TARGET"))
+        | (corrs.x.str.contains("TARGET") & corrs.y.str.contains("CMC"))
+    ]
     print(df)
 
     # for dataset in [

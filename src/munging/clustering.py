@@ -10,11 +10,17 @@ sys.path.append(str(ROOT))  # isort: skip
 
 import sys
 from dataclasses import dataclass
+from os.path import commonprefix
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from pandas import DataFrame
 from sklearn.cluster._hdbscan.hdbscan import HDBSCAN
+from sklearn.decomposition import FactorAnalysis as FA
+from tqdm import tqdm
+
+from src.constants import MEMORY
 
 
 class Cluster:
@@ -23,10 +29,21 @@ class Cluster:
 
     @property
     def name(self) -> str:
+        # we can cheat and solve this well because we mostly have common suffixes
+        names = np.unique(self.data.iloc[:, :-1].to_numpy()).tolist()
+        names_r = ["".join(reversed(name)) for name in names]
+        common = "".join(reversed(commonprefix(names_r)))
+        count = sum(1 if common in name else 0 for name in names)
+        if count / len(names) >= 0.9:
+            final = f"CLUST__{common}"
+            # remove redundant "hemisphere" label in CMC and FS labels
+            if "CLUST__h-" in final:
+                return final.replace("CLUST__h-", "CLUST__")
+
         names: list[str] = sorted(self.data.iloc[0, :-1].to_list())
         if len(names[0]) <= len(names[1]):
             return names[0]
-        return names[1]
+        return f"CLUST__{names[1]}"
 
     @property
     def names(self) -> list[str]:
@@ -70,3 +87,18 @@ def get_cluster_corrs(
         clusters.append(cluster)
     clusters = sorted(clusters, key=lambda clust: len(clust))
     return [Cluster(clust) for clust in clusters if len(clust) > 0]
+
+
+@MEMORY.cache
+def reduce_CMC_clusters(data: DataFrame, clusters: list[Cluster]) -> DataFrame:
+    reductions = []
+    for cluster in tqdm(clusters, desc="Factor reducing..."):
+        name = cluster.name
+        df = cluster.data
+        feat_names = sorted(set(df.x.to_list() + df.y.to_list()))
+        feats = data[feat_names]
+        fa = FA(n_components=1, rotation="varimax")
+        x = fa.fit_transform(feats.fillna(feats.median()))
+        reductions.append(DataFrame(data=x, index=data.index, columns=[name]))
+    df = pd.concat(reductions, axis=1)
+    return df

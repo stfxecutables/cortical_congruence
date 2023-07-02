@@ -46,14 +46,14 @@ def reduce_HCP_clusters(data: DataFrame, clusters: list[Cluster]) -> DataFrame:
         "wm_task_0bk_body_median_rt": "wm_rt",
     }
     for cluster in clusters:
-        if not (cluster.name in mappings):
+        if not (cluster.name.replace("CLUST__", "") in mappings):
             raise ValueError(
                 f"Missing a cluster name for cluster with main feature: {cluster.name}"
             )
 
     reductions = []
     for cluster in tqdm(clusters, desc="Factor reducing..."):
-        name = mappings[cluster.name]
+        name = mappings[cluster.name.replace("CLUST__", "")]
         df = cluster.data
         feat_names = sorted(set(df.x.to_list() + df.y.to_list()))
         feats = data[feat_names]

@@ -2,6 +2,8 @@
 #                           Project-specific ignores                           #
 ################################################################################
 
+cached_results/__JOBLIB_CACHE__
+
 data/**/*.stats
 data/**/*.csv
 data/**/*.yml
