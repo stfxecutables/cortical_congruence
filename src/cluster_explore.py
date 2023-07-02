@@ -99,26 +99,7 @@ def compute_regression_metrics(args: Namespace) -> DataFrame:
     return df
 
 
-if __name__ == "__main__":
-    # pd.options.display.max_rows = 500
-    # load_HCP_complete.clear()
-    out = TABLES / "quick_regression_clusters.parquet"
-    df = pd.read_parquet(out)
-    df = df.reset_index(drop=True)
-    dummy_maes = (
-        df.groupby("target")
-        .apply(lambda grp: grp[grp.model == "Dummy"]["MAE"])
-        .droplevel(1)
-    )
-    base_mae = df.target.apply(lambda target: dummy_maes[target])
-    df.insert(2, "sMAE", df["MAE"] / base_mae)
-    with pd.option_context("display.max_rows", 500):
-        print(df.round(4))
-    sys.exit()
-    print_correlations()
-    df = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=True
-    )
+def get_reg_args(reduce_cmc: bool, reduce_targets: bool = True) -> list[Namespace]:
     n_jobs = 1
     models = {
         "LR": lambda: LR(n_jobs=n_jobs),
@@ -129,6 +110,7 @@ if __name__ == "__main__":
             alpha=1e-4,
             shuffle=True,
             learning_rate_init=3e-4,
+            max_iter=500,
         ),
         "LGB": lambda: LGB(n_jobs=n_jobs),
         "KNN-1": lambda: KNN(n_neighbors=1, n_jobs=n_jobs),
@@ -136,8 +118,10 @@ if __name__ == "__main__":
         "KNN-9": lambda: KNN(n_neighbors=9, n_jobs=n_jobs),
         "Dummy": lambda: Dummy(strategy="mean"),
     }
+    df = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
+    )
     dfr = df.filter(regex="CMC|TARGET|DEMO")
-
     args = []
     for target in dfr.filter(regex="TARGET").columns:
         for model in models:
@@ -148,12 +132,35 @@ if __name__ == "__main__":
                     )
                 )
             )
+    return args
 
-    all_results = Parallel(n_jobs=-1, verbose=10)(
-        delayed(compute_regression_metrics)(arg) for arg in args
+
+if __name__ == "__main__":
+    # pd.options.display.max_rows = 500
+    # load_HCP_complete.clear()
+    reduce_cmc = False
+    args = get_reg_args(reduce_cmc=reduce_cmc)
+    r = "reduced" if reduce_cmc else "raw"
+    out = TABLES / f"quick_regression_cluster_targets_cmc_{r}.parquet"
+    if out.exists():
+        df = pd.read_parquet(out)
+    else:
+        all_results = Parallel(n_jobs=-1, verbose=10)(
+            delayed(compute_regression_metrics)(arg) for arg in args
+        )
+        df = pd.concat(all_results, axis=0).reset_index(drop=True)
+        print(df.to_markdown(tablefmt="simple", floatfmt="0.4f"))
+        df.to_parquet(out)
+        print(f"Saved results to {out}")
+
+    dummy_maes = (
+        df.groupby("target")
+        .apply(lambda grp: grp[grp.model == "Dummy"]["MAE"])
+        .droplevel(1)
     )
+    base_mae = df.target.apply(lambda target: dummy_maes[target])
+    df.insert(2, "sMAE", df["MAE"] / base_mae)
+    df = df.applymap(lambda x: np.nan if (isinstance(x, float) and x > 10) else x)
+    print(df.to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
 
-    results = pd.concat(all_results, axis=0)
-    print(results.to_markdown(tablefmt="simple", floatfmt="0.4f"))
-    results.to_parquet(out)
-    print(f"Saved results to {out}")
+    # print_correlations()
