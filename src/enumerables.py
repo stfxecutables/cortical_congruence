@@ -134,3 +134,27 @@ class FreesurferStatsDataset(Enum):
         ]:
             root = self.root()
         raise NotImplementedError()
+
+
+class PhenotypicFocus(Enum):
+    All = "all"
+    Reduced = "reduced"
+    Focused = "focused"
+
+    def hcp_dict_file(self) -> Path:
+        root = FreesurferStatsDataset.HCP.phenotypic_file().parent
+        files = {
+            PhenotypicFocus.All: root / "all_features.csv",
+            PhenotypicFocus.Reduced: root / "features_of_interest.csv",
+            PhenotypicFocus.Focused: root / "priority_features_of_interest.csv",
+        }
+        if self not in files:
+            raise ValueError(f"Invalid {self.__class__.__name__}: {self}")
+        return files[self]
+
+    def desc(self) -> str:
+        return {
+            PhenotypicFocus.All: "all",
+            PhenotypicFocus.Reduced: "plausible",
+            PhenotypicFocus.Focused: "most sound",
+        }[self]

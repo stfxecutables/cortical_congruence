@@ -12,6 +12,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from enum import Enum
+from math import ceil, floor, sqrt
 from pathlib import Path
 from typing import (
     Any,
@@ -26,23 +27,22 @@ from typing import (
     no_type_check,
 )
 
-from tqdm import tqdm
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from math import floor, ceil, sqrt
 import pandas as pd
+import seaborn as sbn
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
+from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 from typing_extensions import Literal
-import matplotlib
-import seaborn as sbn
-from pandas import Series
 
-
-from src.munging.fs_stats import load_HCP_complete
-from src.constants import PLOTS, CACHED_RESULTS
+from src.constants import CACHED_RESULTS, PLOTS, RESULTS, TABLES
+from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
+from src.munging.fs_stats import load_HCP_complete, load_phenotypic_data
 
 
 def best_rect(m: int) -> tuple[int, int]:
@@ -73,45 +73,236 @@ def visualize_HCP_targets() -> None:
     plt.show()
 
 
-if __name__ == "__main__":
+def _correlate(feats_targs_col: tuple[DataFrame, DataFrame, str]) -> DataFrame:
+    features, targets, col = feats_targs_col
+    corrs = (
+        features.corrwith(targets[col], method="spearman", drop=False).to_frame().T.copy()
+    )
+    # pandas throwing in garbage here for some reason
+    # corrs = corrs.filter(regex="CMC").copy()
+    missing = list(set(features.columns).difference(corrs.columns))
+    n = len(missing)
+    pad = DataFrame(data=np.full([1, n], np.nan), columns=missing)
+    corrs = pd.concat([corrs, pad], axis=1)
+    # for c in missing:
+    #     corrs.loc[:, c] = np.nan
+    corrs.index = [str(col).replace("target__", "")]  # type: ignore
+    return corrs
 
-    out = CACHED_RESULTS / "HCP_corrs.parquet"
-    if out.exists():
-        corrs = pd.read_parquet(out)
 
-    # df = load_HCP_complete(focused_pheno=False)
-    # targets = df.filter(regex="target__").copy()
-    # targets = targets.dropna()
-    # const = targets.std(axis=0) == 0
-    # targets = targets.loc[:, ~const]
-    # cmc = df.filter(regex="CMC").copy()
-    # row_names, dfs = [], []
-    # for i, col in tqdm(enumerate(sorted(targets.columns)), total=targets.shape[1]):
+def compute_HCP_correlations(
+    pheno: PhenotypicFocus, cmc_only: bool = True, use_cache: bool = True
+) -> DataFrame:
+    c = "cmc" if cmc_only else "all"
+    out = CACHED_RESULTS / f"HCP_{c}_corrs_{pheno.value}.parquet"
+    if out.exists() and use_cache:
+        return pd.read_parquet(out)
+
+    df = load_HCP_complete(focus=pheno)
+    targets = df.filter(regex="target__").copy()
+    targets = targets.dropna(axis=1, how="all")
+    means = targets.mean()
+    targets.fillna(means, inplace=True)
+    const = targets.std(axis=0) == 0
+    targets = targets.loc[:, ~const]
+
+    features = df.filter(regex="CMC").copy() if cmc_only else df.copy()
+    features = features.select_dtypes(exclude="O")
+    sds = features.std(axis=0)
+    const = (sds == 0) | (sds.isna())
+    features = features.loc[:, ~const]
+
+    args = [(features, targets, col) for col in sorted(targets.columns)]
+    dfs = process_map(_correlate, args, total=len(args))
+    # dfs = []
+    # for col in tqdm(sorted(targets.columns), total=targets.shape[1]):
     #     corrs = (
-    #         cmc.corrwith(targets[col], method="spearman", drop=False).to_frame().T.copy()
+    #         features.corrwith(targets[col], method="spearman", drop=False)
+    #         .to_frame()
+    #         .T.copy()
     #     )
     #     # pandas throwing in garbage here for some reason
     #     corrs = corrs.filter(regex="CMC").copy()
-    #     missing = set(cmc.columns).difference(corrs.columns)
-    #     for c in missing:
-    #         corrs[c] = np.nan
-    #     corrs.index = [str(col).replace("target__", "")]
-
+    #     missing = list(set(features.columns).difference(corrs.columns))
+    #     n = len(missing)
+    #     pad = DataFrame(data=np.full([1, n], np.nan), columns=missing)
+    #     corrs = pd.concat([corrs, pad], axis=1)
+    #     # for c in missing:
+    #     #     corrs.loc[:, c] = np.nan
+    #     corrs.index = [str(col).replace("target__", "")]  # type: ignore
     #     dfs.append(corrs)
+    # # rows are targets, columns are features
+    corrs = pd.concat(dfs, axis=0)
+    corrs.to_parquet(out)
+    print(f"Saved correlations to {out}")
+    return corrs
 
-    # rows are targets, columns are features
-    # corrs = pd.concat(dfs, axis=0)
-    if not out.exists():
-        corrs.to_parquet(out)
-    corrs = corrs[~corrs.index.str.contains("fs_")]
+
+def sort_correlations(corrs: DataFrame) -> DataFrame:
+    # corrs = corrs.copy()[~corrs.index.str.contains("fs_")]
+    tall = (
+        corrs.stack()  # type: ignore
+        .reset_index(name="r_spearman")
+        .rename(columns={"index": "target", "level_1": "feature"})
+    )
+    tall["r_abs"] = tall["r_spearman"].abs()
+    # tall = tall[tall["r_abs"] > 0.1]
+    tall = tall.sort_values(by="r_abs", ascending=False).drop(columns="r_abs")
+    key = pd.read_csv(focus.hcp_dict_file())
+    key.rename(columns={"columnHeader": "target"}, inplace=True)
+    key.rename(columns=str.lower, inplace=True)
+    key["target"] = key["target"].str.lower()
+    key = key.loc[:, ["target", "fulldisplayname", "description"]]
+
+    tall["feature"] = tall["feature"].str.replace("target__", "")
+    tall = pd.merge(tall, key, how="left", on="target")
+    tall.rename(
+        columns={"fulldisplayname": "target_displayname", "description": "target_desc"},
+        inplace=True,
+    )
+    key.rename(columns=dict(target="feature"), inplace=True)
+    tall = pd.merge(tall, key, how="left", on="feature")
+    tall.rename(
+        columns={
+            "fulldisplayname": "feature_displayname",
+            "description": "feature_desc",
+        },
+        inplace=True,
+    )
+
+    tall = tall.loc[
+        :,
+        [
+            "r_spearman",
+            "feature",
+            "target",
+            "target_displayname",
+            "feature_displayname",
+            "target_desc",
+            "feature_desc",
+        ],
+    ]
+    # remove meaningless correlations
+    tall = tall[~tall["target"].str.contains("fs_")]
+    tall = tall[tall["target"] != tall["feature"]]
+    tall = tall[tall["r_spearman"].abs() < (1.0 - 1e-5)]
+
+    tall["r_abs"] = tall["r_spearman"].abs()
+    tall.insert(2, "feat_is_neuro", tall["feature"].str.contains("fs_|CMC"))
+    tall = tall.sort_values(by=["feat_is_neuro", "r_abs"], ascending=[False, False])
+
+    return tall
+
+
+def make_cmc_v_freesurfer_histogram() -> None:
+    ax: Axes
+    fig, axes = plt.subplots(ncols=3, sharex=True)
+
+    phenos = [PhenotypicFocus.All, PhenotypicFocus.Reduced, PhenotypicFocus.Focused]
+    for i, (ax, pheno) in enumerate(zip(axes, phenos)):
+        corrs = compute_HCP_correlations(pheno=pheno, cmc_only=False, use_cache=True)
+        tall = sort_correlations(corrs)
+        df = tall[tall["feat_is_neuro"]]
+        fs = df[df.feature.str.contains("fs_")]
+        cmc = df[df.feature.str.contains("CMC")]
+        lab = lambda s: s if i == 2 else None
+
+        cargs = dict(color="#ff6505", alpha=0.3)
+        ax.hist(
+            cmc["r_spearman"], bins=100, density=False, label=lab("CMC Metrics"), **cargs
+        )
+        cargs = dict(color="#056dff", alpha=0.3)
+        ax.hist(
+            fs["r_spearman"],
+            bins=100,
+            density=False,
+            label=lab("FreeSurfer Metrics"),
+            **cargs,
+        )
+
+        desc = f"{pheno.desc().capitalize()} Targets"
+        ax.set_xlabel("Correlation (Spearman)")
+        ax.set_ylabel("Number of Correlations")
+        ax.set_title(desc)
+        ymax = ax.get_ylim()[1]
+        ax.vlines(
+            x=cmc["r_spearman"].mean(),
+            ymin=0,
+            ymax=ymax,
+            color="#ff6505",
+            label=lab("CMC mean"),
+        )
+        ax.vlines(
+            x=fs["r_spearman"].mean(),
+            ymin=0,
+            ymax=ymax,
+            color="#056dff",
+            label=lab("FreeSurfer mean"),
+        )
+        ax.set_xlim(-0.25, 0.3)
+        ax.set_ylim(0, ymax)
+        if i == 2:
+            ax.legend().set_visible(True)
+
+    fig.suptitle("Distribution of Univariate Metric Correlations with Phenotypic Targets")
+    fig.set_size_inches(w=14, h=6)
+    fig.tight_layout()
+    out = str(PLOTS / f"cmc_v_freesurfer_correlation_distributions.png")
+    fig.savefig(out, dpi=300)
+    plt.close()
+    print(f"Saved correlations histogram to {out}")
+
+
+if __name__ == "__main__":
+    focus = pheno = PhenotypicFocus.All
+    cmc_only = False
+    c = "CMC-features" if cmc_only else "all-features"
+
+    # pheno = load_phenotypic_data(FreesurferStatsDataset.HCP, pheno=focus)
+    # tall = sort_correlations(corrs)
+
+    # make_cmc_v_freesurfer_histogram()
+
+    all_pheno = PhenotypicFocus.All
+    df = load_HCP_complete(focus=all_pheno)
+    df_out = TABLES / f"HCP_{c}_{all_pheno.value}-targets_data.csv.gz"
+    df.to_csv(
+        df_out,
+        compression={"method": "gzip", "compresslevel": 9},
+    )
+    print(f"Saved raw data table to {df_out}")
+
+    corrs = compute_HCP_correlations(pheno=all_pheno, cmc_only=False, use_cache=True)
+    corrs_out = TABLES / f"HCP_{c}_{all_pheno.value}-targets_raw_correlations.csv.gz"
+    corrs.to_csv(
+        corrs_out,
+        compression={"method": "gzip", "compresslevel": 9},
+    )
+    print(f"Saved raw correlations to {corrs_out}")
+
+    for pheno in PhenotypicFocus:
+        corrs = compute_HCP_correlations(pheno=focus, cmc_only=False, use_cache=True)
+        tall = sort_correlations(corrs)
+        tall_out = (
+            TABLES
+            / f"HCP_{c}_{pheno.value}-targets_sorted_correlations_with_descriptions.csv.gz"
+        )
+        tall.to_csv(
+            tall_out,
+            compression={"method": "gzip", "compresslevel": 9},
+        )
+        print(f"Saved sorted correlations to {tall_out}")
+
+    sys.exit()
 
     sbn.clustermap(corrs, cmap="vlag", xticklabels=1, yticklabels=1)
     fig = plt.gcf()
     fig.set_size_inches(w=60, h=30)
     fig.tight_layout()
-    fig.savefig(PLOTS / "HCP_clustermap.png", dpi=300)
+    cluster_out = str(PLOTS / f"HCP_{focus.value}_clustermap.png")
+    fig.savefig(cluster_out, dpi=300)
     plt.close()
-    print("Saved cluster map")
+    print(f"Saved cluster map to {cluster_out}")
 
     # mean_corrs = corrs.mean(axis=0)
     # idx = mean_corrs.abs().sort_values(ascending=False).index

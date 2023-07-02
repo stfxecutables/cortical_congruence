@@ -35,6 +35,7 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 from typing_extensions import Literal
+from joblib import Memory
 
 
 def ensure_dir(path: Path) -> Path:
@@ -44,8 +45,11 @@ def ensure_dir(path: Path) -> Path:
 
 DATA = ensure_dir(ROOT / "data")
 CACHED_RESULTS = ensure_dir(ROOT / "cached_results")
+JOBLIB_CACHE = CACHED_RESULTS / "__JOBLIB_CACHE__"
+MEMORY = Memory(JOBLIB_CACHE)
 RESULTS = ensure_dir(ROOT / "results")
 PLOTS = ensure_dir(RESULTS / "plots")
+TABLES = ensure_dir(RESULTS / "tables")
 
 ABIDE_I = DATA / "ABIDE-I"
 ABIDE_II = DATA / "ABIDE-II"
@@ -57,6 +61,7 @@ ABIDE_I_PHENO = DATA / "ABIDE_I_Phenotypic_V1_0b.csv"
 ABIDE_II_PHENO = DATA / "ABIDEII_Composite_Phenotypic.csv"
 ADHD200_PHENO = DATA / "ADHD200_preprocessed_phenotypics.tsv"
 
+HCP_FEATURE_INFO = DATA / "HCP/phenotypic_data/available_feature_details.csv"
 CMC_TABLE = ROOT / "abide_cmc_combined.parquet"
 
 """

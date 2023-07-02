@@ -12,17 +12,26 @@ import sys
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
+from typing import Callable, cast
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame, Series
-from typing import Callable, cast
 from pandas.errors import ParserError
-from tqdm.contrib.concurrent import process_map
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
-from src.constants import ABIDE_II_ENCODING, ALL_STATSFILES, CACHED_RESULTS, DATA
-from src.enumerables import FreesurferStatsDataset
+from src.constants import (
+    ABIDE_II_ENCODING,
+    ALL_STATSFILES,
+    CACHED_RESULTS,
+    DATA,
+    HCP_FEATURE_INFO,
+    MEMORY,
+)
+from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
+from src.munging.clustering import get_cluster_corrs
+from src.munging.hcp import cleanup_HCP_phenotypic, reduce_HCP_clusters
 
 
 @dataclass
@@ -723,10 +732,10 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
         df.drop(columns=drop_cols)
         .rename(
             columns={
-                "ThickAvg": "thick__",
-                "SurfArea": "area__",
-                "GrayVol": "vol__",
-                "pseudoVolume": "pvol__",
+                "ThickAvg": "FS__THICK_",
+                "SurfArea": "FS__AREA_",
+                "GrayVol": "FS__VOL_",
+                "pseudoVolume": "FS__PVOL_",
             }
         )
         .rename(columns=lambda s: f"{s}__" if "CMC" in s else s)
@@ -740,58 +749,8 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
     return df_wide
 
 
-def format_HCP_phenotypic(df: DataFrame, extra: DataFrame) -> DataFrame:
-    df = df.rename(
-        columns={"Subject": "sid", "Gender": "sex", "Age": "age_range"}
-    ).rename(columns=str.lower)
-    feats = extra["columnHeader"].str.lower()
-    available = list(set(feats).intersection(df.columns))
-    fs_keeps = [
-        "fs_intracranial_vol",  # Estimated intra-cranial volume
-        "fs_brainseg_vol",  # Brain segmentation volume
-        "fs_brainseg_vol_no_vent",  # Brain segvolume w/o ventricles
-        "fs_brainseg_vol_no_vent_surf",  # Brain seg volume w/o ventricles from surface  # noqa
-        "fs_lcort_gm_vol",  # Left hemisphere cortical gray matter volume
-        "fs_rcort_gm_vol",  # Right hemisphere cortical gray matter volume
-        "fs_totcort_gm_vol",  # Total cortical gray matter volume
-        "fs_subcort_gm_vol",  # Total subcortical gray matter volume
-        "fs_total_gm_vol",  # Total gray matter volume
-        "fs_supratentorial_vol",  # Supratentorial volume
-        "fs_l_wm_vol",  # Left hemisphere cortical white matter volume
-        "fs_r_wm_vol",  # Right hemisphere cortical white matter volume
-        "fs_tot_wm_vol",  # Total cortical white matter volume
-        "fs_mask_vol",  # Mask volume
-        "fs_brainsegvol_etiv_ratio",  # Ratio of BrainSegVol to eTIV
-        "fs_maskvol_etiv_ratio",  # Ratio of MaskVol to eTIV
-        "fs_lh_defect_holes",  # Number of defect holes in LH prior to fixing
-        "fs_rh_defect_holes",  # Number of defect holes in RH prior to fixing
-        "fs_total_defect_holes",  # Total number of defect holes in surfaces prior to fixing  # noqa
-    ]
-    demo_cols = ["sex", "age_range"]
-    always_keep = ["sid"] + demo_cols + fs_keeps + available
-    target_cols = available.copy()
-    df = df[always_keep].copy()
-    df = df.rename(columns=lambda col: f"target__{col}" if col in target_cols else col)
-    df = df.rename(
-        columns=lambda col: f"fs__{col.replace('fs_', '')}" if col in fs_keeps else col
-    )
-    df = df.rename(columns=lambda col: f"pheno__{col}" if col in demo_cols else col)
-    df["sid"] = df["sid"].astype(str)
-    df["pheno__sex"] = (
-        df["pheno__sex"].apply(lambda s: 0 if s == "F" else 1).astype(np.float64)
-    )
-    df = df.loc[:, ~df.columns.duplicated()]
-
-    drops = []
-    for col in df.filter(regex="target__").columns:
-        if df[col].std() <= 0.0 or df[col].isna().all():
-            drops.append(col)
-    df = df.drop(columns=drops)
-    return df
-
-
 def load_phenotypic_data(
-    dataset: FreesurferStatsDataset, focused_pheno: bool = True
+    dataset: FreesurferStatsDataset, pheno: PhenotypicFocus = PhenotypicFocus.Reduced
 ) -> DataFrame:
     """Get: site, dx, dx_dsm_iv, age, sex"""
 
@@ -799,12 +758,9 @@ def load_phenotypic_data(
     sep = "," if source.suffix == ".csv" else "\t"
     df = pd.read_csv(source, sep=sep)
     if dataset is FreesurferStatsDataset.HCP:
-        if focused_pheno:
-            extra = source.parent / "priority_features_of_interest.csv"
-        else:
-            extra = source.parent / "features_of_interest.csv"
+        extra = pheno.hcp_dict_file()
         feats = pd.read_csv(extra)
-        return format_HCP_phenotypic(df, extra=feats)
+        return cleanup_HCP_phenotypic(df, extra=feats)
 
     abidei = load_abide_i_pheno()
     abide2 = load_abide_ii_pheno()
@@ -821,17 +777,51 @@ def load_phenotypic_data(
     return meta.drop(columns="sid")
 
 
-def load_HCP_complete(focused_pheno: bool = True) -> DataFrame:
+@MEMORY.cache
+def load_HCP_complete(
+    *,
+    focus: PhenotypicFocus = PhenotypicFocus.Reduced,
+    reduce_targets: bool,
+    reduce_cmc: bool,
+) -> DataFrame:
     df = load_HCP_CMC_table()
     df = to_wide_subject_table(df)
-    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP, focused_pheno)
-    df = pd.merge(df, pheno, how="inner", on="sid")
+    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP, focus)
+    shared = list(
+        set(df.filter(regex="FS").columns).intersection(pheno.filter(regex="FS").columns)
+    )
+    df = pd.concat([df, pheno.drop(columns=shared)], axis=1)
+    if reduce_targets:
+        if not focus is PhenotypicFocus.All:
+            raise NotImplementedError("Target reduction implemented only for full data")
+        targs = df.filter(regex="TARGET__")
+        cols = targs.columns
+        targs = targs.rename(columns=lambda s: s.replace("TARGET__", ""))
+        corrs = targs.corr()  # most correlations differ at most by 0.1 with spearman
+        clusters = get_cluster_corrs(corrs)
+        targs_reduced = reduce_HCP_clusters(data=targs, clusters=clusters)
+        targs_reduced.rename(columns=lambda s: f"TARGET__{s}", inplace=True)
+        others = df.drop(columns=cols, errors="ignore")
+        return pd.concat([others, targs_reduced], axis=1)
+    if reduce_cmc:
+        cmcs = df.filter(regex="CMC__|sid").rename(
+            columns=lambda s: s.replace("CMC__", "")
+        )
+        corrs = cmcs.drop(columns="sid").corr()
+        clusters = get_cluster_corrs(corrs)
+        cmc_reduced = reduce_HCP_clusters(data=cmcs, clusters=clusters)
+        others = df.drop(columns=cmcs.columns)
+        return pd.concat([others, cmc_reduced], axis=1)
+
     return df
 
 
 if __name__ == "__main__":
     # pd.options.display.max_rows = 500
-    df = load_HCP_complete()
+    # load_HCP_complete.clear()
+    df = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+    )
     print(df)
 
     # for dataset in [
