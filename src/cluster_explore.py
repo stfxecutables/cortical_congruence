@@ -80,6 +80,7 @@ def _get_score(args: SelectArgs) -> float:
     estimator = args.estimator
     direction = args.direction
     X = args.X
+    y = args.y
     cv = args.cv
     scoring = args.scoring
 
