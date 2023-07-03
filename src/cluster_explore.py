@@ -568,10 +568,11 @@ def sample_random_subsets(use_mean: bool) -> None:
     print(f"Saved feature subset summary to {summary_out}")
 
 
-if __name__ == "__main__":
-    ...
-    # pd.options.display.max_rows = 500
-    # load_HCP_complete.clear()
+def stepup_feature_select() -> DataFrame:
+    scores_out = TABLES / "stepup_selected_scores.parquet"
+    if scores_out.exists():
+        return pd.read_parquet(scores_out)
+
     reduce_cmc = False
     reduce_targets = True
     df = load_HCP_complete(
@@ -602,10 +603,6 @@ if __name__ == "__main__":
             ).astype(np.int64)
             s = np.array(seq.iteration_scores)
             best = 100 * np.max(seq.iteration_scores)
-            # print(
-            #     f"{feature_regex} Best Explained Variance for {target}: "
-            #     f"{np.round(best, 3)}%"
-            # )
             n_best = np.min(np.where(s == s.max()))
             all_scores.append(
                 DataFrame(
@@ -623,6 +620,58 @@ if __name__ == "__main__":
             pbar.set_description(f"{name}: {np.round(best, 3)}% @ {n_best} features")
             count += 1
     scores = pd.concat(all_scores, axis=0)
-    scores_out = TABLES / "stepup_selected_scores.parquet"
     scores.to_parquet(scores_out)
     print(f"Saved scores to {scores_out}")
+    return scores
+
+
+if __name__ == "__main__":
+    reduce_cmc = False
+    reduce_targets = True
+    df = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
+    )
+
+    scores = stepup_feature_select()
+    scores.insert(3, "CMC ratio", 0.0)
+    for i in range(scores.shape[0]):
+        regex = scores.loc[i, "source"]
+        if regex == "CMC":
+            continue
+        n = int(scores.loc[i, "n_best"])  # type: ignore
+        idx = np.array(eval(scores.loc[i, "features"]), dtype=np.int64)
+        cols = df.filter(regex=regex).columns.to_numpy()[idx]
+        n_cmc = sum("CMC" in col for col in cols)
+        scores.loc[i, "CMC ratio"] = n_cmc / n
+    print(scores)
+    pivoted = (
+        scores.drop(columns="features")
+        .groupby("source")
+        .apply(
+            lambda g: g.drop(columns="source").sort_values(
+                by=["Exp.Var", "target"], ascending=[False, True]
+            )
+        )
+        .droplevel(1)
+        .reset_index()
+        .pivot(columns="source", index="target")
+    )
+    print(
+        pivoted.sort_values(
+            by=[("Exp.Var", "FS|CMC"), ("Exp.Var", "FS"), ("Exp.Var", "CMC")],
+            ascending=False,
+        )
+        .round(2)
+        .rename(
+            columns={
+                "n_best": "n_selected",
+                "Exp.Var": "Explained Variance (%)",
+                "CMC ratio": "Proportion CMC Features",
+            }
+        )
+    )
+
+    # features = df.filter(regex=feature_regex)
+
+    # pd.options.display.max_rows = 500
+    # load_HCP_complete.clear()
