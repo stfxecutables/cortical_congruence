@@ -569,8 +569,8 @@ def sample_random_subsets(use_mean: bool) -> None:
     print(f"Saved feature subset summary to {summary_out}")
 
 
-def stepup_feature_select() -> DataFrame:
-    scores_out = TABLES / "stepup_selected_scores.parquet"
+def stepup_feature_select(regex: str) -> DataFrame:
+    scores_out = TABLES / f"stepup_selected_scores_{regex}.parquet"
     if scores_out.exists():
         return pd.read_parquet(scores_out)
 
@@ -581,7 +581,8 @@ def stepup_feature_select() -> DataFrame:
     )
     all_scores = []
     count = 0
-    pbar_outer = tqdm(["CMC", "FS", "FS|CMC"], leave=True)
+    # pbar_outer = tqdm(["CMC", "FS", "FS|CMC"], leave=True)
+    pbar_outer = tqdm([regex], leave=True)
     # pbar_outer = tqdm(["FS", "FS|CMC"], leave=True)
     for feature_regex in pbar_outer:
         pbar_outer.set_description(feature_regex)
@@ -600,9 +601,6 @@ def stepup_feature_select() -> DataFrame:
                 n_jobs=-1,
             )
             seq.fit(features.to_numpy(), y)
-            idx = np.array(
-                seq.get_feature_names_out(np.arange(features.shape[1]))
-            ).astype(np.int64)
             s = np.array(seq.iteration_scores)
             best = 100 * np.max(seq.iteration_scores)
             n_best = np.min(np.where(s == s.max()))
@@ -634,7 +632,7 @@ if __name__ == "__main__":
         focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
     )
 
-    scores = stepup_feature_select()
+    scores = stepup_feature_select(regex="FS|CMC")
     scores.insert(3, "CMC ratio", 0.0)
     for i in range(scores.shape[0]):
         regex = scores.loc[i, "source"]
