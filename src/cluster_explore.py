@@ -591,7 +591,7 @@ def stepup_feature_select() -> DataFrame:
         for target in pbar:
             y = df[target]
             seq = StepUpSelect(
-                n_features_to_select=50 if feature_regex == "CMC" else 100,
+                n_features_to_select=100,
                 tol=1e-5,
                 estimator=LR(),
                 direction="forward",

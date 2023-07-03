@@ -791,6 +791,7 @@ def load_HCP_complete(
         set(df.filter(regex="FS").columns).intersection(pheno.filter(regex="FS").columns)
     )
     df = pd.concat([df, pheno.drop(columns=shared)], axis=1)
+    df.rename(columns=lambda col: col.replace("FS__PVOL", "CMC__pvol"), inplace=True)
     if reduce_targets:
         if not focus is PhenotypicFocus.All:
             raise NotImplementedError("Target reduction implemented only for full data")
