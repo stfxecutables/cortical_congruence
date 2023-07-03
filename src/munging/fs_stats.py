@@ -821,7 +821,7 @@ if __name__ == "__main__":
     # pd.options.display.max_rows = 500
     # load_HCP_complete.clear()
     df = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=True
+        focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=True
     )
     dfr = df.filter(regex="CMC|TARGET|DEMO")
     corrs = (
