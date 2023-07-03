@@ -580,7 +580,8 @@ def stepup_feature_select() -> DataFrame:
     )
     all_scores = []
     count = 0
-    pbar_outer = tqdm(["CMC", "FS", "FS|CMC"], leave=True)
+    # pbar_outer = tqdm(["CMC", "FS", "FS|CMC"], leave=True)
+    pbar_outer = tqdm(["FS", "FS|CMC"], leave=True)
     for feature_regex in pbar_outer:
         pbar_outer.set_description(feature_regex)
         features = df.filter(regex=feature_regex)
@@ -589,7 +590,7 @@ def stepup_feature_select() -> DataFrame:
         for target in pbar:
             y = df[target]
             seq = StepUpSelect(
-                n_features_to_select=50,
+                n_features_to_select=50 if regex == "CMC" else 100,
                 tol=1e-5,
                 estimator=LR(),
                 direction="forward",
