@@ -8,248 +8,26 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
-import re
 import sys
-import time
 from argparse import Namespace
-from dataclasses import dataclass
-from io import StringIO
 from math import ceil
-from numbers import Integral
 from pathlib import Path
 from random import shuffle
-from typing import Any, Callable, Iterable, Literal, cast
+from typing import Any
 
 import numpy as np
 import pandas as pd
-import tabulate
 from joblib import Parallel, delayed
-from lightgbm import LGBMRegressor as LGB
-from numpy import ndarray
-from pandas import DataFrame, Series
-from pandas.errors import ParserError
-from sklearn.base import BaseEstimator, _fit_context, clone, is_classifier
-from sklearn.cluster._hdbscan.hdbscan import HDBSCAN
-from sklearn.decomposition import FactorAnalysis as FA
+from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
-from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.model_selection import (
-    BaseCrossValidator,
-    ParameterGrid,
-    StratifiedKFold,
-    cross_val_score,
-    cross_validate,
-)
-from sklearn.model_selection._split import check_cv
-from sklearn.neighbors import KNeighborsRegressor as KNN
-from sklearn.neural_network import MLPRegressor as MLP
+from sklearn.model_selection import cross_validate
 from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_II_ENCODING,
-    ALL_STATSFILES,
-    CACHED_RESULTS,
-    DATA,
-    HCP_FEATURE_INFO,
-    MEMORY,
-    TABLES,
-)
-from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
+from src.constants import TABLES
+from src.enumerables import PhenotypicFocus, RegressionMetric, RegressionModel
+from src.feature_selection.stepwise import StepwiseSelect
 from src.munging.fs_stats import load_HCP_complete
-
-from sklearn.model_selection._split import BaseShuffleSplit  # isort: skip
-
-
-@dataclass
-class SelectArgs:
-    estimator: Any
-    X: ndarray
-    y: ndarray
-    mask: ndarray
-    idx: ndarray
-    direction: str
-    scoring: Any
-    cv: Any
-
-
-def _get_score(args: SelectArgs) -> float:
-    current_mask = args.mask
-    feature_idx = args.idx
-    estimator = args.estimator
-    direction = args.direction
-    X = args.X
-    y = args.y
-    cv = args.cv
-    scoring = args.scoring
-
-    candidate_mask = current_mask.copy()
-    candidate_mask[feature_idx] = True
-    if direction == "backward":
-        candidate_mask = ~candidate_mask
-    X_new = X[:, candidate_mask]
-    return cross_val_score(
-        estimator,
-        X_new,
-        y,
-        cv=cv,
-        scoring=scoring,
-        n_jobs=1,
-    ).mean()
-
-
-class StepUpSelect(SequentialFeatureSelector):
-    def __init__(
-        self,
-        estimator: BaseEstimator,
-        *,
-        n_features_to_select: float | int | Literal["auto", "warn"] = "warn",
-        tol: float | None = None,
-        direction: Literal["forward", "backward"] = "forward",
-        scoring: str | Callable[..., Any] | None = None,
-        cv: Iterable | int | BaseShuffleSplit | BaseCrossValidator = 5,
-        n_jobs: int | None = None,
-    ) -> None:
-        super().__init__(
-            estimator,
-            n_features_to_select=n_features_to_select,
-            tol=tol,
-            direction=direction,
-            scoring=scoring,
-            cv=cv,
-            n_jobs=n_jobs,
-        )
-        self.iteration_scores: list[float] = []
-        self.iteration_features: list[Any] = []
-
-    @_fit_context(
-        # SequentialFeatureSelector.estimator is not validated yet
-        prefer_skip_nested_validation=False
-    )
-    def fit(self, X, y=None):
-        """Learn the features to select from X.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training vectors, where `n_samples` is the number of samples and
-            `n_features` is the number of predictors.
-
-        y : array-like of shape (n_samples,), default=None
-            Target values. This parameter may be ignored for
-            unsupervised learning.
-
-        Returns
-        -------
-        self : object
-            Returns the instance itself.
-        """
-        tags = self._get_tags()
-        X = self._validate_data(
-            X,
-            accept_sparse="csc",
-            ensure_min_features=2,
-            force_all_finite=not tags.get("allow_nan", True),
-        )
-        n_features = X.shape[1]
-
-        if self.n_features_to_select == "auto":
-            if self.tol is not None:
-                # With auto feature selection, `n_features_to_select_` will be updated
-                # to `support_.sum()` after features are selected.
-                self.n_features_to_select_ = n_features - 1
-            else:
-                self.n_features_to_select_ = n_features // 2
-        elif isinstance(self.n_features_to_select, Integral):
-            if self.n_features_to_select >= n_features:
-                raise ValueError("n_features_to_select must be < n_features.")
-            self.n_features_to_select_ = self.n_features_to_select
-        elif isinstance(self.n_features_to_select, Real):
-            self.n_features_to_select_ = int(n_features * self.n_features_to_select)
-
-        if self.tol is not None and self.tol < 0 and self.direction == "forward":
-            raise ValueError("tol must be positive when doing forward selection")
-
-        cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
-
-        cloned_estimator = clone(self.estimator)
-
-        # the current mask corresponds to the set of features:
-        # - that we have already *selected* if we do forward selection
-        # - that we have already *excluded* if we do backward selection
-        current_mask = np.zeros(shape=n_features, dtype=bool)
-        n_iterations = (
-            self.n_features_to_select_
-            if self.n_features_to_select == "auto" or self.direction == "forward"
-            else n_features - self.n_features_to_select_
-        )
-
-        old_score = -np.inf
-        is_auto_select = self.tol is not None and self.n_features_to_select == "auto"
-        for _ in range(n_iterations):
-            new_feature_idx, new_score = self._get_best_new_feature_score(
-                cloned_estimator, X, y, cv, current_mask
-            )
-            self.iteration_scores.append(new_score)
-            self.iteration_features.append(new_feature_idx)
-            if is_auto_select and ((new_score - old_score) < self.tol):
-                break
-
-            old_score = new_score
-            current_mask[new_feature_idx] = True
-
-        if self.direction == "backward":
-            current_mask = ~current_mask
-
-        self.support_ = current_mask
-        self.n_features_to_select_ = self.support_.sum()
-
-        return self
-
-    def _get_best_new_feature_score(self, estimator, X, y, cv, current_mask):
-        # Return the best new feature and its score to add to the current_mask,
-        # i.e. return the best new feature and its score to add (resp. remove)
-        # when doing forward selection (resp. backward selection).
-        # Feature will be added if the current score and past score are greater
-        # than tol when n_feature is auto,
-        candidate_feature_indices = np.flatnonzero(~current_mask)
-        args = [
-            SelectArgs(
-                estimator=estimator,
-                X=X,
-                y=y,
-                cv=cv,
-                mask=current_mask.copy(),
-                idx=feature_idx,
-                scoring=self.scoring,
-                direction=self.direction,
-            )
-            for feature_idx in candidate_feature_indices
-        ]
-
-        results = Parallel(n_jobs=-1, verbose=0)(delayed(_get_score)(arg) for arg in args)
-
-        scores = {}
-        for feature_idx, score in zip(candidate_feature_indices, results):
-            scores[feature_idx] = score
-
-        # for feature_idx in tqdm(candidate_feature_indices, leave=True):
-        #     candidate_mask = current_mask.copy()
-        #     candidate_mask[feature_idx] = True
-        #     if self.direction == "backward":
-        #         candidate_mask = ~candidate_mask
-        #     X_new = X[:, candidate_mask]
-        #     scores[feature_idx] = cross_val_score(
-        #         estimator,
-        #         X_new,
-        #         y,
-        #         cv=cv,
-        #         scoring=self.scoring,
-        #         n_jobs=self.n_jobs,
-        #     ).mean()
-        new_feature_idx = max(scores, key=lambda feature_idx: scores[feature_idx])
-        return new_feature_idx, scores[new_feature_idx]
 
 
 def print_correlations() -> None:
@@ -569,8 +347,17 @@ def sample_random_subsets(use_mean: bool) -> None:
     print(f"Saved feature subset summary to {summary_out}")
 
 
-def stepup_feature_select(regex: str) -> DataFrame:
-    scores_out = TABLES / f"stepup_selected_scores_{regex}.parquet"
+def stepup_feature_select(
+    regex: str,
+    model: RegressionModel,
+    scoring: RegressionMetric = RegressionMetric.ExplainedVariance,
+    max_n_features: int = 100,
+) -> DataFrame:
+    fname = (
+        f"stepup_{scoring.value}_selected"
+        f"_{model.value}_{regex}_n={max_n_features}.parquet"
+    )
+    scores_out = TABLES / fname
     if scores_out.exists():
         return pd.read_parquet(scores_out)
 
@@ -591,33 +378,50 @@ def stepup_feature_select(regex: str) -> DataFrame:
         pbar = tqdm(cols, leave=True)
         for target in pbar:
             y = df[target]
-            seq = StepUpSelect(
-                n_features_to_select=100,
+            seq = StepwiseSelect(
+                n_features_to_select=max_n_features,
                 tol=1e-5,
-                estimator=LR(),
+                estimator=model.get(),
                 direction="forward",
-                scoring="explained_variance",
+                scoring=scoring,
                 cv=5,
                 n_jobs=-1,
             )
             seq.fit(features.to_numpy(), y)
             s = np.array(seq.iteration_scores)
-            best = 100 * np.max(seq.iteration_scores)
+            best = np.max(seq.iteration_scores)
+            if scoring in RegressionMetric.inverted():
+                best = -best
             n_best = np.min(np.where(s == s.max()))
+            info = seq.iteration_metrics[n_best]
+            info = info.drop(columns=["fit_time", "score_time"])
+            info = info.mean()
+            for reg in RegressionMetric.inverted():
+                info[reg.value] = -info[reg.value]
             all_scores.append(
                 DataFrame(
                     {
-                        "Exp.Var": best,
-                        "n_best": n_best,
                         "source": feature_regex,
+                        "model": model.value,
                         "target": str(target).replace("TARGET__", ""),
+                        "scorer": scoring.value,
+                        "best_score": best,
+                        **info.to_dict(),
+                        "n_best": n_best,
                         "features": str(seq.iteration_features),
                     },
                     index=[count],
                 )
             )
             name = str(target).replace("TARGET__", "")
-            pbar.set_description(f"{name}: {np.round(best, 3)}% @ {n_best} features")
+            metric = (
+                f"{np.round(100 * best, 3)}%"
+                if scoring is RegressionMetric.ExplainedVariance
+                else f"{np.round(best, 4)}"
+            )
+            pbar.set_description(
+                f"{name}: {scoring.value.upper()}={metric} @ {n_best} features"
+            )
             count += 1
     scores = pd.concat(all_scores, axis=0)
     scores.to_parquet(scores_out)
@@ -626,24 +430,40 @@ def stepup_feature_select(regex: str) -> DataFrame:
 
 
 if __name__ == "__main__":
+    scores = stepup_feature_select(
+        regex="CMC",
+        model=RegressionModel.Linear,
+        scoring=RegressionMetric.MeanAbsoluteError,
+        max_n_features=5,
+    )
+    print(scores)
+
+    sys.exit()
     reduce_cmc = False
     reduce_targets = True
     df = load_HCP_complete(
         focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
     )
 
-    scores = stepup_feature_select(regex="FS|CMC")
+    scores = [stepup_feature_select(regex=reg) for reg in ["CMC", "FS", "FS|CMC"]]
+    scores = pd.concat(scores, axis=0).reset_index(drop=True)
     scores.insert(3, "CMC ratio", 0.0)
+    scores["Feat Names"] = ""
     for i in range(scores.shape[0]):
         regex = scores.loc[i, "source"]
-        if regex == "CMC":
-            continue
         n = int(scores.loc[i, "n_best"])  # type: ignore
         idx = np.array(eval(scores.loc[i, "features"]), dtype=np.int64)
         cols = df.filter(regex=regex).columns.to_numpy()[idx]
         n_cmc = sum("CMC" in col for col in cols)
-        scores.loc[i, "CMC ratio"] = n_cmc / n
+        if regex == "CMC":
+            scores.loc[i, "CMC ratio"] = n_cmc / n
+        scores.loc[i, "Feat Names"] = f'"{str(cols)}"'
+
+    scores_out = TABLES / "stepup_selected_scores_linear_all_sources.csv.gz"
+    scores.to_csv(scores_out, compression={"method": "gzip", "compresslevel": 9})
+    print(f"Saved linear scores to {scores_out}")
     print(scores)
+    sys.exit()
     pivoted = (
         scores.drop(columns="features")
         .groupby("source")

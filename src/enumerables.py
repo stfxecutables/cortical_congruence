@@ -8,9 +8,35 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 from enum import Enum
+from typing import Callable, Mapping, Union
+
+from lightgbm import LGBMRegressor as LGB
+from numpy import ndarray
 from pandas import DataFrame
+from sklearn.dummy import DummyRegressor as Dummy
+from sklearn.linear_model import LinearRegression as LR
+from sklearn.linear_model import LinearRegression as Linear
+from sklearn.neural_network import MLPRegressor as MLP
+from sklearn.svm import SVR
 
 from src.constants import DATA
+from src.metrics import (
+    expl_var,
+    expl_var_scorer,
+    mad,
+    mad_scorer,
+    mae,
+    mae_scorer,
+    r2,
+    r2_scorer,
+    smad,
+    smad_scorer,
+    smae,
+    smae_scorer,
+)
+
+Regressor = Union[LGB, SVR, LR, Dummy]
+Metric = Callable[[ndarray, ndarray], float]
 
 
 class ROISource(Enum):
@@ -158,3 +184,66 @@ class PhenotypicFocus(Enum):
             PhenotypicFocus.Reduced: "plausible",
             PhenotypicFocus.Focused: "most sound",
         }[self]
+
+
+class RegressionModel(Enum):
+    LightGBM = "lgb"
+    Linear = "linear"
+    SVR = "svr"
+    Dummy = "dummy"
+    MLP = "mlp"
+
+    def get(self, params: Mapping | None = None) -> Regressor:
+        if params is None:
+            params = dict()
+        return {
+            RegressionModel.LightGBM: LGB(**params),
+            RegressionModel.Linear: Linear(**params),
+            RegressionModel.SVR: SVR(**params),
+            RegressionModel.Dummy: Dummy(strategy="mean"),
+            RegressionModel.MLP: MLP(**params),
+        }[self]
+
+
+class RegressionMetric(Enum):
+    MeanAbsoluteError = "mae"
+    ScaledMeanAbsoluteError = "smae"
+    MedianAbsoluteDeviation = "mad"
+    ScaledMedianAbsoluteDeviation = "smad"
+    ExplainedVariance = "exp-var"
+    RSquared = "r2"
+
+    def scorer(self) -> Metric:
+        metrics: dict[RegressionMetric, Metric] = {
+            RegressionMetric.MeanAbsoluteError: mae_scorer,
+            RegressionMetric.ScaledMeanAbsoluteError: smae_scorer,
+            RegressionMetric.MedianAbsoluteDeviation: mad_scorer,
+            RegressionMetric.ScaledMedianAbsoluteDeviation: smad_scorer,
+            RegressionMetric.ExplainedVariance: expl_var_scorer,
+            RegressionMetric.RSquared: r2_scorer,
+        }
+        return metrics[self]
+
+    @staticmethod
+    def scorers() -> dict[str, Metric]:
+        return {reg.value: reg.scorer() for reg in RegressionMetric}
+
+    @staticmethod
+    def inverted() -> list[RegressionMetric]:
+        return [
+            RegressionMetric.MeanAbsoluteError,
+            RegressionMetric.ScaledMeanAbsoluteError,
+            RegressionMetric.MedianAbsoluteDeviation,
+            RegressionMetric.ScaledMedianAbsoluteDeviation,
+        ]
+
+    def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
+        metric = {
+            RegressionMetric.MeanAbsoluteError: mae,
+            RegressionMetric.ScaledMeanAbsoluteError: smae,
+            RegressionMetric.MedianAbsoluteDeviation: mad,
+            RegressionMetric.ScaledMedianAbsoluteDeviation: smad,
+            RegressionMetric.ExplainedVariance: expl_var,
+            RegressionMetric.RSquared: r2,
+        }[self]
+        return metric(y_true, y_pred)
