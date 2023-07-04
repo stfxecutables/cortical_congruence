@@ -119,6 +119,7 @@ class StepwiseSelect(SequentialFeatureSelector):
         direction: Literal["forward", "backward"] = "forward",
         scoring: RegressionMetric = RegressionMetric.ExplainedVariance,
         cv: Iterable | int | BaseShuffleSplit | BaseCrossValidator = 5,
+        inner_progress: bool = False,
         n_jobs: int | None = None,
     ) -> None:
         super().__init__(
@@ -134,6 +135,7 @@ class StepwiseSelect(SequentialFeatureSelector):
         self.iteration_features: list[Any] = []
         self.iteration_metrics: list[DataFrame] = []
         self.scoring = scoring
+        self.inner_progress = inner_progress
 
     @_fit_context(
         # SequentialFeatureSelector.estimator is not validated yet
@@ -199,7 +201,7 @@ class StepwiseSelect(SequentialFeatureSelector):
 
         old_score = -np.inf
         is_auto_select = self.tol is not None and self.n_features_to_select == "auto"
-        for _ in range(n_iterations):
+        for _ in tqdm(range(n_iterations), leave=True, disable=not self.inner_progress):
             new_feature_idx, new_score, new_info = self._get_best_new_feature_score(
                 cloned_estimator, X, y, cv, current_mask
             )

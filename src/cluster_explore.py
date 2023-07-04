@@ -352,6 +352,7 @@ def stepup_feature_select(
     model: RegressionModel,
     scoring: RegressionMetric = RegressionMetric.ExplainedVariance,
     max_n_features: int = 100,
+    inner_progress: bool = False,
 ) -> DataFrame:
     fname = (
         f"stepup_{scoring.value}_selected"
@@ -386,6 +387,7 @@ def stepup_feature_select(
                 scoring=scoring,
                 cv=5,
                 n_jobs=-1,
+                inner_progress=inner_progress,
             )
             seq.fit(features.to_numpy(), y)
             s = np.array(seq.iteration_scores)
@@ -432,9 +434,10 @@ def stepup_feature_select(
 if __name__ == "__main__":
     scores = stepup_feature_select(
         regex="CMC",
-        model=RegressionModel.Linear,
-        scoring=RegressionMetric.MeanAbsoluteError,
-        max_n_features=5,
+        model=RegressionModel.SVR,
+        scoring=RegressionMetric.ExplainedVariance,
+        max_n_features=100,
+        inner_progress=True,
     )
     print(scores)
 
