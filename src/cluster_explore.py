@@ -455,8 +455,8 @@ def stepup_feature_select(
 if __name__ == "__main__":
     scores = stepup_feature_select(
         regex="CMC",
-        model=RegressionModel.Linear,
-        scoring=RegressionMetric.ExplainedVariance,
+        model=RegressionModel.Ridge,
+        scoring=RegressionMetric.MeanAbsoluteError,
         max_n_features=100,
         inner_progress=False,
         holdout=0.25,

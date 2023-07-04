@@ -15,7 +15,7 @@ from numpy import ndarray
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.linear_model import LinearRegression as Linear
+from sklearn.linear_model import Ridge
 from sklearn.neural_network import MLPRegressor as MLP
 from sklearn.svm import SVR
 
@@ -192,16 +192,18 @@ class RegressionModel(Enum):
     SVR = "svr"
     Dummy = "dummy"
     MLP = "mlp"
+    Ridge = "ridge"
 
     def get(self, params: Mapping | None = None) -> Regressor:
         if params is None:
             params = dict()
         return {
             RegressionModel.LightGBM: LGB(**params),
-            RegressionModel.Linear: Linear(**params),
+            RegressionModel.Linear: LR(**params),
             RegressionModel.SVR: SVR(**params),
             RegressionModel.Dummy: Dummy(strategy="mean"),
             RegressionModel.MLP: MLP(**params),
+            RegressionModel.Ridge: Ridge(**params),
         }[self]
 
 
