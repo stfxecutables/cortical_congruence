@@ -21,7 +21,7 @@ from joblib import Parallel, delayed
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, train_test_split
 from tqdm import tqdm
 
 from src.constants import TABLES
@@ -353,10 +353,12 @@ def stepup_feature_select(
     scoring: RegressionMetric = RegressionMetric.ExplainedVariance,
     max_n_features: int = 100,
     inner_progress: bool = False,
+    holdout: float | None = None,
 ) -> DataFrame:
+    h = f"_holdout={holdout}" if holdout is not None else ""
     fname = (
         f"stepup_{scoring.value}_selected"
-        f"_{model.value}_{regex}_n={max_n_features}.parquet"
+        f"_{model.value}_{regex}_n={max_n_features}{h}.parquet"
     )
     scores_out = TABLES / fname
     if scores_out.exists():
@@ -367,6 +369,11 @@ def stepup_feature_select(
     df = load_HCP_complete(
         focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
     )
+    if holdout is not None:
+        df, df_test = train_test_split(df, test_size=holdout)
+    else:
+        df_test = df
+
     all_scores = []
     count = 0
     # pbar_outer = tqdm(["CMC", "FS", "FS|CMC"], leave=True)
@@ -378,6 +385,7 @@ def stepup_feature_select(
         cols = df.filter(regex="TARGET").columns.to_list()
         pbar = tqdm(cols, leave=True)
         for target in pbar:
+            X = features.to_numpy()
             y = df[target]
             seq = StepwiseSelect(
                 n_features_to_select=max_n_features,
@@ -389,7 +397,7 @@ def stepup_feature_select(
                 n_jobs=-1,
                 inner_progress=inner_progress,
             )
-            seq.fit(features.to_numpy(), y)
+            seq.fit(X, y)
             s = np.array(seq.iteration_scores)
             best = np.max(seq.iteration_scores)
             if scoring in RegressionMetric.inverted():
@@ -400,6 +408,18 @@ def stepup_feature_select(
             info = info.mean()
             for reg in RegressionMetric.inverted():
                 info[reg.value] = -info[reg.value]
+            if holdout is not None:
+                idx = seq.iteration_features
+                X_test = df_test.filter(regex=feature_regex).iloc[:, idx].to_numpy()
+                y_test = df_test[target]
+                estimator = model.get()
+                estimator.fit(features.iloc[:, idx].to_numpy(), y)
+                y_pred = estimator.predict(X_test)
+                holdout_info = {
+                    f"test_{reg.value}": reg(y_test, y_pred) for reg in RegressionMetric
+                }
+            else:
+                holdout_info = {}
             all_scores.append(
                 DataFrame(
                     {
@@ -409,6 +429,7 @@ def stepup_feature_select(
                         "scorer": scoring.value,
                         "best_score": best,
                         **info.to_dict(),
+                        **holdout_info,
                         "n_best": n_best,
                         "features": str(seq.iteration_features),
                     },
@@ -434,10 +455,11 @@ def stepup_feature_select(
 if __name__ == "__main__":
     scores = stepup_feature_select(
         regex="CMC",
-        model=RegressionModel.SVR,
+        model=RegressionModel.Linear,
         scoring=RegressionMetric.ExplainedVariance,
         max_n_features=100,
-        inner_progress=True,
+        inner_progress=False,
+        holdout=0.25,
     )
     print(scores)
 

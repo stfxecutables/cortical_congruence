@@ -132,7 +132,7 @@ class StepwiseSelect(SequentialFeatureSelector):
             n_jobs=n_jobs,
         )
         self.iteration_scores: list[float] = []
-        self.iteration_features: list[Any] = []
+        self.iteration_features: list[int] = []
         self.iteration_metrics: list[DataFrame] = []
         self.scoring = scoring
         self.inner_progress = inner_progress
