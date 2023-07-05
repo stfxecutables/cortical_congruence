@@ -14,6 +14,7 @@ from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
+from sklearn.linear_model import Lasso
 from sklearn.linear_model import LinearRegression as LR
 from sklearn.linear_model import Ridge
 from sklearn.neural_network import MLPRegressor as MLP
@@ -193,18 +194,20 @@ class RegressionModel(Enum):
     Dummy = "dummy"
     MLP = "mlp"
     Ridge = "ridge"
+    Lasso = "lasso"
 
     def get(self, params: Mapping | None = None) -> Regressor:
         if params is None:
             params = dict()
         return {
-            RegressionModel.LightGBM: LGB(**params),
-            RegressionModel.Linear: LR(**params),
-            RegressionModel.SVR: SVR(**params),
-            RegressionModel.Dummy: Dummy(strategy="mean"),
-            RegressionModel.MLP: MLP(**params),
-            RegressionModel.Ridge: Ridge(alpha=10, **params),
-        }[self]
+            RegressionModel.LightGBM: lambda: LGB(**params),
+            RegressionModel.Linear: lambda: LR(**params),
+            RegressionModel.SVR: lambda: SVR(**params),
+            RegressionModel.Dummy: lambda: Dummy(strategy="mean"),
+            RegressionModel.MLP: lambda: MLP(**params),
+            RegressionModel.Ridge: lambda: Ridge(**params),
+            RegressionModel.Lasso: lambda: Lasso(**params),
+        }[self]()
 
 
 class RegressionMetric(Enum):
