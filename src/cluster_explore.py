@@ -13,7 +13,7 @@ from argparse import Namespace
 from math import ceil
 from pathlib import Path
 from random import shuffle
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 import pandas as pd
@@ -354,6 +354,7 @@ def stepup_feature_select(
     max_n_features: int = 100,
     inner_progress: bool = False,
     holdout: float | None = None,
+    params: Mapping | None = None,
 ) -> DataFrame:
     h = f"_holdout={holdout}" if holdout is not None else ""
     fname = (
@@ -364,6 +365,8 @@ def stepup_feature_select(
     if scores_out.exists():
         return pd.read_parquet(scores_out)
 
+    if params is None:
+        params = dict()
     reduce_cmc = False
     reduce_targets = True
     df = load_HCP_complete(
@@ -390,7 +393,7 @@ def stepup_feature_select(
             seq = StepwiseSelect(
                 n_features_to_select=max_n_features,
                 tol=1e-5,
-                estimator=model.get(),
+                estimator=model.get(params),
                 direction="forward",
                 scoring=scoring,
                 cv=5,
@@ -412,7 +415,7 @@ def stepup_feature_select(
                 idx = seq.iteration_features
                 X_test = df_test.filter(regex=feature_regex).iloc[:, idx].to_numpy()
                 y_test = df_test[target]
-                estimator = model.get()
+                estimator = model.get(params)
                 estimator.fit(features.iloc[:, idx].to_numpy(), y)
                 y_pred = estimator.predict(X_test)
                 holdout_info = {
@@ -455,13 +458,14 @@ def stepup_feature_select(
 if __name__ == "__main__":
     scores = stepup_feature_select(
         regex="CMC",
-        model=RegressionModel.Ridge,
+        model=RegressionModel.Lasso,
         scoring=RegressionMetric.MeanAbsoluteError,
-        max_n_features=100,
+        max_n_features=20,
         inner_progress=False,
         holdout=0.25,
+        params=dict(alpha=10.0),
     )
-    print(scores)
+    print(scores.drop(columns=["features"]))
 
     sys.exit()
     reduce_cmc = False
