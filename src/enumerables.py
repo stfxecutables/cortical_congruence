@@ -203,7 +203,7 @@ class RegressionModel(Enum):
             RegressionModel.SVR: SVR(**params),
             RegressionModel.Dummy: Dummy(strategy="mean"),
             RegressionModel.MLP: MLP(**params),
-            RegressionModel.Ridge: Ridge(**params),
+            RegressionModel.Ridge: Ridge(alpha=10, **params),
         }[self]
 
 
