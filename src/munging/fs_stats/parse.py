@@ -12,34 +12,12 @@ import sys
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Callable, cast
 
-import numpy as np
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from pandas.errors import ParserError
-from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_II_ENCODING,
-    ALL_STATSFILES,
-    CACHED_RESULTS,
-    DATA,
-    HCP_FEATURE_INFO,
-    MEMORY,
-    load_abide_i_pheno,
-    load_abide_ii_pheno,
-    load_adhd200_pheno,
-)
-from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
-from src.munging.clustering import get_cluster_corrs, reduce_CMC_clusters
-from src.munging.fs_stats.tabularize import (
-    add_bilateral_stats,
-    compute_cmcs,
-    to_wide_subject_table,
-)
-from src.munging.hcp import cleanup_HCP_phenotypic, reduce_HCP_clusters
+from src.constants import ABIDE_II_ENCODING, DATA
 
 
 @dataclass
@@ -343,170 +321,28 @@ def to_frame(stat: Path) -> DataFrame:
     return FreesurferStats.from_statsfile(stat).to_subject_table()
 
 
-def reformat_HPC(df: DataFrame) -> DataFrame:
-    path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
-    df = pd.read_csv(path)
-    df.rename(
-        columns={"Subject": "sid", "Gender": "sex", "Release": "release"}, inplace=True
-    )
-    df.rename(columns=str.lower, inplace=True)
-    df.rename(columns=lambda s: s.replace("fs_r_", "rh-"), inplace=True)
-    df.rename(columns=lambda s: s.replace("fs_l_", "lh-"), inplace=True)
-    drop_reg = "curv|foldind|thckstd|numvert|_range|_min|_max|_std|intens_mean|_vox"
-    keep_reg = "sid|gender|_grayvol|_area|_thck"
-    df = df.filter(regex=keep_reg).copy()
-    df["sid"] = df["sid"].astype(str)
-    df["sname"] = df["sid"].astype(str)
-    df["parent"] = str(path.parent)
-    df["fname"] = path.name
-    meta_cols = ["sid", "sname", "parent", "fname"]
-    cols = list(set(df.columns).difference(meta_cols))
-    df = df.loc[:, meta_cols + cols].copy()
-    df = df.melt(id_vars=meta_cols, var_name="metric").sort_values(by=["sid", "metric"])
-
-    vols = (
-        df[df["metric"].str.contains("grayvol")]
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    areas = (
-        df[df["metric"].str.contains("area")]
-        .copy()
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    thick = (
-        df[df["metric"].str.contains("thck")]
-        .copy()
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    vols.loc[:, "StructName"] = vols["metric"].str.replace("_grayvol", "")
-    areas.loc[:, "StructName"] = areas["metric"].str.replace("_area", "")
-    thick.loc[:, "StructName"] = thick["metric"].str.replace("_thck", "")
-
-    vols.drop(columns="metric", inplace=True)
-    areas.drop(columns="metric", inplace=True)
-    thick.drop(columns="metric", inplace=True)
-
-    vols.rename(columns={"value": "GrayVol"}, inplace=True)
-    areas.rename(columns={"value": "SurfArea"}, inplace=True)
-    thick.rename(columns={"value": "ThickAvg"}, inplace=True)
-    vols["SurfArea"] = areas["SurfArea"]
-    vols["ThickAvg"] = thick["ThickAvg"]
-
-    df = vols.copy()
-    df["Struct"] = df["StructName"].str.replace("lh-", "")
-    df["Struct"] = df["Struct"].str.replace("rh-", "")
-    df["hemi"] = df["StructName"].apply(
-        lambda s: "left" if s.startswith("lh") else "right"
-    )
-    df = df.loc[
-        :, meta_cols + ["StructName", "Struct", "hemi", "GrayVol", "SurfArea", "ThickAvg"]
-    ].copy()
-    return df
-
-
-def load_HCP_CMC_table() -> DataFrame:
-    path: Path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
-    df = pd.read_csv(path)
-    df = reformat_HPC(df)
-    df["pseudoVolume"] = df["ThickAvg"] * df["SurfArea"]
-    df = add_bilateral_stats(df)
-    df = compute_cmcs(df)
-    return df
-
-
-def load_phenotypic_data(
-    dataset: FreesurferStatsDataset, pheno: PhenotypicFocus = PhenotypicFocus.Reduced
-) -> DataFrame:
-    """Get: site, dx, dx_dsm_iv, age, sex"""
-
-    source = dataset.phenotypic_file()
-    sep = "," if source.suffix == ".csv" else "\t"
-    df = pd.read_csv(source, sep=sep)
-    if dataset is FreesurferStatsDataset.HCP:
-        extra = pheno.hcp_dict_file()
-        feats = pd.read_csv(extra)
-        return cleanup_HCP_phenotypic(df, extra=feats)
-
-    abidei = load_abide_i_pheno()
-    abide2 = load_abide_ii_pheno()
-    adhd = load_adhd200_pheno()
-
-    df = pd.concat([abidei, abide2, adhd], axis=0, ignore_index=True)
-    meta = df[df["sid"].isin([int(sid)])]
-    if isinstance(meta, Series):
-        meta = meta.to_frame()
-    if len(meta) == 0:
-        raise ValueError(f"SID {sid} not found in ABIDE-I or ABIDE-II phenotypic data")
-    if len(meta) > 1:
-        raise ValueError(f"Duplicate SIDs in ABIDE-I and ABIDE-II for sid: {sid}\n{meta}")
-    return meta.drop(columns="sid")
-
-
-@MEMORY.cache
-def load_HCP_complete(
-    *,
-    focus: PhenotypicFocus = PhenotypicFocus.Reduced,
-    reduce_targets: bool,
-    reduce_cmc: bool,
-) -> DataFrame:
-    df = load_HCP_CMC_table()
-    df = to_wide_subject_table(df)
-    pheno = load_phenotypic_data(FreesurferStatsDataset.HCP, focus)
-    shared = list(
-        set(df.filter(regex="FS").columns).intersection(pheno.filter(regex="FS").columns)
-    )
-    df = pd.concat([df, pheno.drop(columns=shared)], axis=1)
-    df.rename(columns=lambda col: col.replace("FS__PVOL", "CMC__pvol"), inplace=True)
-    if reduce_targets:
-        if focus is not PhenotypicFocus.All:
-            raise NotImplementedError("Target reduction implemented only for full data")
-        targs = df.filter(regex="TARGET__")
-        cols = targs.columns
-        targs = targs.rename(columns=lambda s: s.replace("TARGET__", ""))
-        corrs = targs.corr()  # most correlations differ at most by 0.1 with spearman
-        clusters = get_cluster_corrs(corrs)
-        targs_reduced = reduce_HCP_clusters(data=targs, clusters=clusters)
-        targs_reduced.rename(columns=lambda s: f"TARGET__{s}", inplace=True)
-        others = df.drop(columns=cols, errors="ignore")
-        df = pd.concat([others, targs_reduced], axis=1)
-    if reduce_cmc:
-        cmcs = df.filter(regex="CMC__")
-        cols = cmcs.columns
-        cmcs = cmcs.rename(columns=lambda s: s.replace("CMC__", ""))
-        corrs = cmcs.corr()
-        clusters = get_cluster_corrs(corrs, min_cluster_size=3, epsilon=0.2)
-        cmc_reduced = reduce_CMC_clusters(data=cmcs, clusters=clusters)
-        others = df.drop(columns=cols)
-        cmc_reduced.rename(columns=lambda s: f"CMC__{s}", inplace=True)
-        df = pd.concat([others, cmc_reduced], axis=1)
-
-    return df
-
-
 if __name__ == "__main__":
+    ...
     # pd.options.display.max_rows = 500
     # load_HCP_complete.clear()
-    df = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=True
-    )
-    dfr = df.filter(regex="CMC|TARGET|DEMO")
-    corrs = (
-        dfr.corr()
-        .stack()
-        .reset_index()
-        .rename(columns={"level_0": "x", "level_1": "y", 0: "r"})
-    )
-    corrs["abs"] = corrs["r"].abs()
-    corrs = corrs.sort_values(by="abs", ascending=False).drop(columns="abs")
-    corrs = corrs[corrs["r"] < 1.0]
-    cmc_corrs = corrs[
-        (corrs.x.str.contains("CMC") & corrs.y.str.contains("TARGET"))
-        | (corrs.x.str.contains("TARGET") & corrs.y.str.contains("CMC"))
-    ]
-    print(df)
+    # df = load_HCP_complete(
+    #     focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=True
+    # )
+    # dfr = df.filter(regex="CMC|TARGET|DEMO")
+    # corrs = (
+    #     dfr.corr()
+    #     .stack()
+    #     .reset_index()
+    #     .rename(columns={"level_0": "x", "level_1": "y", 0: "r"})
+    # )
+    # corrs["abs"] = corrs["r"].abs()
+    # corrs = corrs.sort_values(by="abs", ascending=False).drop(columns="abs")
+    # corrs = corrs[corrs["r"] < 1.0]
+    # cmc_corrs = corrs[
+    #     (corrs.x.str.contains("CMC") & corrs.y.str.contains("TARGET"))
+    #     | (corrs.x.str.contains("TARGET") & corrs.y.str.contains("CMC"))
+    # ]
+    # print(df)
 
     # for dataset in [
     #     FreesurferStatsDataset.ABIDE_I,

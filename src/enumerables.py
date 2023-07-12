@@ -8,7 +8,7 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 from enum import Enum
-from typing import Callable, Mapping, Union
+from typing import Any, Callable, Mapping, Union
 
 from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
@@ -38,6 +38,33 @@ from src.metrics import (
 
 Regressor = Union[LGB, SVR, LR, Dummy]
 Metric = Callable[[ndarray, ndarray], float]
+
+
+class ColumnTags(Enum):
+    Feature = "FEAT"
+    Target = "TARGET"
+    Demographics = "DEMO"
+    Regression = "REG"
+    Classification = "CLS"
+    FreeSurfer = "FS"
+    Reduced = "REDUCED"
+    Constructed = "CONSTR"
+
+    @staticmethod
+    def combine(tags: list[ColumnTags]) -> str:
+        if ColumnTags.Target in tags:
+            if ColumnTags.Feature in tags:
+                raise ValueError("Cannot tag column as both 'Feature' and 'Target'")
+            if ColumnTags.Demographics in tags:
+                raise ValueError("Cannot tag column as both 'Demographic' and 'Target'")
+            if ColumnTags.FreeSurfer in tags:
+                raise ValueError("Cannot tag column as both 'FreeSurfer' and 'Target'")
+
+        combined = []
+        for tag in ColumnTags:
+            if tag in tags:
+                combined.append(tag.value)
+        return "__".join(combined)
 
 
 class ROISource(Enum):
@@ -79,6 +106,33 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.QTAB: root / "phenotypic_data.tsv",
             FreesurferStatsDataset.QTIM: root / "participants.tsv",
         }[self]
+
+    def load_pheno(self, focus: Any | None = None) -> DataFrame:
+        """Groteqsque hackery to have a clean interface from the enum..."""
+        from src.munging.abide import (
+            load_abide_i_pheno,
+            load_abide_ii_pheno,
+            load_adhd200_pheno,
+        )
+        from src.munging.hcp import PhenotypicFocus, load_hcp_phenotypic
+
+        if focus is None:
+            focus = PhenotypicFocus.All
+
+        assert isinstance(focus, PhenotypicFocus)
+
+        def not_implemented() -> None:
+            raise NotImplementedError()
+
+        return {
+            FreesurferStatsDataset.ABIDE_I: load_abide_i_pheno,
+            FreesurferStatsDataset.ABIDE_II: load_abide_ii_pheno,
+            FreesurferStatsDataset.ADHD_200: load_adhd200_pheno,
+            FreesurferStatsDataset.HBN: lambda: not_implemented(),
+            FreesurferStatsDataset.HCP: lambda: load_hcp_phenotypic(focus),
+            FreesurferStatsDataset.QTAB: lambda: not_implemented(),
+            FreesurferStatsDataset.QTIM: lambda: not_implemented(),
+        }[self]()
 
     def data_dictionary(self) -> Path:
         root = self.root() / "phenotypic_data"
@@ -177,30 +231,6 @@ class FreesurferStatsDataset(Enum):
         raise NotImplementedError()
 
 
-class PhenotypicFocus(Enum):
-    All = "all"
-    Reduced = "reduced"
-    Focused = "focused"
-
-    def hcp_dict_file(self) -> Path:
-        root = FreesurferStatsDataset.HCP.phenotypic_file().parent
-        files = {
-            PhenotypicFocus.All: root / "all_features.csv",
-            PhenotypicFocus.Reduced: root / "features_of_interest.csv",
-            PhenotypicFocus.Focused: root / "priority_features_of_interest.csv",
-        }
-        if self not in files:
-            raise ValueError(f"Invalid {self.__class__.__name__}: {self}")
-        return files[self]
-
-    def desc(self) -> str:
-        return {
-            PhenotypicFocus.All: "all",
-            PhenotypicFocus.Reduced: "plausible",
-            PhenotypicFocus.Focused: "most sound",
-        }[self]
-
-
 class RegressionModel(Enum):
     LightGBM = "lgb"
     Linear = "linear"
@@ -266,3 +296,11 @@ class RegressionMetric(Enum):
             RegressionMetric.RSquared: r2,
         }[self]
         return metric(y_true, y_pred)
+
+
+if __name__ == "__main__":
+    print(FreesurferStatsDataset.ABIDE_I.load_pheno())
+    print(FreesurferStatsDataset.ABIDE_II.load_pheno())
+    print(FreesurferStatsDataset.ADHD_200.load_pheno())
+    print(FreesurferStatsDataset.HCP.load_pheno())
+    print(FreesurferStatsDataset.HBN.load_pheno())

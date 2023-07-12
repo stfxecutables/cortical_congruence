@@ -9,30 +9,17 @@ sys.path.append(str(ROOT))  # isort: skip
 
 import re
 import sys
-from dataclasses import dataclass
-from io import StringIO
 from pathlib import Path
-from typing import Callable, cast
+from typing import Callable
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame, Series
-from pandas.errors import ParserError
-from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_II_ENCODING,
-    ALL_STATSFILES,
-    CACHED_RESULTS,
-    DATA,
-    HCP_FEATURE_INFO,
-    MEMORY,
-)
-from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
-from src.munging.clustering import get_cluster_corrs, reduce_CMC_clusters
+from src.constants import ALL_STATSFILES, CACHED_RESULTS
+from src.enumerables import FreesurferStatsDataset
 from src.munging.fs_stats.parse import FreesurferStats
-from src.munging.hcp import cleanup_HCP_phenotypic, reduce_HCP_clusters
 
 
 def to_frame(stat: Path) -> DataFrame:
