@@ -10,6 +10,9 @@ data/**/*.yml
 data/**/*.tsv
 data/**/*.nii.gz
 
+drafts/methods/methods*.html
+drafts/methods/methods*.zip
+
 *.csv
 *.gz
 *.json
