@@ -7,33 +7,17 @@ ROOT = Path(__file__).resolve().parent.parent.parent  # isort: skip
 sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
-import re
 import sys
-from dataclasses import dataclass
 from functools import lru_cache
-from io import StringIO
 from pathlib import Path
-from typing import Callable, cast
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame, Series
-from pandas.errors import ParserError
+from pandas import DataFrame
 from sklearn.decomposition import FactorAnalysis as FA
-from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_II_ENCODING,
-    ALL_STATSFILES,
-    CACHED_RESULTS,
-    DATA,
-    HCP_FEATURE_INFO,
-    MEMORY,
-)
-from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
-from src.munging.clustering import get_cluster_corrs, reduce_CMC_clusters
-from src.munging.hcp import cleanup_HCP_phenotypic, reduce_HCP_clusters
+from src.constants import ABIDE_II_ENCODING
+from src.enumerables import FreesurferStatsDataset
 
 
 @lru_cache
