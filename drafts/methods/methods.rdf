@@ -1,0 +1,1031 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:z="http://www.zotero.org/namespaces/export#"
+ xmlns:bib="http://purl.org/net/biblio#"
+ xmlns:foaf="http://xmlns.com/foaf/0.1/"
+ xmlns:dcterms="http://purl.org/dc/terms/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:vcard="http://nwalsh.com/rdf/vCard#"
+ xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/"
+ xmlns:link="http://purl.org/rss/1.0/modules/link/">
+    <rdf:Description rdf:about="https://stats.stackexchange.com/q/402412">
+        <z:itemType>document</z:itemType>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>(https://stats.stackexchange.com/users/53690/richard-hardy)</foaf:surname>
+                        <foaf:givenName>Richard Hardy</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dcterms:isReferencedBy rdf:resource="#item_2464"/>
+        <dc:title>What is *common variance* in factor analysis and how is it estimated?</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>https://stats.stackexchange.com/q/402412</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dc:description>tex.eprint: https://stats.stackexchange.com/q/402412
+tex.howpublished: Cross Validated
+Citation Key: CommonVarianceStackExchange</dc:description>
+    </rdf:Description>
+    <bib:Memo rdf:about="#item_2464">
+        <rdf:value>URL:https://stats.stackexchange.com/q/402412 (version: 2020-06-11)</rdf:value>
+    </bib:Memo>
+    <bib:Book rdf:about="urn:isbn:978-0-429-13209-4">
+        <z:itemType>book</z:itemType>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>New York</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Chapman and Hall/CRC</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Mulaik</foaf:surname>
+                        <foaf:givenName>Stanley A.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dc:title>Foundations of Factor Analysis</dc:title>
+        <dcterms:abstract>Providing a practical, thorough understanding of how factor analysis works, Foundations of Factor Analysis, Second Edition discusses the assumptions underlying the equations and procedures of this method. It also explains the options in commercial computer programs for performing factor analysis and structural equation modeling. This long-awaited e</dcterms:abstract>
+        <dc:date>2013-10-02</dc:date>
+        <dc:description>DOI: 10.1201/b15851</dc:description>
+        <dc:identifier>ISBN 978-0-429-13209-4</dc:identifier>
+        <prism:edition>2</prism:edition>
+        <z:numPages>548</z:numPages>
+    </bib:Book>
+    <bib:Book rdf:about="#item_2466">
+        <z:itemType>book</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Series>
+               <dc:title>Introduction to factor analysis</dc:title>
+            </bib:Series>
+        </dcterms:isPartOf>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>Oxford, England</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Van Nostrand</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Fruchter</foaf:surname>
+                        <foaf:givenName>Benjamin</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2467"/>
+        <dc:title>Introduction to factor analysis</dc:title>
+        <dcterms:abstract>Requiring a background of only high school mathematics, this textbook provides an elementary presentation of the method of factor analysis. The first four chapters introduce fundamental concepts including matrix algebra and geometry. Factoring by diagonal, centroid, multiple group, and principal-axes methods are explained. Rotation on orthogonal and oblique axes is discussed. Two chapters deal with the interpretation of factors and illustrative uses of the methods. 46-page bibliography. (PsycINFO Database Record (c) 2016 APA, all rights reserved)</dcterms:abstract>
+        <dc:date>1954</dc:date>
+        <z:libraryCatalog>APA PsycNet</z:libraryCatalog>
+        <dc:description>Pages: xii, 280</dc:description>
+        <z:numPages>xii, 280</z:numPages>
+    </bib:Book>
+    <z:Attachment rdf:about="#item_2467">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Snapshot</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://psycnet.apa.org/record/1954-08313-000</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 11:29:54</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <bib:Book rdf:about="urn:isbn:978-1-4684-2264-1%20978-1-4684-2262-7">
+        <z:itemType>book</z:itemType>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>Boston, MA</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Springer US</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Cattell</foaf:surname>
+                        <foaf:givenName>Raymond B.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2469"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>algebra</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>cluster analysis</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>evaluation</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>media</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>physiology</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Power</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>regression analysis</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>sociology</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>statistics</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Trend</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Variation</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>workbook</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>The Scientific Use of Factor Analysis in Behavioral and Life Sciences</dc:title>
+        <dc:date>1978</dc:date>
+        <z:language>en</z:language>
+        <z:libraryCatalog>DOI.org (Crossref)</z:libraryCatalog>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>http://link.springer.com/10.1007/978-1-4684-2262-7</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 11:30:39</dcterms:dateSubmitted>
+        <dc:description>DOI: 10.1007/978-1-4684-2262-7</dc:description>
+        <dc:identifier>ISBN 978-1-4684-2264-1 978-1-4684-2262-7</dc:identifier>
+    </bib:Book>
+    <z:Attachment rdf:about="#item_2469">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Full Text PDF</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://link.springer.com/content/pdf/10.1007%2F978-1-4684-2262-7.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 11:30:49</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <bib:Book rdf:about="urn:isbn:978-0-8264-8000-2">
+        <z:itemType>book</z:itemType>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>London ; New York</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Bloomsbury Academic</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Child</foaf:surname>
+                        <foaf:givenName>Dennis</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2473"/>
+        <dc:title>The Essentials of Factor Analysis</dc:title>
+        <dcterms:abstract>Factor analysis is an increasingly important tool for understanding and working with quantitative data. It is used in education (for analysing exam results), psychology, medical science, economics and other scientific fields, and allows one to work with statistics from an area where many variables are involved. Even those who are not called on to make use of the method themsleves will require some knowledge of it in order to understand books and papers in which it appears. The maths involved in the technique can be very complex and offputting, and many of those brought into contact with it are desperate for a simple introduction. This book fills that need, and already has a reputation for doing so. This new edition incorporates fundamental help in the use of factor and cluster analysis computer programs within the statistical package SPSS. There are also links to an online data bank to enable students to carry out some analyses of their own as they read. This new material converts the present text into a user-friendly 'hands-on' text.</dcterms:abstract>
+        <dc:date>2006-06-23</dc:date>
+        <z:language>English</z:language>
+        <z:libraryCatalog>Amazon</z:libraryCatalog>
+        <dc:identifier>ISBN 978-0-8264-8000-2</dc:identifier>
+        <prism:edition>3rd edition</prism:edition>
+        <z:numPages>192</z:numPages>
+    </bib:Book>
+    <z:Attachment rdf:about="#item_2473">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Amazon.com Link</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.amazon.ca/Essentials-Factor-Analysis-Dennis-Child/dp/0826480004</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 11:34:52</dcterms:dateSubmitted>
+        <z:linkMode>3</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <bib:Book rdf:about="urn:isbn:978-0-203-78109-8">
+        <z:itemType>book</z:itemType>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>New York</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Psychology Press</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Gorsuch</foaf:surname>
+                        <foaf:givenName>Richard L.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dc:title>Factor Analysis</dc:title>
+        <dcterms:abstract>Comprehensive and comprehensible, this classic covers the basic and advanced topics essential for using factor analysis as a scientific tool in psychology, education, sociology, and related areas. Emphasizing the usefulness of the techniques, it presents sufficient mathematical background for understanding and sufficient discussion of applications for effective use. This includes not only theory but also the empirical evaluations of the importance of mathematical distinctions for applied scientific analysis.</dcterms:abstract>
+        <dc:date>1983-10-31</dc:date>
+        <dc:description>DOI: 10.4324/9780203781098</dc:description>
+        <dc:identifier>ISBN 978-0-203-78109-8</dc:identifier>
+        <prism:edition>2</prism:edition>
+        <z:numPages>448</z:numPages>
+    </bib:Book>
+    <bib:Book rdf:about="urn:isbn:978-1-315-80251-0">
+        <z:itemType>book</z:itemType>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>New York</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Psychology Press</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>McDonald</foaf:surname>
+                        <foaf:givenName>Roderick P.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dc:title>Factor Analysis and Related Methods</dc:title>
+        <dcterms:abstract>Factor Analysis is a genetic term for a somewhat vaguely delimited set of techniques for data processing, mainly applicable to the social and biological sciences. These techniques have been developed for the analysis of mutual relationships among a number of measurements made on a number of measurable entities. In the broad sense, factor analysis comprises a number of statistical models which yield testable hypotheses -- hypotheses that may confirm or disconfirm in terms of the usual statistical procedures for making tests of significance. It also comprises a number of simplifying procedures for the approximate description of data, which do not in any sense constitute disconfirmable hypotheses, except in the loose sense that they supply approximations to the data. In literature, the two types of analysis have often been confused.   This book clarifies the concepts of factor analysis for students or professionals in the social sciences who wish to know the technique, rather than the mathematics, of factor theory. Mathematical concepts are described to have an intuitive meaning for the non-mathematical reader. An account of the elements of matrix algebra, in the appendix, and the (mathematical) notes following each chapter will help the reader who wishes to receive a more advanced treatment of the subject. Factor Analysis and Related Methods should prove a useful text for graduate and advanced undergraduate students in economics, the behavioral sciences, and education. Researchers and practitioners in those fields will also find this book a handy reference.</dcterms:abstract>
+        <dc:date>2014-01-30</dc:date>
+        <dc:description>DOI: 10.4324/9781315802510</dc:description>
+        <dc:identifier>ISBN 978-1-315-80251-0</dc:identifier>
+        <z:numPages>272</z:numPages>
+    </bib:Book>
+    <bib:Article rdf:about="#item_2476">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:1939-1463"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Fabrigar</foaf:surname>
+                        <foaf:givenName>Leandre R.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Wegener</foaf:surname>
+                        <foaf:givenName>Duane T.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>MacCallum</foaf:surname>
+                        <foaf:givenName>Robert C.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Strahan</foaf:surname>
+                        <foaf:givenName>Erin J.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2477"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Evaluation</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Experimentation</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Exploratory Factor Analysis</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Factor Analysis</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Psychology</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Scientific Communication</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Evaluating the use of exploratory factor analysis in psychological research</dc:title>
+        <dcterms:abstract>Despite the widespread use of exploratory factor analysis in psychological research, researchers often make questionable decisions when conducting these analyses. This article reviews the major design and analytical decisions that must be made when conducting a factor analysis and notes that each of these decisions has important consequences for the obtained results. Recommendations that have been made in the methodological literature are discussed. Analyses of 3 existing empirical data sets are used to illustrate how questionable decisions in conducting factor analyses can yield problematic results. The article presents a survey of 2 prominent journals that suggests that researchers routinely conduct analyses using such questionable methods. The implications of these practices for psychological research are discussed, and the reasons for current practices are reviewed. (PsycInfo Database Record (c) 2022 APA, all rights reserved)</dcterms:abstract>
+        <dc:date>1999</dc:date>
+        <z:libraryCatalog>APA PsycNet</z:libraryCatalog>
+        <dc:description>Place: US
+Publisher: American Psychological Association</dc:description>
+        <bib:pages>272-299</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:1939-1463">
+        <prism:volume>4</prism:volume>
+        <dc:title>Psychological Methods</dc:title>
+        <dc:identifier>DOI 10.1037/1082-989X.4.3.272</dc:identifier>
+        <prism:number>3</prism:number>
+        <dc:identifier>ISSN 1939-1463</dc:identifier>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2477">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Snapshot</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://psycnet.apa.org/record/1999-03908-004</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 11:40:25</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <rdf:Description rdf:about="https://stats.stackexchange.com/q/123136">
+        <z:itemType>document</z:itemType>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>(https://stats.stackexchange.com/users/28666/amoeba)</foaf:surname>
+                        <foaf:givenName>amoeba</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dcterms:isReferencedBy rdf:resource="#item_2479"/>
+        <dc:title>Is there any good reason to use PCA instead of EFA? Also, can PCA be a substitute for factor analysis?</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>https://stats.stackexchange.com/q/123136</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dc:description>Citation Key: 123136
+tex.eprint: https://stats.stackexchange.com/q/123136
+tex.howpublished: Cross Validated</dc:description>
+    </rdf:Description>
+    <bib:Memo rdf:about="#item_2479">
+        <rdf:value>URL:https://stats.stackexchange.com/q/123136 (version: 2017-04-13)</rdf:value>
+    </bib:Memo>
+    <bib:Article rdf:about="#item_2480">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:1873-3549"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>McCrae</foaf:surname>
+                        <foaf:givenName>Robert R.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Costa Jr.</foaf:surname>
+                        <foaf:givenName>Paul T.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2481"/>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Factor Structure</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Inventories</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Personality Measures</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Test Reliability</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Test Validity</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>A contemplated revision of the NEO Five-Factor Inventory</dc:title>
+        <dcterms:abstract>Previous item factor analyses and readability analyses suggested that 14 of the 60 items in the NEO Five- Factor Inventory might usefully be replaced. New analyses in high school (N = 1959) and adult (N = 1492) samples led to the selection of new items from the remaining pool of Revised NEO Personality Inventory items. The resulting scales showed modest improvements in reliability and factor structure, and equivalent validity. These new scales should be appropriate for most respondents age 14 and up. However, continued use of the current instrument is also reasonable for most applications. (PsycInfo Database Record (c) 2020 APA, all rights reserved)</dcterms:abstract>
+        <dc:date>2004</dc:date>
+        <z:libraryCatalog>APA PsycNet</z:libraryCatalog>
+        <dc:description>Place: Netherlands
+Publisher: Elsevier Science</dc:description>
+        <bib:pages>587-596</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:1873-3549">
+        <prism:volume>36</prism:volume>
+        <dc:title>Personality and Individual Differences</dc:title>
+        <dc:identifier>DOI 10.1016/S0191-8869(03)00118-1</dc:identifier>
+        <prism:number>3</prism:number>
+        <dc:identifier>ISSN 1873-3549</dc:identifier>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2481">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Snapshot</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://psycnet.apa.org/record/2004-10936-008</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 16:26:29</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="#item_2482">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:0165-1781"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Buysse</foaf:surname>
+                        <foaf:givenName>D. J.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Reynolds</foaf:surname>
+                        <foaf:givenName>C. F.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Monk</foaf:surname>
+                        <foaf:givenName>T. H.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Berman</foaf:surname>
+                        <foaf:givenName>S. R.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Kupfer</foaf:surname>
+                        <foaf:givenName>D. J.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2483"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Adult</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Aged</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Aged, 80 and over</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Depression</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Female</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Humans</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Male</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Middle Aged</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Psychological Tests</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Psychometrics</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Sleep Initiation and Maintenance Disorders</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Sleep Stages</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>The Pittsburgh Sleep Quality Index: a new instrument for psychiatric practice and research</dc:title>
+        <dcterms:abstract>Despite the prevalence of sleep complaints among psychiatric patients, few questionnaires have been specifically designed to measure sleep quality in clinical populations. The Pittsburgh Sleep Quality Index (PSQI) is a self-rated questionnaire which assesses sleep quality and disturbances over a 1-month time interval. Nineteen individual items generate seven &quot;component&quot; scores: subjective sleep quality, sleep latency, sleep duration, habitual sleep efficiency, sleep disturbances, use of sleeping medication, and daytime dysfunction. The sum of scores for these seven components yields one global score. Clinical and clinimetric properties of the PSQI were assessed over an 18-month period with &quot;good&quot; sleepers (healthy subjects, n = 52) and &quot;poor&quot; sleepers (depressed patients, n = 54; sleep-disorder patients, n = 62). Acceptable measures of internal homogeneity, consistency (test-retest reliability), and validity were obtained. A global PSQI score greater than 5 yielded a diagnostic sensitivity of 89.6% and specificity of 86.5% (kappa = 0.75, p less than 0.001) in distinguishing good and poor sleepers. The clinimetric and clinical properties of the PSQI suggest its utility both in psychiatric clinical practice and research activities.</dcterms:abstract>
+        <dc:date>1989-05</dc:date>
+        <z:language>eng</z:language>
+        <z:shortTitle>The Pittsburgh Sleep Quality Index</z:shortTitle>
+        <z:libraryCatalog>PubMed</z:libraryCatalog>
+        <dc:description>PMID: 2748771</dc:description>
+        <bib:pages>193-213</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:0165-1781">
+        <prism:volume>28</prism:volume>
+        <dc:title>Psychiatry Research</dc:title>
+        <dc:identifier>DOI 10.1016/0165-1781(89)90047-4</dc:identifier>
+        <prism:number>2</prism:number>
+        <dcterms:alternative>Psychiatry Res</dcterms:alternative>
+        <dc:identifier>ISSN 0165-1781</dc:identifier>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2483">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>PubMed entry</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>http://www.ncbi.nlm.nih.gov/pubmed/2748771</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 16:29:03</dcterms:dateSubmitted>
+        <z:linkMode>3</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="https://www.cambridge.org/core/journals/judgment-and-decision-making/article/survey-of-time-preference-delay-discounting-models/521200B3C971D0AB0A2721FEFA842F24">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:1930-2975"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Doyle</foaf:surname>
+                        <foaf:givenName>John R.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2485"/>
+        <dc:title>Survey of time preference, delay discounting models</dc:title>
+        <dcterms:abstract>The paper surveys over twenty models of delay discounting (also known as temporal discounting, time preference, time discounting), that psychologists and economists have put forward to explain the way people actually trade off time and money. Using little more than the basic algebra of powers and logarithms, I show how the models are derived, what assumptions they are based upon, and how different models relate to each other. Rather than concentrate only on discount functions themselves, I show how discount functions may be manipulated to isolate rate parameters for each model. This approach, consistently applied, helps focus attention on the three main components in any discounting model: subjectively perceived money; subjectively perceived time; and how these elements are combined. We group models by the number of parameters that have to be estimated, which means our exposition follows a trajectory of increasing complexity to the models. However, as the story unfolds it becomes clear that most models fall into a smaller number of families. We also show how new models may be constructed by combining elements of different models.
+The surveyed models are: Exponential; Hyperbolic; Arithmetic; Hyperboloid (Green &amp; Myerson, Rachlin); Loewenstein and Prelec Generalized Hyperboloid; quasi-Hyperbolic (also known as β-δ discounting); Benhabib et al’s fixed cost; Benhabib et al’s Exponential / Hyperbolic / quasi-Hyperbolic; Read’s discounting fractions; Roelofsma’s exponential time; Scholten and Read’s discounting-by-intervals (DBI); Ebert and Prelec’s constant sensitivity (CS); Bleichrodt et al.’s constant absolute decreasing impatience (CADI); Bleichrodt et al.’s constant relative decreasing impatience (CRDI); Green, Myerson, and Macaux’s hyperboloid over intervals models; Killeen’s additive utility; size-sensitive additive utility; Yi, Landes, and Bickel’s memory trace models; McClure et al.’s two exponentials; and Scholten and Read’s trade-off model.
+For a convenient overview, a single “cheat sheet” table captures the notation and essential mathematics behind all but one of the models.</dcterms:abstract>
+        <dc:date>2013/03</dc:date>
+        <z:language>en</z:language>
+        <z:libraryCatalog>Cambridge University Press</z:libraryCatalog>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.cambridge.org/core/journals/judgment-and-decision-making/article/survey-of-time-preference-delay-discounting-models/521200B3C971D0AB0A2721FEFA842F24</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 16:33:36</dcterms:dateSubmitted>
+        <dc:description>Publisher: Cambridge University Press</dc:description>
+        <bib:pages>116-135</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:1930-2975">
+        <prism:volume>8</prism:volume>
+        <dc:title>Judgment and Decision Making</dc:title>
+        <dc:identifier>DOI 10.1017/S1930297500005052</dc:identifier>
+        <prism:number>2</prism:number>
+        <dc:identifier>ISSN 1930-2975</dc:identifier>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2485">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Full Text PDF</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.cambridge.org/core/services/aop-cambridge-core/content/view/521200B3C971D0AB0A2721FEFA842F24/S1930297500005052a.pdf/div-class-title-survey-of-time-preference-delay-discounting-models-div.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 16:33:37</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <rdf:Description rdf:about="urn:isbn:978-3-642-37456-2">
+        <z:itemType>conferencePaper</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Journal>
+                <dcterms:isPartOf>
+                    <bib:Series>
+                       <dc:title>Lecture Notes in Computer Science</dc:title>
+                    </bib:Series>
+                </dcterms:isPartOf>
+                <dc:identifier>ISBN 978-3-642-37456-2</dc:identifier>
+                <dc:title>Advances in Knowledge Discovery and Data Mining</dc:title>
+                <dc:identifier>DOI 10.1007/978-3-642-37456-2_14</dc:identifier>
+            </bib:Journal>
+        </dcterms:isPartOf>
+        <dc:publisher>
+            <foaf:Organization>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>Berlin, Heidelberg</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+                <foaf:name>Springer</foaf:name>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Campello</foaf:surname>
+                        <foaf:givenName>Ricardo J. G. B.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Moulavi</foaf:surname>
+                        <foaf:givenName>Davoud</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Sander</foaf:surname>
+                        <foaf:givenName>Joerg</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <bib:editors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Pei</foaf:surname>
+                        <foaf:givenName>Jian</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Tseng</foaf:surname>
+                        <foaf:givenName>Vincent S.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Cao</foaf:surname>
+                        <foaf:givenName>Longbing</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Motoda</foaf:surname>
+                        <foaf:givenName>Hiroshi</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Xu</foaf:surname>
+                        <foaf:givenName>Guandong</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:editors>
+        <link:link rdf:resource="#item_2487"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Cluster Tree</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Core Object</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Density Threshold</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Hierarchical Cluster Method</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Minimum Span Tree</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Density-Based Clustering Based on Hierarchical Density Estimates</dc:title>
+        <dcterms:abstract>We propose a theoretically and practically improved density-based, hierarchical clustering method, providing a clustering hierarchy from which a simplified tree of significant clusters can be constructed. For obtaining a “flat” partition consisting of only the most significant clusters (possibly corresponding to different density thresholds), we propose a novel cluster stability measure, formalize the problem of maximizing the overall stability of selected clusters, and formulate an algorithm that computes an optimal solution to this problem. We demonstrate that our approach outperforms the current, state-of-the-art, density-based clustering methods on a wide variety of real world data.</dcterms:abstract>
+        <dc:date>2013</dc:date>
+        <z:language>en</z:language>
+        <z:libraryCatalog>Springer Link</z:libraryCatalog>
+        <bib:pages>160-172</bib:pages>
+    </rdf:Description>
+    <z:Attachment rdf:about="#item_2487">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Full Text PDF</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://link.springer.com/content/pdf/10.1007%2F978-3-642-37456-2_14.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 17:15:55</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="https://doi.org/10.1145/2733381">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:1556-4681"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Campello</foaf:surname>
+                        <foaf:givenName>Ricardo J. G. B.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Moulavi</foaf:surname>
+                        <foaf:givenName>Davoud</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Zimek</foaf:surname>
+                        <foaf:givenName>Arthur</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Sander</foaf:surname>
+                        <foaf:givenName>Jörg</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>data visualization</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Density-based clustering</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>global/local outliers</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>hierarchical and nonhierarchical clustering</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>outlier detection</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>unsupervised and semisupervised clustering</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Hierarchical Density Estimates for Data Clustering, Visualization, and Outlier Detection</dc:title>
+        <dcterms:abstract>An integrated framework for density-based cluster analysis, outlier detection, and data visualization is introduced in this article. The main module consists of an algorithm to compute hierarchical estimates of the level sets of a density, following Hartigan’s classic model of density-contour clusters and trees. Such an algorithm generalizes and improves existing density-based clustering techniques with respect to different aspects. It provides as a result a complete clustering hierarchy composed of all possible density-based clusters following the nonparametric model adopted, for an infinite range of density thresholds. The resulting hierarchy can be easily processed so as to provide multiple ways for data visualization and exploration. It can also be further postprocessed so that: (i) a normalized score of “outlierness” can be assigned to each data object, which unifies both the global and local perspectives of outliers into a single definition; and (ii) a “flat” (i.e., nonhierarchical) clustering solution composed of clusters extracted from local cuts through the cluster tree (possibly corresponding to different density thresholds) can be obtained, either in an unsupervised or in a semisupervised way. In the unsupervised scenario, the algorithm corresponding to this postprocessing module provides a global, optimal solution to the formal problem of maximizing the overall stability of the extracted clusters. If partially labeled objects or instance-level constraints are provided by the user, the algorithm can solve the problem by considering both constraints violations/satisfactions and cluster stability criteria. An asymptotic complexity analysis, both in terms of running time and memory space, is described. Experiments are reported that involve a variety of synthetic and real datasets, including comparisons with state-of-the-art, density-based clustering and (global and local) outlier detection methods.</dcterms:abstract>
+        <dc:date>July 22, 2015</dc:date>
+        <z:libraryCatalog>ACM Digital Library</z:libraryCatalog>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>https://doi.org/10.1145/2733381</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 17:16:19</dcterms:dateSubmitted>
+        <bib:pages>5:1–5:51</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:1556-4681">
+        <prism:volume>10</prism:volume>
+        <dc:title>ACM Transactions on Knowledge Discovery from Data</dc:title>
+        <dc:identifier>DOI 10.1145/2733381</dc:identifier>
+        <prism:number>1</prism:number>
+        <dcterms:alternative>ACM Trans. Knowl. Discov. Data</dcterms:alternative>
+        <dc:identifier>ISSN 1556-4681</dc:identifier>
+    </bib:Journal>
+    <bib:Article rdf:about="http://jmlr.org/papers/v12/pedregosa11a.html">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Journal>
+                <prism:volume>12</prism:volume>
+                <dc:title>Journal of Machine Learning Research</dc:title>
+                <prism:number>85</prism:number>
+            </bib:Journal>
+        </dcterms:isPartOf>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Pedregosa</foaf:surname>
+                        <foaf:givenName>Fabian</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Varoquaux</foaf:surname>
+                        <foaf:givenName>Gaël</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Gramfort</foaf:surname>
+                        <foaf:givenName>Alexandre</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Michel</foaf:surname>
+                        <foaf:givenName>Vincent</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Thirion</foaf:surname>
+                        <foaf:givenName>Bertrand</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Grisel</foaf:surname>
+                        <foaf:givenName>Olivier</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Blondel</foaf:surname>
+                        <foaf:givenName>Mathieu</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Prettenhofer</foaf:surname>
+                        <foaf:givenName>Peter</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Weiss</foaf:surname>
+                        <foaf:givenName>Ron</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Dubourg</foaf:surname>
+                        <foaf:givenName>Vincent</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Vanderplas</foaf:surname>
+                        <foaf:givenName>Jake</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Passos</foaf:surname>
+                        <foaf:givenName>Alexandre</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Cournapeau</foaf:surname>
+                        <foaf:givenName>David</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Brucher</foaf:surname>
+                        <foaf:givenName>Matthieu</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Perrot</foaf:surname>
+                        <foaf:givenName>Matthieu</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Duchesnay</foaf:surname>
+                        <foaf:givenName>Édouard</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dc:title>Scikit-learn: Machine learning in python</dc:title>
+        <dc:date>2011</dc:date>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>http://jmlr.org/papers/v12/pedregosa11a.html</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dc:description>Citation Key: JMLR:v12:pedregosa11a</dc:description>
+        <bib:pages>2825-2830</bib:pages>
+    </bib:Article>
+    <rdf:Description rdf:about="http://arxiv.org/abs/1911.02282">
+        <z:itemType>conferencePaper</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Journal>
+                <dc:title>2020 IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems (MFI)</dc:title>
+                <dc:identifier>DOI 10.1109/MFI49285.2020.9235263</dc:identifier>
+            </bib:Journal>
+        </dcterms:isPartOf>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Malzer</foaf:surname>
+                        <foaf:givenName>Claudia</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Baum</foaf:surname>
+                        <foaf:givenName>Marcus</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <dcterms:isReferencedBy rdf:resource="#item_2491"/>
+        <link:link rdf:resource="#item_2492"/>
+        <link:link rdf:resource="#item_2493"/>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Computer Science - Databases</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:title>A Hybrid Approach To Hierarchical Density-based Cluster Selection</dc:title>
+        <dcterms:abstract>HDBSCAN is a density-based clustering algorithm that constructs a cluster hierarchy tree and then uses a specific stability measure to extract flat clusters from the tree. We show how the application of an additional threshold value can result in a combination of DBSCAN* and HDBSCAN clusters, and demonstrate potential benefits of this hybrid approach when clustering data of variable densities. In particular, our approach is useful in scenarios where we require a low minimum cluster size but want to avoid an abundance of micro-clusters in high-density regions. The method can directly be applied to HDBSCAN's tree of cluster candidates and does not require any modifications to the hierarchy itself. It can easily be integrated as an addition to existing HDBSCAN implementations.</dcterms:abstract>
+        <dc:date>2020-9-14</dc:date>
+        <z:libraryCatalog>arXiv.org</z:libraryCatalog>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>http://arxiv.org/abs/1911.02282</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 17:29:11</dcterms:dateSubmitted>
+        <dc:description>arXiv:1911.02282 [cs]</dc:description>
+        <bib:pages>223-228</bib:pages>
+    </rdf:Description>
+    <bib:Memo rdf:about="#item_2491">
+        <rdf:value>Comment: 6 pages. Conference: 2020 IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems (MFI)</rdf:value>
+    </bib:Memo>
+    <z:Attachment rdf:about="#item_2492">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>arXiv Fulltext PDF</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>https://arxiv.org/pdf/1911.02282.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 17:29:15</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <z:Attachment rdf:about="#item_2493">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>arXiv.org Snapshot</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+               <rdf:value>https://arxiv.org/abs/1911.02282</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2023-07-12 17:29:21</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+</rdf:RDF>
