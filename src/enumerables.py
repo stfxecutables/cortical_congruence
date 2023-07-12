@@ -80,6 +80,20 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.QTIM: root / "participants.tsv",
         }[self]
 
+    def data_dictionary(self) -> Path:
+        root = self.root() / "phenotypic_data"
+
+        return {
+            FreesurferStatsDataset.ABIDE_I: root / "ABIDE_I_Phenotypic_V1_0b.csv",
+            FreesurferStatsDataset.ABIDE_II: root / "ABIDEII_Composite_Phenotypic.csv",
+            FreesurferStatsDataset.ADHD_200: root
+            / "ADHD200_preprocessed_phenotypics.tsv",
+            FreesurferStatsDataset.HBN: root / "HBN_R10_Pheno.csv",
+            FreesurferStatsDataset.HCP: root / "unrestricted_behavioral.csv",
+            FreesurferStatsDataset.QTAB: root / "phenotypic_data.tsv",
+            FreesurferStatsDataset.QTIM: root / "participants.tsv",
+        }[self]
+
     def freesurfer_files(self, ses2: bool = False) -> tuple[Path, Path] | Path | None:
         root = self.root()
 

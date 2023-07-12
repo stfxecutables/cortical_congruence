@@ -58,7 +58,7 @@ from src.constants import (
     TABLES,
 )
 from src.enumerables import FreesurferStatsDataset, PhenotypicFocus, RegressionMetric
-from src.munging.fs_stats import load_HCP_complete
+from src.munging.fs_stats.parse import load_HCP_complete
 
 
 @dataclass

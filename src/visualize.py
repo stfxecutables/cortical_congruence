@@ -42,7 +42,7 @@ from typing_extensions import Literal
 
 from src.constants import CACHED_RESULTS, PLOTS, RESULTS, TABLES
 from src.enumerables import FreesurferStatsDataset, PhenotypicFocus
-from src.munging.fs_stats import load_HCP_complete, load_phenotypic_data
+from src.munging.fs_stats.parse import load_HCP_complete, load_phenotypic_data
 
 
 def best_rect(m: int) -> tuple[int, int]:

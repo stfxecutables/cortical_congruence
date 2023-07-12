@@ -46,16 +46,16 @@ from src.constants import (
     ABIDE_II_ALL_ROIS,
     ABIDE_II_ENCODING,
     ABIDE_II_EXTRA_REMOVE,
-    BASE_STATFILES,
     ADHD200,
     ADHD200_ALL_ROIS,
+    BASE_STATFILES,
     DATA,
     load_abide_i_pheno,
     load_abide_ii_pheno,
     load_adhd200_pheno,
 )
 from src.enumerables import FreesurferStatsDataset
-from src.munging.fs_stats import FreesurferStats, MetaData
+from src.munging.fs_stats.parse import FreesurferStats, MetaData
 
 """
 See https://github.com/fphammerle/freesurfer-stats/blob/master/freesurfer_stats/__init__.py

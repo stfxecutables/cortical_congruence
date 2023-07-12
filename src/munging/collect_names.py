@@ -26,7 +26,7 @@ from src.constants import (
     PIAL_STATFILES,
 )
 from src.enumerables import ROISource
-from src.fs_stats import FreesurferStats
+from src.munging.fs_stats.parse import FreesurferStats
 
 
 @dataclass

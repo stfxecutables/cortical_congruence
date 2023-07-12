@@ -15,8 +15,11 @@ from pathlib import Path
 from random import shuffle
 from typing import Any, Mapping
 
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sbn
 from joblib import Parallel, delayed
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
@@ -24,10 +27,12 @@ from sklearn.linear_model import LinearRegression as LR
 from sklearn.model_selection import cross_validate, train_test_split
 from tqdm import tqdm
 
-from src.constants import TABLES
+from src.constants import PLOTS, TABLES
 from src.enumerables import PhenotypicFocus, RegressionMetric, RegressionModel
 from src.feature_selection.stepwise import StepwiseSelect
-from src.munging.fs_stats import load_HCP_complete
+from src.munging.fs_stats.parse import load_HCP_complete
+
+matplotlib.use("QtAgg")
 
 
 def print_correlations() -> None:
@@ -456,23 +461,45 @@ def stepup_feature_select(
 
 
 if __name__ == "__main__":
-    scores = stepup_feature_select(
-        regex="CMC",
-        model=RegressionModel.Lasso,
-        scoring=RegressionMetric.MeanAbsoluteError,
-        max_n_features=20,
-        inner_progress=False,
-        holdout=0.25,
-        params=dict(alpha=10.0),
-    )
-    print(scores.drop(columns=["features"]))
+    # all_scores = []
+    # for regex in ["CMC", "FS", "FS|CMC"]:
+    #     scores = stepup_feature_select(
+    #         regex=regex,
+    #         model=RegressionModel.Lasso,
+    #         scoring=RegressionMetric.MeanAbsoluteError,
+    #         max_n_features=40,
+    #         inner_progress=False,
+    #         holdout=0.25,
+    #         params=dict(alpha=10.0),
+    #     )
+    #     # scores["source"] = regex
+    #     print(scores.drop(columns=["features"]))
+    #     all_scores.append(scores)
+    # df = pd.concat(all_scores, axis=0)
 
-    sys.exit()
+    # sys.exit()
     reduce_cmc = False
     reduce_targets = True
     df = load_HCP_complete(
         focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
     )
+    sbn.set_style("darkgrid")
+    targs = df.filter(regex="TARGET").rename(columns=lambda s: s.replace("TARGET__", ""))
+    targs.hist(bins=50, color="black")
+    fig = plt.gcf()
+    fig.set_size_inches(10, 10)
+    fig.tight_layout()
+    fig.savefig(PLOTS / "HCP_latent_target_distributions.png", dpi=300)
+    plt.close()
+
+    print(
+        targs.describe(percentiles=[0.025, 0.25, 0.5, 0.75, 0.975])
+        .round(2)
+        .T.to_markdown(tablefmt="simple", floatfmt="0.2f")
+    )
+
+    sys.exit()
+    # cross_val_score(LGB(max_depth=1, min_data_in_leaf=5, extra_trees=True, max_bin=20, n_jobs=-1), x, y, cv=5, scoring="explained_variance")  # NOTE: for CMC
 
     scores = [stepup_feature_select(regex=reg) for reg in ["CMC", "FS", "FS|CMC"]]
     scores = pd.concat(scores, axis=0).reset_index(drop=True)
@@ -498,7 +525,7 @@ if __name__ == "__main__":
         .groupby("source")
         .apply(
             lambda g: g.drop(columns="source").sort_values(
-                by=["Exp.Var", "target"], ascending=[False, True]
+                by=["test_exp_var", "target"], ascending=[False, True]
             )
         )
         .droplevel(1)
