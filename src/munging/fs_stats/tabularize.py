@@ -18,7 +18,7 @@ from pandas import DataFrame, Series
 from tqdm.contrib.concurrent import process_map
 
 from src.constants import ALL_STATSFILES, CACHED_RESULTS
-from src.enumerables import FreesurferStatsDataset
+from src.enumerables import FreesurferStatsDataset, Tag
 from src.munging.fs_stats.parse import FreesurferStats
 
 
@@ -64,7 +64,7 @@ def add_bilateral_stats(stats_df: DataFrame) -> DataFrame:
     vols = [vol for vol in vols if vol in other]
     for vol in vols:
         other.remove(vol)
-    meta_cols = ["sid", "sname", "parent", "fname"]
+    # meta_cols = ["sid", "sname", "parent", "fname"]
 
     df = stats_df.copy()
 
@@ -291,7 +291,9 @@ def compute_cmcs(bilateral_df: DataFrame) -> DataFrame:
     return df_cmc
 
 
-def compute_CMC_table(dataset: FreesurferStatsDataset) -> DataFrame:
+def compute_CMC_table(
+    dataset: FreesurferStatsDataset, use_cached: bool = True
+) -> DataFrame:
     if dataset not in [
         FreesurferStatsDataset.ABIDE_I,
         FreesurferStatsDataset.ABIDE_II,
@@ -301,7 +303,7 @@ def compute_CMC_table(dataset: FreesurferStatsDataset) -> DataFrame:
         raise NotImplementedError()
 
     out = CACHED_RESULTS / f"{dataset.value}__CMC_stats.parquet"
-    if out.exists():
+    if out.exists() and use_cached:
         return pd.read_parquet(out)
 
     df = tabularize_all_stats_files(dataset=dataset)
@@ -341,25 +343,53 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
         "ThickAvg",
         "pseudoVolume",
     ]
+    column_tags = {
+        "sid": [],
+        "sname": [Tag.Id],
+        "parent": [Tag.Info],
+        "fname": [Tag.Info],
+        "StructName": [Tag.Info],
+        "Struct": [Tag.Info],
+        "hemi": [Tag.Info],
+        "SegId": [Tag.Info],
+        "NVoxels": [Tag.Feature, Tag.FreeSurfer],
+        "Volume_mm3": [Tag.Feature, Tag.FreeSurfer],
+        "normMean": [Tag.Feature, Tag.FreeSurfer],
+        "normStdDev": [Tag.Feature, Tag.FreeSurfer],
+        "normMin": [Tag.Feature, Tag.FreeSurfer],
+        "normMax": [Tag.Feature, Tag.FreeSurfer],
+        "normRange": [Tag.Feature, Tag.FreeSurfer],
+        "NumVert": [Tag.Feature, Tag.FreeSurfer],
+        "SurfArea": [Tag.Feature, Tag.FreeSurfer],
+        "GrayVol": [Tag.Feature, Tag.FreeSurfer],
+        "ThickAvg": [Tag.Feature, Tag.FreeSurfer],
+        "ThickStd": [Tag.Feature, Tag.FreeSurfer],
+        "MeanCurv": [Tag.Feature, Tag.FreeSurfer],
+        "GausCurv": [Tag.Feature, Tag.FreeSurfer],
+        "FoldInd": [Tag.Feature, Tag.FreeSurfer],
+        "CurvInd": [Tag.Feature, Tag.FreeSurfer],
+        "pseudoVolume": [Tag.Feature, Tag.CMC],
+    }
+    cmc_renames = {
+        "CMC": f"{Tag.combine([Tag.Feature, Tag.CMC])}__cmc",
+        "CMC__asym": f"{Tag.combine([Tag.Feature, Tag.CMC])}__asym",
+        "CMC__asym_abs": f"{Tag.combine([Tag.Feature, Tag.CMC])}__asym_abs",
+        "CMC__asym_div": f"{Tag.combine([Tag.Feature, Tag.CMC])}__asym_div",
+    }
+    column_renames = {
+        col: f"{Tag.combine(tags)}__{col}" for col, tags in list(column_tags.items())[1:]
+    }
+    renames = {**column_renames, **cmc_renames}
     drop_cols = ["Struct", "parent", "fname", "SegId", "hemi", "sname"]
 
     meta_cols = [c for c in meta_cols if c in df.columns]
     drop_cols = [c for c in drop_cols if c in df.columns]
-    df_long = (
-        df.drop(columns=drop_cols)
-        .rename(
-            columns={
-                "ThickAvg": "FS__THICK_",
-                "SurfArea": "FS__AREA_",
-                "GrayVol": "FS__VOL_",
-                "pseudoVolume": "FS__PVOL_",
-            }
-        )
-        .rename(columns=lambda s: f"{s}__" if "CMC" in s else s)
-        .melt(id_vars=["sid", "StructName"], var_name="metric")
-    )
-    df_long["feature"] = df_long["metric"] + df_long["StructName"]
-    df_long.drop(columns=["StructName", "metric"], inplace=True)
+
+    df_long = df.drop(columns=drop_cols).rename(columns=renames)
+    df_long = df_long.melt(id_vars=["sid", "INFO__StructName"], var_name="metric")
+
+    df_long["feature"] = df_long["metric"] + "__" + df_long["INFO__StructName"]
+    df_long.drop(columns=["INFO__StructName", "metric"], inplace=True)
     df_wide = df_long.pivot(index="sid", columns="feature")["value"].copy()
     if isinstance(df_wide, Series):
         df_wide = df_wide.to_frame()

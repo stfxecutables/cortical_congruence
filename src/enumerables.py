@@ -40,28 +40,53 @@ Regressor = Union[LGB, SVR, LR, Dummy]
 Metric = Callable[[ndarray, ndarray], float]
 
 
-class ColumnTags(Enum):
-    Feature = "FEAT"
-    Target = "TARGET"
+class Tag(Enum):
+    Id = "ID"
+    Info = "INFO"
+    # Feature types
     Demographics = "DEMO"
+    CMC = "CMC"
+    FreeSurfer = "FS"
+    Feature = "FEAT"
+    # Target types
+    Target = "TARGET"
     Regression = "REG"
     Classification = "CLS"
-    FreeSurfer = "FS"
+    # Feature or target construction types
     Reduced = "REDUCED"
     Constructed = "CONSTR"
 
     @staticmethod
-    def combine(tags: list[ColumnTags]) -> str:
-        if ColumnTags.Target in tags:
-            if ColumnTags.Feature in tags:
+    def combine(tags: list[Tag]) -> str:
+        if len(tags) == 0:
+            return ""
+
+        if Tag.Id in tags and len(tags) > 1:
+            raise ValueError("'Id' columns can only be tagged as 'Id'")
+        if Tag.Info in tags and len(tags) > 1:
+            raise ValueError("'Info' columns can only be tagged as 'Info'")
+
+        if Tag.Feature in tags:
+            if Tag.Id in tags:
+                raise ValueError("Cannot tag column as both 'Id' and 'Feature'")
+            if Tag.Info in tags:
+                raise ValueError("Cannot tag column as both 'Info' and 'Feature'")
+
+        if Tag.Target in tags:
+            if Tag.Feature in tags:
                 raise ValueError("Cannot tag column as both 'Feature' and 'Target'")
-            if ColumnTags.Demographics in tags:
+            if Tag.CMC in tags:
+                raise ValueError("Cannot tag column as both 'CMC' and 'Target'")
+            if Tag.Demographics in tags:
                 raise ValueError("Cannot tag column as both 'Demographic' and 'Target'")
-            if ColumnTags.FreeSurfer in tags:
+            if Tag.FreeSurfer in tags:
                 raise ValueError("Cannot tag column as both 'FreeSurfer' and 'Target'")
 
+        if (Tag.Reduced in tags) and (Tag.Constructed in tags):
+            raise ValueError("Column can not be both 'Reduced' and 'Constructed'")
+
         combined = []
-        for tag in ColumnTags:
+        for tag in Tag:
             if tag in tags:
                 combined.append(tag.value)
         return "__".join(combined)
@@ -132,6 +157,39 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.HCP: lambda: load_hcp_phenotypic(focus),
             FreesurferStatsDataset.QTAB: lambda: not_implemented(),
             FreesurferStatsDataset.QTIM: lambda: not_implemented(),
+        }[self]()
+
+    def load_complete(
+        self,
+        focus: Any | None = None,
+        reduce_targets: bool = True,
+        reduce_cmc: bool = False,
+    ) -> DataFrame:
+        from src.munging.abide import (
+            load_abide_i_complete,
+            load_abide_ii_complete,
+            load_adhd200_complete,
+        )
+        from src.munging.hcp import PhenotypicFocus, load_HCP_complete
+
+        if focus is None:
+            focus = PhenotypicFocus.All
+
+        assert isinstance(focus, PhenotypicFocus)
+
+        def not_implemented() -> None:
+            raise NotImplementedError()
+
+        return {
+            FreesurferStatsDataset.ABIDE_I: load_abide_i_complete,
+            FreesurferStatsDataset.ABIDE_II: load_abide_ii_complete,
+            FreesurferStatsDataset.ADHD_200: load_adhd200_complete,
+            FreesurferStatsDataset.HBN: lambda: not_implemented(),
+            FreesurferStatsDataset.QTAB: lambda: not_implemented(),
+            FreesurferStatsDataset.QTIM: lambda: not_implemented(),
+            FreesurferStatsDataset.HCP: lambda: load_HCP_complete(
+                focus=focus, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
+            ),
         }[self]()
 
     def data_dictionary(self) -> Path:
@@ -299,8 +357,13 @@ class RegressionMetric(Enum):
 
 
 if __name__ == "__main__":
-    print(FreesurferStatsDataset.ABIDE_I.load_pheno())
-    print(FreesurferStatsDataset.ABIDE_II.load_pheno())
-    print(FreesurferStatsDataset.ADHD_200.load_pheno())
-    print(FreesurferStatsDataset.HCP.load_pheno())
-    print(FreesurferStatsDataset.HBN.load_pheno())
+    # print(FreesurferStatsDataset.ABIDE_I.load_pheno())
+    # print(FreesurferStatsDataset.ABIDE_II.load_pheno())
+    # print(FreesurferStatsDataset.ADHD_200.load_pheno())
+    # print(FreesurferStatsDataset.HCP.load_pheno())
+
+    print(FreesurferStatsDataset.ABIDE_I.load_complete())
+    print(FreesurferStatsDataset.ABIDE_II.load_complete())
+    print(FreesurferStatsDataset.ADHD_200.load_complete())
+    # print(FreesurferStatsDataset.HCP.load_complete())
+    # print(FreesurferStatsDataset.HBN.load_pheno())

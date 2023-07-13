@@ -1,0 +1,11 @@
+{
+  "editor.formatOnSave": true,
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.py$",
+        "cmd": "isort ${file} && black ${file}"
+      }
+    ]
+  }
+}

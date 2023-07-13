@@ -13,11 +13,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Index
 from sklearn.decomposition import FactorAnalysis as FA
 
 from src.constants import ABIDE_II_ENCODING
-from src.enumerables import FreesurferStatsDataset
+from src.enumerables import FreesurferStatsDataset, Tag
+from src.munging.fs_stats.tabularize import compute_CMC_table, to_wide_subject_table
 
 
 @lru_cache
@@ -46,18 +47,6 @@ def load_abide_i_pheno() -> DataFrame:
         1: 1,  # 1 in their table is Male
         2: 0,  # 2 in their table is Female
     }
-    keep_cols = [
-        "sid",
-        "site",
-        "sex",
-        "age",
-        "autism",
-        "dsm_iv",
-        "dsm_iv_spectrum",
-        "fiq",
-        "viq",
-        "piq",
-    ]
 
     path = FreesurferStatsDataset.ABIDE_I.phenotypic_file()
     df = pd.read_csv(path)
@@ -93,31 +82,40 @@ def load_abide_i_pheno() -> DataFrame:
         },
         inplace=True,
     )
-    target_cols = [
-        "autism",
-        "dsm_iv",
-        "dsm_iv_spectrum",
-        "fiq",
-        "viq",
-        "piq",
-    ]
-    demo_cols = [
-        "age",
-        "sex",
-    ]
+    keep_cols = {
+        "sid": [],
+        # "site": [Tag.Info],
+        "sex": [Tag.Demographics, Tag.Feature],
+        "age": [Tag.Demographics, Tag.Feature],
+        "autism": [Tag.Target, Tag.Classification],
+        "dsm_iv": [Tag.Target, Tag.Classification],
+        "dsm_iv_spectrum": [Tag.Target, Tag.Classification],
+        "fiq": [Tag.Target, Tag.Regression],
+        "viq": [Tag.Target, Tag.Regression],
+        "piq": [Tag.Target, Tag.Regression],
+    }
+    renames = {
+        col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
+    }
 
     df["autism"] = df["autism"].apply(lambda x: dx[x])
     df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_diagnoses[x])
-    # if on the spectrum
     df["dsm_iv_spectrum"] = df["dsm_iv"].apply(lambda x: dsm_spectrum[x])
     df["sex"] = df["sex"].apply(lambda x: sex[x])
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
     df["piq"].replace(-9999.0, np.nan, inplace=True)
-    df = df.loc[:, keep_cols].copy()
-    df = df.rename(columns=lambda s: f"TARGET__{s}" if s in target_cols else s)
-    df = df.rename(columns=lambda s: f"DEMO__{s}" if s in demo_cols else s)
+    df = df.loc[:, list(keep_cols.keys())].copy()
+    df.rename(columns=renames, inplace=True)
+    df.index = Index(name="sid", data=df["sid"].astype(str))
+    df.drop(columns="sid", inplace=True)
+    df.columns.name = "feature"
     return df
+
+    # df = df.loc[:, keep_cols].copy()
+    # df = df.rename(columns=lambda s: f"TARGET__{s}" if s in target_cols else s)
+    # df = df.rename(columns=lambda s: f"DEMO__{s}" if s in demo_cols else s)
+    # return df
 
 
 @lru_cache
@@ -179,18 +177,21 @@ def load_abide_ii_pheno() -> DataFrame:
         inplace=True,
     )
     df.fillna(-9999, inplace=True)
-    target_cols = [
-        "autism",
-        "dsm_iv",
-        "dsm5_spectrum",
-        "fiq",
-        "viq",
-        "piq",
-    ]
-    demo_cols = [
-        "age",
-        "sex",
-    ]
+    keep_cols = {
+        "sid": [],
+        # "site": [Tag.Info],
+        "sex": [Tag.Demographics, Tag.Feature],
+        "age": [Tag.Demographics, Tag.Feature],
+        "autism": [Tag.Target, Tag.Classification],
+        "dsm_iv": [Tag.Target, Tag.Classification],
+        "dsm5_spectrum": [Tag.Target, Tag.Classification],
+        "fiq": [Tag.Target, Tag.Regression],
+        "viq": [Tag.Target, Tag.Regression],
+        "piq": [Tag.Target, Tag.Regression],
+    }
+    renames = {
+        col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
+    }
 
     df["site"] = df["site"].str.replace("ABIDEII-", "")
     df["autism"] = df["autism"].apply(lambda x: dx[x])
@@ -200,10 +201,16 @@ def load_abide_ii_pheno() -> DataFrame:
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
     df["piq"].replace(-9999.0, np.nan, inplace=True)
-    df = df.loc[:, keep_cols].copy()
-    df = df.rename(columns=lambda s: f"TARGET__{s}" if s in target_cols else s)
-    df = df.rename(columns=lambda s: f"DEMO__{s}" if s in demo_cols else s)
+    df = df[list(keep_cols.keys())].copy()
+    df.rename(columns=renames, inplace=True)
+    df.index = Index(name="sid", data=df["sid"].astype(str))
+    df.drop(columns="sid", inplace=True)
+    df.columns.name = "feature"
     return df
+    # df = df.loc[:, keep_cols].copy()
+    # df = df.rename(columns=lambda s: f"TARGET__{s}" if s in target_cols else s)
+    # df = df.rename(columns=lambda s: f"DEMO__{s}" if s in demo_cols else s)
+    # return df
 
 
 @lru_cache
@@ -223,19 +230,6 @@ def load_adhd200_pheno() -> DataFrame:
         "Verbal IQ": "viq",
         "Performance IQ": "piq",
     }
-    target_cols = [
-        "diagnosis",
-        "adhd_score",
-        "adhd_score_inattentive",
-        "adhd_score_hyper",
-        "fiq",
-        "viq",
-        "piq",
-    ]
-    demo_cols = [
-        "sex",
-        "age",
-    ]
 
     path = FreesurferStatsDataset.ADHD_200.phenotypic_file()
     df = pd.read_csv(path, sep="\t")
@@ -387,19 +381,78 @@ def load_adhd200_pheno() -> DataFrame:
     }
 
     df["site"] = df["site"].apply(lambda x: site[x])
-    target_cols.extend(constructed_cols)
-    keep_cols = list(renames.values()) + constructed_cols
-    keep_cols.remove("adhd_scale")
-    df = df.loc[:, keep_cols].copy()
-    df = df.rename(columns=lambda c: f"TARGET__{c}" if c in target_cols else c)
-    df = df.rename(columns=lambda c: f"DEMO__{c}" if c in demo_cols else c)
+
+    keep_cols = {
+        "sid": [],
+        # "site": [Tag.Info],
+        # "Handedness": [Tag.Demographics, Tag.Feature],
+        "sex": [Tag.Demographics, Tag.Feature],
+        "age": [Tag.Demographics, Tag.Feature],
+        # "dsm_iv": [Tag.Target, Tag.Classification],
+        # "dsm5_spectrum": [Tag.Target, Tag.Classification],
+        "diagnosis": [Tag.Target, Tag.Classification],
+        "adhd_score": [Tag.Target, Tag.Regression],
+        "adhd_score_inattentive": [Tag.Target, Tag.Regression],
+        "adhd_score_hyper": [Tag.Target, Tag.Regression],
+        "adhd_z": [Tag.Target, Tag.Regression, Tag.Constructed],
+        "adhd_z_inattentive": [Tag.Target, Tag.Regression, Tag.Constructed],
+        "adhd_z_hyper": [Tag.Target, Tag.Regression, Tag.Constructed],
+        "adhd_z_sum": [Tag.Target, Tag.Regression, Tag.Constructed],
+        "adhd_factor": [Tag.Target, Tag.Regression, Tag.Reduced],
+        "fiq": [Tag.Target, Tag.Regression],
+        "viq": [Tag.Target, Tag.Regression],
+        "piq": [Tag.Target, Tag.Regression],
+    }
+    renames = {
+        col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
+    }
+    df = df.loc[:, list(keep_cols.keys())].copy()
+    df.rename(columns=renames, inplace=True)
+    df.index = Index(name="sid", data=df["sid"].astype(str))
+    df.drop(columns="sid", inplace=True)
+    df.columns.name = "feature"
     return df
 
 
+def load_abide_i_complete() -> DataFrame:
+    pheno = load_abide_i_pheno()
+    cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ABIDE_I)
+    wide = to_wide_subject_table(cmc)
+    return pd.merge(wide, pheno, on="sid", how="left")
+
+
+def load_abide_ii_complete() -> DataFrame:
+    pheno = load_abide_ii_pheno()
+    cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ABIDE_II)
+    wide = to_wide_subject_table(cmc)
+    return pd.merge(wide, pheno, on="sid", how="left")
+
+
+def load_adhd200_complete() -> DataFrame:
+    pheno = load_abide_ii_pheno()
+    cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ADHD_200)
+    wide = to_wide_subject_table(cmc)
+    return pd.merge(wide, pheno, on="sid", how="left")
+
+
 if __name__ == "__main__":
-    # df_i = load_abide_i_pheno()
+    df_i = load_abide_i_pheno()
     # print(df_i)
-    # df_ii = load_abide_ii_pheno()
+    df_ii = load_abide_ii_pheno()
     # print(df_ii)
     df_adhd = load_adhd200_pheno()
-    print(df_adhd)
+    # print(df_adhd)
+    phenos = {
+        FreesurferStatsDataset.ABIDE_I: df_i,
+        FreesurferStatsDataset.ABIDE_II: df_ii,
+        FreesurferStatsDataset.ADHD_200: df_adhd,
+    }
+    for dataset, pheno in phenos.items():
+        cmc = compute_CMC_table(dataset=dataset)
+        wide = to_wide_subject_table(cmc)
+        df = pd.merge(wide, pheno, on="sid", how="left")
+        print(df)
+
+    # df = compute_CMC_table(FreesurferStatsDataset.ABIDE_I)
+    # wide = to_wide_subject_table(df)
+    # print(df)

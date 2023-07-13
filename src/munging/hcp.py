@@ -55,12 +55,14 @@ class PhenotypicFocus(Enum):
 
 
 @MEMORY.cache
-def reduce_HCP_clusters(data: DataFrame, clusters: list[Cluster]) -> DataFrame:
+def reduce_HCP_clusters(
+    data: DataFrame, clusters: list[Cluster]
+) -> tuple[DataFrame, list[DataFrame]]:
     mappings = {
         "gambling_task_perc_larger": "gambling_perf",
         "mars_log_score": "mars",
         "language_task_median_rt": "language_rt",
-        "psqi_comp1": "psqi_score",
+        "psqi_comp1": "psqi_latent",
         "relational_task_median_rt": "relational_rt",
         "emotion_task_median_rt": "emotion_rt",
         "emotion_task_acc": "emotion_perf",
@@ -89,17 +91,26 @@ def reduce_HCP_clusters(data: DataFrame, clusters: list[Cluster]) -> DataFrame:
             )
 
     reductions = []
+    loadings = []
     for cluster in tqdm(clusters, desc="Factor reducing..."):
         name = mappings[shortname(cluster)]
         df = cluster.data
         feat_names = sorted(set(df.x.to_list() + df.y.to_list()))
         feats = data[feat_names]
         fa = FA(n_components=1, rotation="varimax")
-        x = fa.fit_transform(feats.fillna(feats.median()))
-        reductions.append(DataFrame(data=x, index=data.index, columns=[name]))
+        with pd.option_context("display.max_rows", 500):
+            print(f"Filling NaN values for cluster: {name}")
+            print(feats.isnull().sum())
+        x = fa.fit_transform(feats.fillna(feats.mean()))
+        reduced = DataFrame(data=x, index=data.index, columns=[name])
+        loading = pd.concat([feats, reduced], axis=1).corr()[name].to_frame()
+        loading["abs"] = loading[name].abs()
+        loading = loading.sort_values(by="abs", ascending=False).drop(columns="abs")
+        reductions.append(reduced)
+        loadings.append(loading)
     df = pd.concat(reductions, axis=1)
     df.rename(columns=lambda s: f"target__{s}")
-    return df
+    return df, loadings
 
 
 def get_available_features(df: DataFrame, extra: DataFrame) -> list[str]:
@@ -111,6 +122,71 @@ def get_available_features(df: DataFrame, extra: DataFrame) -> list[str]:
 
 
 def remove_uncontroversial_features(df: DataFrame, extra: DataFrame) -> DataFrame:
+    # fmt: off
+    non_freesurfer = [
+        "angaffect_unadj", "angaggr_unadj", "anghostil_unadj", "cardsort_unadj",
+        "cogcrystalcomp_unadj", "cogearlycomp_unadj", "cogfluidcomp_unadj",
+        "cogtotalcomp_unadj", "ddisc_auc_200", "ddisc_auc_40k", "dexterity_unadj",
+        "emotion_task_acc", "emotion_task_face_acc", "emotion_task_face_median_rt",
+        "emotion_task_median_rt", "emotion_task_shape_acc", "emotion_task_shape_median_rt",
+        "emotsupp_unadj", "endurance_unadj", "er40_cr", "er40_crt", "er40ang", "er40fear",
+        "er40hap", "er40noe", "er40sad", "fearaffect_unadj", "fearsomat_unadj",
+        "flanker_unadj", "friendship_unadj", "gaitspeed_comp",
+        "gambling_task_median_rt_larger", "gambling_task_median_rt_smaller",
+        "gambling_task_perc_larger", "gambling_task_perc_nlr",
+        "gambling_task_punish_median_rt_larger", "gambling_task_punish_median_rt_smaller",
+        "gambling_task_punish_perc_larger", "gambling_task_punish_perc_nlr",
+        "gambling_task_reward_median_rt_larger", "gambling_task_reward_median_rt_smaller",
+        "gambling_task_reward_perc_larger", "gambling_task_reward_perc_nlr",
+        "instrusupp_unadj", "iwrd_rtc", "iwrd_tot", "language_task_acc",
+        "language_task_math_acc", "language_task_math_avg_difficulty_level",
+        "language_task_math_median_rt", "language_task_median_rt",
+        "language_task_story_acc", "language_task_story_avg_difficulty_level",
+        "language_task_story_median_rt", "lifesatisf_unadj", "listsort_unadj",
+        "loneliness_unadj", "mars_errs", "mars_final", "meanpurp_unadj", "mmse_score",
+        "neofac_a", "neofac_c", "neofac_e", "neofac_n", "neofac_o", "odor_unadj",
+        "painintens_rawscore", "paininterf_tscore", "perchostil_unadj", "percreject_unadj",
+        "percstress_unadj", "picseq_unadj", "picvocab_unadj", "pmat24_a_cr", "pmat24_a_rtcr",
+        "pmat24_a_si", "posaffect_unadj", "procspeed_unadj", "psqi_comp1", "psqi_comp2",
+        "psqi_comp3", "psqi_comp4", "psqi_comp5", "psqi_comp6", "psqi_comp7", "psqi_score",
+        "readeng_unadj", "relational_task_acc", "relational_task_match_acc",
+        "relational_task_match_median_rt", "relational_task_median_rt",
+        "relational_task_rel_acc", "relational_task_rel_median_rt", "sadness_unadj",
+        "scpt_lrnr", "scpt_sen", "scpt_spec", "selfeff_unadj",
+        "social_task_median_rt_random", "social_task_median_rt_tom", "social_task_perc_nlr",
+        "social_task_perc_random", "social_task_perc_tom", "social_task_perc_unsure",
+        "social_task_random_median_rt_random", "social_task_random_perc_nlr",
+        "social_task_random_perc_random", "social_task_random_perc_tom",
+        "social_task_random_perc_unsure", "social_task_tom_median_rt_tom",
+        "social_task_tom_perc_nlr", "social_task_tom_perc_random",
+        "social_task_tom_perc_tom", "social_task_tom_perc_unsure", "strength_unadj",
+        "taste_unadj", "vsplot_crte", "vsplot_off", "vsplot_tc", "wm_task_0bk_acc",
+        "wm_task_0bk_body_acc", "wm_task_0bk_body_acc_nontarget",
+        "wm_task_0bk_body_acc_target", "wm_task_0bk_body_median_rt",
+        "wm_task_0bk_body_median_rt_nontarget", "wm_task_0bk_body_median_rt_target",
+        "wm_task_0bk_face_acc", "wm_task_0bk_face_acc_nontarget",
+        "wm_task_0bk_face_acc_target", "wm_task_0bk_face_median_rt",
+        "wm_task_0bk_face_median_rt_nontarget", "wm_task_0bk_face_median_rt_target",
+        "wm_task_0bk_median_rt", "wm_task_0bk_place_acc", "wm_task_0bk_place_acc_nontarget",
+        "wm_task_0bk_place_acc_target", "wm_task_0bk_place_median_rt",
+        "wm_task_0bk_place_median_rt_nontarget", "wm_task_0bk_place_median_rt_target",
+        "wm_task_0bk_tool_acc", "wm_task_0bk_tool_acc_nontarget",
+        "wm_task_0bk_tool_acc_target", "wm_task_0bk_tool_median_rt",
+        "wm_task_0bk_tool_median_rt_nontarget", "wm_task_0bk_tool_median_rt_target",
+        "wm_task_2bk_acc", "wm_task_2bk_body_acc", "wm_task_2bk_body_acc_nontarget",
+        "wm_task_2bk_body_acc_target", "wm_task_2bk_body_median_rt",
+        "wm_task_2bk_body_median_rt_nontarget", "wm_task_2bk_body_median_rt_target",
+        "wm_task_2bk_face_acc", "wm_task_2bk_face_acc_nontarget",
+        "wm_task_2bk_face_acc_target", "wm_task_2bk_face_median_rt",
+        "wm_task_2bk_face_median_rt_nontarget", "wm_task_2bk_face_median_rt_target",
+        "wm_task_2bk_median_rt", "wm_task_2bk_place_acc",
+        "wm_task_2bk_place_acc_nontarget", "wm_task_2bk_place_acc_target",
+        "wm_task_2bk_place_median_rt", "wm_task_2bk_place_median_rt_nontarget",
+        "wm_task_2bk_place_median_rt_target", "wm_task_2bk_tool_acc",
+        "wm_task_2bk_tool_acc_nontarget", "wm_task_2bk_tool_acc_target",
+        "wm_task_2bk_tool_median_rt", "wm_task_2bk_tool_median_rt_nontarget",
+        "wm_task_2bk_tool_median_rt_target", "wm_task_acc", "wm_task_median_rt",
+    ]
     df = df.copy()
     available = get_available_features(df, extra)
     freesurfer = sorted(filter(lambda f: "fs_" in f, available))
@@ -432,7 +508,7 @@ def load_HCP_complete(
         targs = targs.rename(columns=lambda s: s.replace("TARGET__", ""))
         corrs = targs.corr()  # most correlations differ at most by 0.1 with spearman
         clusters = get_cluster_corrs(corrs)
-        targs_reduced = reduce_HCP_clusters(data=targs, clusters=clusters)
+        targs_reduced, loadings = reduce_HCP_clusters(data=targs, clusters=clusters)
         targs_reduced.rename(columns=lambda s: f"TARGET__{s}", inplace=True)
         others = df.drop(columns=cols, errors="ignore")
         df = pd.concat([others, targs_reduced], axis=1)
@@ -448,3 +524,9 @@ def load_HCP_complete(
         df = pd.concat([others, cmc_reduced], axis=1)
 
     return df
+
+
+if __name__ == "__main__":
+    df = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+    )
