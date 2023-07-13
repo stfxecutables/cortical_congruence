@@ -10,8 +10,22 @@ data/**/*.yml
 data/**/*.tsv
 data/**/*.nii.gz
 
+data/ABIDE-II/phenotypic_data/ABIDEII_Data_Legend.pdf
+data/ADNI/
+data/FCON1000.txt
+data/HBN/phenotypic_data/Release11_DataDic.zip
+data/HBN/phenotypic_data/Release11_DataDic/
+data/HBN_R10_Pheno.csv.1
+data/HCP/README.md
+data/all_INDI.txt
+
 drafts/methods/methods*.html
 drafts/methods/methods*.zip
+
+results
+
+HCP_factor_loadings.txt
+cluster_table.txt
 
 *.csv
 *.gz
