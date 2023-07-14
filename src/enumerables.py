@@ -35,6 +35,7 @@ from src.metrics import (
     smae,
     smae_scorer,
 )
+from src.munging.remove_nans import remove_nans
 
 Regressor = Union[LGB, SVR, LR, Dummy]
 Metric = Callable[[ndarray, ndarray], float]
@@ -180,7 +181,7 @@ class FreesurferStatsDataset(Enum):
         def not_implemented() -> None:
             raise NotImplementedError()
 
-        return {
+        df = {
             FreesurferStatsDataset.ABIDE_I: load_abide_i_complete,
             FreesurferStatsDataset.ABIDE_II: load_abide_ii_complete,
             FreesurferStatsDataset.ADHD_200: load_adhd200_complete,
@@ -191,6 +192,7 @@ class FreesurferStatsDataset(Enum):
                 focus=focus, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
             ),
         }[self]()
+        return remove_nans(df)
 
     def data_dictionary(self) -> Path:
         root = self.root() / "phenotypic_data"
@@ -308,7 +310,7 @@ class RegressionModel(Enum):
             RegressionModel.Dummy: lambda: Dummy(strategy="mean"),
             RegressionModel.MLP: lambda: MLP(**params),
             RegressionModel.Ridge: lambda: Ridge(**params),
-            RegressionModel.Lasso: lambda: Lasso(**params),
+            RegressionModel.Lasso: lambda: Lasso(**{**params, **dict(max_iter=2000)}),
         }[self]()
 
 
@@ -365,5 +367,5 @@ if __name__ == "__main__":
     print(FreesurferStatsDataset.ABIDE_I.load_complete())
     print(FreesurferStatsDataset.ABIDE_II.load_complete())
     print(FreesurferStatsDataset.ADHD_200.load_complete())
-    # print(FreesurferStatsDataset.HCP.load_complete())
+    print(FreesurferStatsDataset.HCP.load_complete())
     # print(FreesurferStatsDataset.HBN.load_pheno())

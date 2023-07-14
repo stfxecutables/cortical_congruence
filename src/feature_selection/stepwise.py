@@ -8,57 +8,22 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
-import re
-import sys
-import time
-from argparse import Namespace
 from dataclasses import dataclass
-from io import StringIO
-from math import ceil
-from numbers import Integral
-from pathlib import Path
-from random import shuffle
-from typing import Any, Callable, Iterable, Literal, cast
+from numbers import Integral, Real
+from typing import Any, Iterable, Literal
 
 import numpy as np
-import pandas as pd
-import tabulate
 from joblib import Parallel, delayed
-from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
-from pandas import DataFrame, Series
-from pandas.errors import ParserError
+from pandas import DataFrame
 from sklearn.base import _fit_context  # type: ignore
 from sklearn.base import BaseEstimator, clone, is_classifier
-from sklearn.cluster._hdbscan.hdbscan import HDBSCAN
-from sklearn.decomposition import FactorAnalysis as FA
-from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.feature_selection import SequentialFeatureSelector
-from sklearn.linear_model import LinearRegression as LR
-from sklearn.model_selection import (
-    BaseCrossValidator,
-    ParameterGrid,
-    StratifiedKFold,
-    cross_val_score,
-    cross_validate,
-)
+from sklearn.model_selection import BaseCrossValidator, cross_validate
 from sklearn.model_selection._split import BaseShuffleSplit, check_cv
-from sklearn.neighbors import KNeighborsRegressor as KNN
-from sklearn.neural_network import MLPRegressor as MLP
 from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 
-from src.constants import (
-    ABIDE_II_ENCODING,
-    ALL_STATSFILES,
-    CACHED_RESULTS,
-    DATA,
-    HCP_FEATURE_INFO,
-    MEMORY,
-    TABLES,
-)
-from src.enumerables import FreesurferStatsDataset, PhenotypicFocus, RegressionMetric
-from src.munging.fs_stats.parse import load_HCP_complete
+from src.enumerables import RegressionMetric
 
 
 @dataclass
@@ -145,7 +110,7 @@ class StepwiseSelect(SequentialFeatureSelector):
         """Learn the features to select from X.
 
         Parameters
-        ----------
+        ---------
         X : array-like of shape (n_samples, n_features)
             Training vectors, where `n_samples` is the number of samples and
             `n_features` is the number of predictors.
@@ -159,8 +124,8 @@ class StepwiseSelect(SequentialFeatureSelector):
         self : object
             Returns the instance itself.
         """
-        tags = self._get_tags()
-        X = self._validate_data(
+        tags = self._get_tags()  # type: ignore
+        X = self._validate_data(  # type: ignore
             X,
             accept_sparse="csc",
             ensure_min_features=2,
@@ -168,26 +133,26 @@ class StepwiseSelect(SequentialFeatureSelector):
         )
         n_features = X.shape[1]
 
-        if self.n_features_to_select == "auto":
-            if self.tol is not None:
+        if self.n_features_to_select == "auto":  # type: ignore
+            if self.tol is not None:  # type: ignore  # noqa
                 # With auto feature selection, `n_features_to_select_` will be updated
                 # to `support_.sum()` after features are selected.
                 self.n_features_to_select_ = n_features - 1
             else:
                 self.n_features_to_select_ = n_features // 2
-        elif isinstance(self.n_features_to_select, Integral):
-            if self.n_features_to_select >= n_features:
+        elif isinstance(self.n_features_to_select, Integral):  # type: ignore
+            if self.n_features_to_select >= n_features:  # type: ignore
                 raise ValueError("n_features_to_select must be < n_features.")
-            self.n_features_to_select_ = self.n_features_to_select
-        elif isinstance(self.n_features_to_select, Real):
-            self.n_features_to_select_ = int(n_features * self.n_features_to_select)
+            self.n_features_to_select_ = self.n_features_to_select  # type: ignore
+        elif isinstance(self.n_features_to_select, Real):  # type: ignore
+            self.n_features_to_select_ = int(n_features * self.n_features_to_select)  # type: ignore  # noqa
 
-        if self.tol is not None and self.tol < 0 and self.direction == "forward":
+        if self.tol is not None and self.tol < 0 and self.direction == "forward":  # type: ignore  # noqa
             raise ValueError("tol must be positive when doing forward selection")
 
-        cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
+        cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))  # type: ignore  # noqa
 
-        cloned_estimator = clone(self.estimator)
+        cloned_estimator = clone(self.estimator)  # type: ignore  # noqa
 
         # the current mask corresponds to the set of features:
         # - that we have already *selected* if we do forward selection
@@ -195,12 +160,12 @@ class StepwiseSelect(SequentialFeatureSelector):
         current_mask = np.zeros(shape=n_features, dtype=bool)
         n_iterations = (
             self.n_features_to_select_
-            if self.n_features_to_select == "auto" or self.direction == "forward"
+            if self.n_features_to_select == "auto" or self.direction == "forward"  # type: ignore  # noqa
             else n_features - self.n_features_to_select_
         )
 
         old_score = -np.inf
-        is_auto_select = self.tol is not None and self.n_features_to_select == "auto"
+        is_auto_select = self.tol is not None and self.n_features_to_select == "auto"  # type: ignore  # noqa
         for _ in tqdm(range(n_iterations), leave=True, disable=not self.inner_progress):
             new_feature_idx, new_score, new_info = self._get_best_new_feature_score(
                 cloned_estimator, X, y, cv, current_mask
@@ -208,13 +173,13 @@ class StepwiseSelect(SequentialFeatureSelector):
             self.iteration_scores.append(new_score)
             self.iteration_features.append(new_feature_idx)
             self.iteration_metrics.append(new_info)
-            if is_auto_select and ((new_score - old_score) < self.tol):
+            if is_auto_select and ((new_score - old_score) < self.tol):  # type: ignore  # noqa
                 break
 
             old_score = new_score
             current_mask[new_feature_idx] = True
 
-        if self.direction == "backward":
+        if self.direction == "backward":  # type: ignore  # noqa
             current_mask = ~current_mask
 
         self.support_ = current_mask
@@ -238,13 +203,13 @@ class StepwiseSelect(SequentialFeatureSelector):
                 mask=current_mask.copy(),
                 idx=feature_idx,
                 scoring=self.scoring,
-                direction=self.direction,
+                direction=self.direction,  # type: ignore  # noqa
             )
             for feature_idx in candidate_feature_indices
         ]
 
         results: list[tuple[float, DataFrame]]
-        results = Parallel(n_jobs=-1, verbose=0)(delayed(_get_score)(arg) for arg in args)
+        results = Parallel(n_jobs=-1, verbose=0)(delayed(_get_score)(arg) for arg in args)  # type: ignore  # noqa
 
         scores: dict[int, tuple[float, DataFrame]] = {}
         for feature_idx, (score, info) in zip(candidate_feature_indices, results):
