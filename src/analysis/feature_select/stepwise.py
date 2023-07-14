@@ -8,10 +8,13 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
+import json
+import pickle
 import platform
 import sys
 from argparse import Namespace
 from enum import Enum
+from hashlib import sha256
 from math import ceil
 from pathlib import Path
 from random import shuffle
@@ -149,14 +152,6 @@ def select_target(
         index=[count],
     )
     return results, best, n_best
-    name = str(target).replace("TARGET__", "")
-    metric = (
-        f"{np.round(100 * best, 3)}%"
-        if scorer is RegressionMetric.ExplainedVariance
-        else f"{np.round(best, 4)}"
-    )
-    pbar.set_description(f"{name}: {scorer.value.upper()}={metric} @ {n_best} features")
-    count += 1
 
 
 def stepup_feature_select(
@@ -319,6 +314,7 @@ def stepup_feature_select(
 
 if __name__ == "__main__":
     all_scores = []
+    alpha = 10.0
     for regex in FeatureRegex:
         scores = stepup_feature_select(
             dataset=FreesurferStatsDataset.ADHD_200,
@@ -328,11 +324,11 @@ if __name__ == "__main__":
                 RegressionMetric.MeanAbsoluteError,
                 ClassificationMetric.BalancedAccuracy,
             ),
-            max_n_features=1,
+            max_n_features=50,
             holdout=0.25,
             nans="mean",
-            reg_params=dict(alpha=10.0),
-            cls_params=dict(),
+            reg_params=dict(alpha=alpha),
+            cls_params=dict(C=1.0 / (2.0 * alpha)),
             inner_progress=True,
         )
         # scores["source"] = regex
