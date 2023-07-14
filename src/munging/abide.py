@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame, Index
 from sklearn.decomposition import FactorAnalysis as FA
+from sklearn.preprocessing import LabelEncoder
 
 from src.constants import ABIDE_II_ENCODING
 from src.enumerables import FreesurferStatsDataset, Tag
@@ -31,13 +32,21 @@ def load_abide_i_pheno() -> DataFrame:
         4: "aspergers-or-PDD-NOS",
         -9999: np.nan,
     }
+    dsm_labels = {
+        "control": 0.0,
+        "autism": 1.0,
+        "aspergers": 2.0,
+        "PDD-NOS": 3.0,
+        "aspergers-or-PDD-NOS": 4.0,
+        np.nan: np.nan,
+    }
     dsm_spectrum = {
-        "control": "control",
-        "autism": "ASD",
-        "aspergers": "ASD",
-        "PDD-NOS": "ASD",
-        "aspergers-or-PDD-NOS": "ASD",
-        np.nan: "NaN",
+        "control": 0.0,
+        "autism": 1.0,
+        "aspergers": 1.0,
+        "PDD-NOS": 1.0,
+        "aspergers-or-PDD-NOS": 1.0,
+        np.nan: np.nan,
     }
     dx = {
         1: 1,  # 1 in their table is "autism",
@@ -88,7 +97,7 @@ def load_abide_i_pheno() -> DataFrame:
         "sex": [Tag.Demographics, Tag.Feature],
         "age": [Tag.Demographics, Tag.Feature],
         "autism": [Tag.Target, Tag.Classification],
-        "dsm_iv": [Tag.Target, Tag.Classification],
+        "dsm_iv": [Tag.Target, Tag.Multiclass],
         "dsm_iv_spectrum": [Tag.Target, Tag.Classification],
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
@@ -101,6 +110,7 @@ def load_abide_i_pheno() -> DataFrame:
     df["autism"] = df["autism"].apply(lambda x: dx[x])
     df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_diagnoses[x])
     df["dsm_iv_spectrum"] = df["dsm_iv"].apply(lambda x: dsm_spectrum[x])
+    df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_labels[x])
     df["sex"] = df["sex"].apply(lambda x: sex[x])
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
@@ -127,12 +137,19 @@ def load_abide_ii_pheno() -> DataFrame:
         3: "PDD-NOS",
         -9999: np.nan,
     }
+    dsm_iv_labels = {
+        "control": 0.0,
+        "autism": 1.0,
+        "aspergers": 2.0,
+        "PDD-NOS": 3.0,
+        np.nan: np.nan,
+    }
     dsm5_diagnoses = {
-        "control": "control",
-        "autism": "ASD",
-        "aspergers": "ASD",
-        "PDD-NOS": "ASD",
-        np.nan: "NaN",
+        "control": 0.0,
+        "autism": 1.0,
+        "aspergers": 1.0,
+        "PDD-NOS": 1.0,
+        np.nan: np.nan,
     }
     dx = {
         1: 1,  # 1 in their table is "autism",
@@ -183,8 +200,8 @@ def load_abide_ii_pheno() -> DataFrame:
         "sex": [Tag.Demographics, Tag.Feature],
         "age": [Tag.Demographics, Tag.Feature],
         "autism": [Tag.Target, Tag.Classification],
-        "dsm_iv": [Tag.Target, Tag.Classification],
-        "dsm5_spectrum": [Tag.Target, Tag.Classification],
+        "dsm_iv": [Tag.Target, Tag.Multiclass],
+        "dsm5_spectrum": [Tag.Target, Tag.Multiclass],
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
         "piq": [Tag.Target, Tag.Regression],
@@ -197,6 +214,7 @@ def load_abide_ii_pheno() -> DataFrame:
     df["autism"] = df["autism"].apply(lambda x: dx[x])
     df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_iv_diagnoses[x])
     df["dsm5_spectrum"] = df["dsm_iv"].apply(lambda x: dsm5_diagnoses[x])
+    df["dsm_iv"] = df["dsm_iv"].apply(lambda x: dsm_iv_labels[x])
     df["sex"] = df["sex"].apply(lambda x: sex[x])
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
@@ -229,6 +247,13 @@ def load_adhd200_pheno() -> DataFrame:
         "Full4 IQ": "fiq",
         "Verbal IQ": "viq",
         "Performance IQ": "piq",
+    }
+    binary_dx = {
+        "0": 0.0,
+        "1": 1.0,
+        "2": 1.0,
+        "3": 1.0,
+        "pending": np.nan,
     }
 
     path = FreesurferStatsDataset.ADHD_200.phenotypic_file()
@@ -381,6 +406,7 @@ def load_adhd200_pheno() -> DataFrame:
     }
 
     df["site"] = df["site"].apply(lambda x: site[x])
+    df["adhd_spectrum"] = df["diagnosis"].apply(lambda x: binary_dx[x])
 
     keep_cols = {
         "sid": [],
@@ -390,7 +416,8 @@ def load_adhd200_pheno() -> DataFrame:
         "age": [Tag.Demographics, Tag.Feature],
         # "dsm_iv": [Tag.Target, Tag.Classification],
         # "dsm5_spectrum": [Tag.Target, Tag.Classification],
-        "diagnosis": [Tag.Target, Tag.Classification],
+        "diagnosis": [Tag.Target, Tag.Multiclass],
+        "adhd_spectrum": [Tag.Target, Tag.Classification],
         "adhd_score": [Tag.Target, Tag.Regression],
         "adhd_score_inattentive": [Tag.Target, Tag.Regression],
         "adhd_score_hyper": [Tag.Target, Tag.Regression],
@@ -424,7 +451,8 @@ def load_abide_i_complete() -> DataFrame:
     # right merges because pheno files are more complete
     # return pd.merge(wide, pheno, on="sid", how="right")
     # inner merges are all that make sense due to NaNs...
-    return pd.merge(wide, pheno, on="sid", how="inner")
+    complete = pd.merge(wide, pheno, on="sid", how="inner")
+    return complete
 
 
 def load_abide_ii_complete() -> DataFrame:
@@ -434,7 +462,8 @@ def load_abide_ii_complete() -> DataFrame:
     # right merges because pheno files are more complete
     # return pd.merge(wide, pheno, on="sid", how="right")
     # inner merges are all that make sense due to NaNs...
-    return pd.merge(wide, pheno, on="sid", how="inner")
+    complete = pd.merge(wide, pheno, on="sid", how="inner")
+    return complete
 
 
 def load_adhd200_complete() -> DataFrame:
@@ -444,7 +473,8 @@ def load_adhd200_complete() -> DataFrame:
     # right merges because pheno files are more complete
     # return pd.merge(wide, pheno, on="sid", how="right")
     # inner merges are all that make sense due to NaNs...
-    return pd.merge(wide, pheno, on="sid", how="inner")
+    complete = pd.merge(wide, pheno, on="sid", how="inner")
+    return complete
 
 
 if __name__ == "__main__":

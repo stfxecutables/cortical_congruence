@@ -10,7 +10,7 @@ sys.path.append(str(ROOT))  # isort: skip
 
 from dataclasses import dataclass
 from numbers import Integral, Real
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable, Literal, Union
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -23,7 +23,7 @@ from sklearn.model_selection import BaseCrossValidator, cross_validate
 from sklearn.model_selection._split import BaseShuffleSplit, check_cv
 from tqdm import tqdm
 
-from src.enumerables import RegressionMetric
+from src.enumerables import ClassificationMetric, RegressionMetric
 
 
 @dataclass
@@ -34,7 +34,7 @@ class SelectArgs:
     mask: ndarray
     idx: ndarray
     direction: str
-    scoring: RegressionMetric
+    scoring: Union[RegressionMetric, ClassificationMetric]
     cv: Any
 
 
@@ -58,7 +58,7 @@ def _get_score(args: SelectArgs) -> tuple[float, DataFrame]:
         X_new,
         y,
         cv=cv,
-        scoring=RegressionMetric.scorers(),
+        scoring=scoring.__class__.scorers(),
         n_jobs=1,
     )
     key = f"test_{scoring.value}"
@@ -82,7 +82,9 @@ class StepwiseSelect(SequentialFeatureSelector):
         n_features_to_select: float | int | Literal["auto", "warn"] = "warn",
         tol: float | None = None,
         direction: Literal["forward", "backward"] = "forward",
-        scoring: RegressionMetric = RegressionMetric.ExplainedVariance,
+        scoring: Union[
+            RegressionMetric, ClassificationMetric
+        ] = RegressionMetric.ExplainedVariance,
         cv: Iterable | int | BaseShuffleSplit | BaseCrossValidator = 5,
         inner_progress: bool = False,
         n_jobs: int | None = None,

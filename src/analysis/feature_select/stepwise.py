@@ -26,17 +26,28 @@ from joblib import Parallel, delayed
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-from src.constants import PLOTS, TABLES
-from src.enumerables import FreesurferStatsDataset, RegressionMetric, RegressionModel
+from src.constants import CACHED_RESULTS, MEMORY, PLOTS, TABLES, ensure_dir
+from src.enumerables import (
+    ClassificationMetric,
+    ClassificationModel,
+    FreesurferStatsDataset,
+    RegressionMetric,
+    RegressionModel,
+)
 from src.feature_selection.stepwise import StepwiseSelect
 from src.munging.hcp import PhenotypicFocus
 
 if platform.system().lower() == "darwin":
     matplotlib.use("QtAgg")
+
+STEPUP_RESULTS = ensure_dir(TABLES / "stepup_results")
+STEPUP_CACHE = ensure_dir(CACHED_RESULTS / "stepup_selection")
 
 
 class FeatureRegex(Enum):
@@ -45,15 +56,125 @@ class FeatureRegex(Enum):
     FS_OR_CMC = "FS|CMC"
 
 
+@MEMORY.cache(ignore=["df", "inner_progress", "count"], verbose=0)
+def select_target(
+    df: DataFrame,
+    target: str,
+    regex: str,
+    model: Union[RegressionModel, ClassificationModel],
+    params: Mapping,
+    scorer: Union[RegressionMetric, ClassificationMetric],
+    holdout: float | None,
+    max_n_features: int,
+    inner_progress: bool,
+    count: int,
+) -> tuple[DataFrame, float, int]:
+    is_reg = "REG" in str(target)
+    features = df.filter(regex=regex)
+    X = features.to_numpy()
+    y = df[target]
+    if holdout is not None:
+        stratify = None if is_reg else y
+        df, df_test = train_test_split(df, test_size=holdout, stratify=stratify)
+    else:
+        df_test = df.copy()
+    if model in [ClassificationModel.Logistic, ClassificationModel.SVC]:
+        params = {**params, **dict()}
+    idx_nan = y.isnull()
+    X, y = X[~idx_nan], y[~idx_nan].to_numpy()
+    if model is RegressionModel.Lasso:
+        X = np.asfortranarray(X)
+
+    seq = StepwiseSelect(
+        n_features_to_select=max_n_features,
+        tol=1e-5,
+        estimator=model.get(params),  # type: ignore
+        direction="forward",
+        scoring=scorer,
+        cv=5,
+        n_jobs=-1,
+        inner_progress=inner_progress,
+    )
+    seq.fit(X, y)
+    s = np.array(seq.iteration_scores)
+    best = np.max(seq.iteration_scores)
+    if scorer in RegressionMetric.inverted():
+        best = -best
+    n_best = int(np.min(np.where(s == s.max())))
+    info = seq.iteration_metrics[n_best]
+    info = info.drop(columns=["fit_time", "score_time"])
+    info = info.mean()
+    if is_reg:
+        for reg in RegressionMetric.inverted():
+            info[reg.value] = -info[reg.value]
+    if holdout is not None:
+        idx = seq.iteration_features
+        X_test = df_test.filter(regex=regex).iloc[:, idx].to_numpy()
+        y_test = df_test[target]
+        estimator = model.get(params)
+        estimator.fit(features.iloc[:, idx].to_numpy(), y)
+        y_pred = estimator.predict(X_test)
+        holdout_info = dict()
+        for metric in scorer.__class__:
+            if (
+                isinstance(estimator, LogisticRegression)
+                and metric is ClassificationMetric.AUROC
+            ):
+                y_prob = estimator.predict_proba(X_test)
+                if y_prob.shape[1] == 2:
+                    # sklearn auc implementation very bugged
+                    y_prob = y_prob[:, 0]
+                    auc = float(
+                        roc_auc_score(y_test, y_pred, average="macro", multi_class="ovr")
+                    )
+                    holdout_info[f"test_{metric.value}"] = max(1 - auc, auc)
+                else:
+                    holdout_info[f"test_{metric.value}"] = metric(y_test, y_prob)
+            else:
+                holdout_info[f"test_{metric.value}"] = metric(y_test, y_pred)
+    else:
+        holdout_info = {}
+    results = DataFrame(
+        {
+            "source": regex,
+            "model": model.value,
+            "target": str(target).replace("TARGET__", ""),
+            "scorer": scorer.value,
+            "best_score": best,
+            **info.to_dict(),
+            **holdout_info,
+            "n_best": n_best,
+            "features": str(seq.iteration_features),
+        },
+        index=[count],
+    )
+    return results, best, n_best
+    name = str(target).replace("TARGET__", "")
+    metric = (
+        f"{np.round(100 * best, 3)}%"
+        if scorer is RegressionMetric.ExplainedVariance
+        else f"{np.round(best, 4)}"
+    )
+    pbar.set_description(f"{name}: {scorer.value.upper()}={metric} @ {n_best} features")
+    count += 1
+
+
 def stepup_feature_select(
     dataset: FreesurferStatsDataset,
     feature_regex: FeatureRegex,
-    model: RegressionModel = RegressionModel.Lasso,
-    scoring: RegressionMetric = RegressionMetric.MeanAbsoluteError,
+    models: tuple[RegressionModel, ClassificationModel] = (
+        RegressionModel.Lasso,
+        ClassificationModel.Logistic,
+    ),
+    scoring: tuple[RegressionMetric, ClassificationMetric] = (
+        RegressionMetric.MeanAbsoluteError,
+        ClassificationMetric.AUROC,
+    ),
     max_n_features: int = 100,
     holdout: float | None = 0.25,
     nans: Literal["mean", "drop"] = "mean",
-    params: Mapping | None = None,
+    reg_params: Mapping | None = None,
+    cls_params: Mapping | None = None,
     inner_progress: bool = False,
     use_cached: bool = True,
 ) -> DataFrame:
@@ -68,11 +189,11 @@ def stepup_feature_select(
     feature_regex: Literal["FS", "CMC", "FS|CMC"]
         Regex to use with `df.filter(regex=feature_regex)`
 
-    model: RegressionModel = RegressionModel.Lasso
-        Model to use for performing feature selection.
+    models: tuple[RegressionModel, ClassificationModel]
+        Models to use for performing feature selection.
 
-    scoring: RegressionMetric = RegressionMetric.MeanAbsoluteError
-        Evaluation metric for selection.
+    scoring: tuple[RegressionMetric, ClassificationMetric]
+        Evaluation metrics for selection.
 
     max_n_features: int = 100
         Number of features after which to stop selection.
@@ -84,8 +205,11 @@ def stepup_feature_select(
     holdout: float | None = 0.25
         If a value in (0, 1), evaluate selected features on a random holdout.
 
-    params: Mapping | None = None
-        Params to pass to `model`.
+    reg_params: Mapping | None = None
+        Params to pass to `reg_model`.
+
+    cls_params: Mapping | None = None
+        Params to pass to `cls_model`.
 
     use_cached: bool = True
         If True, load saved results if available.
@@ -116,13 +240,20 @@ def stepup_feature_select(
         features: a string of the form "[f1, f2, ...]" where each fi is the
                   column index of the selected feature at iteration i
     """
-    if params is None:
-        params = dict()
-    h = f"_holdout={holdout}" if holdout is not None else ""
+
+    if reg_params is None:
+        reg_params = dict()
+    if cls_params is None:
+        cls_params = dict()
+    reg_model, cls_model = models
+    reg_scoring, cls_scoring = scoring
     regex = feature_regex.value
+
+    h = f"_holdout={holdout}" if holdout is not None else ""
     r = regex.replace("|", "+")
     fname = (
-        f"{dataset.value}_{model.value}_stepup_{scoring.value}_selected"
+        f"{dataset.value}_{reg_model.value}_{cls_model.value}"
+        f"_stepup_{reg_scoring.value}_{cls_scoring.value}_selected"
         f"_{r}_n={max_n_features}{h}.parquet"
     )
     scores_out = TABLES / fname
@@ -139,82 +270,45 @@ def stepup_feature_select(
     else:
         raise ValueError(f"Undefined nan handling: {nans}")
 
-    if model is RegressionModel.Lasso:
-        # need to standardize features for co-ordinate descent
+    if (reg_model is RegressionModel.Lasso) or (
+        cls_model is ClassificationModel.Logistic
+    ):
+        # need to standardize features for co-ordinate descent in LASSO, keep
+        # comparisons to Logistic the same
         feature_cols = df.filter(regex=regex).columns
         df.loc[:, feature_cols] = StandardScaler().fit_transform(df[feature_cols])
-
-    if holdout is not None:
-        df, df_test = train_test_split(df, test_size=holdout)
-    else:
-        df_test = df
 
     all_scores = []
     count = 0
 
-    features = df.filter(regex=regex)
     cols = df.filter(regex="TARGET").columns.to_list()
     pbar = tqdm(cols, leave=True)
     for target in pbar:
-        X = features.to_numpy()
-        y = df[target]
-        seq = StepwiseSelect(
-            n_features_to_select=max_n_features,
-            tol=1e-5,
-            estimator=model.get(params),  # type: ignore
-            direction="forward",
-            scoring=scoring,
-            cv=5,
-            n_jobs=-1,
+        is_reg = "REG" in str(target)
+        model = reg_model if is_reg else cls_model
+        params = reg_params if is_reg else cls_params
+        scorer = reg_scoring if is_reg else cls_scoring
+        results, best, n_best = select_target(
+            target=target,
+            df=df,
+            regex=regex,
+            model=model,
+            params=params,
+            scorer=scorer,
+            holdout=holdout,
+            max_n_features=max_n_features,
             inner_progress=inner_progress,
+            count=count,
         )
-        seq.fit(X, y)
-        s = np.array(seq.iteration_scores)
-        best = np.max(seq.iteration_scores)
-        if scoring in RegressionMetric.inverted():
-            best = -best
-        n_best = np.min(np.where(s == s.max()))
-        info = seq.iteration_metrics[n_best]
-        info = info.drop(columns=["fit_time", "score_time"])
-        info = info.mean()
-        for reg in RegressionMetric.inverted():
-            info[reg.value] = -info[reg.value]
-        if holdout is not None:
-            idx = seq.iteration_features
-            X_test = df_test.filter(regex=regex).iloc[:, idx].to_numpy()
-            y_test = df_test[target]
-            estimator = model.get(params)
-            estimator.fit(features.iloc[:, idx].to_numpy(), y)
-            y_pred = estimator.predict(X_test)
-            holdout_info = {
-                f"test_{reg.value}": reg(y_test, y_pred) for reg in RegressionMetric
-            }
-        else:
-            holdout_info = {}
-        all_scores.append(
-            DataFrame(
-                {
-                    "source": regex,
-                    "model": model.value,
-                    "target": str(target).replace("TARGET__", ""),
-                    "scorer": scoring.value,
-                    "best_score": best,
-                    **info.to_dict(),
-                    **holdout_info,
-                    "n_best": n_best,
-                    "features": str(seq.iteration_features),
-                },
-                index=[count],
-            )
-        )
+        all_scores.append(results)
         name = str(target).replace("TARGET__", "")
         metric = (
             f"{np.round(100 * best, 3)}%"
-            if scoring is RegressionMetric.ExplainedVariance
+            if scorer is RegressionMetric.ExplainedVariance
             else f"{np.round(best, 4)}"
         )
         pbar.set_description(
-            f"{name}: {scoring.value.upper()}={metric} @ {n_best} features"
+            f"{name}: {scorer.value.upper()}={metric} @ {n_best} features"
         )
         count += 1
     scores = pd.concat(all_scores, axis=0)
@@ -229,12 +323,16 @@ if __name__ == "__main__":
         scores = stepup_feature_select(
             dataset=FreesurferStatsDataset.ADHD_200,
             feature_regex=regex,
-            model=RegressionModel.Lasso,
-            scoring=RegressionMetric.MeanAbsoluteError,
-            max_n_features=50,
+            models=(RegressionModel.Lasso, ClassificationModel.Logistic),
+            scoring=(
+                RegressionMetric.MeanAbsoluteError,
+                ClassificationMetric.BalancedAccuracy,
+            ),
+            max_n_features=1,
             holdout=0.25,
             nans="mean",
-            params=dict(alpha=10.0),
+            reg_params=dict(alpha=10.0),
+            cls_params=dict(),
             inner_progress=True,
         )
         # scores["source"] = regex

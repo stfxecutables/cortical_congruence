@@ -10,6 +10,7 @@ from sklearn.metrics import median_absolute_error as mad
 from sklearn.metrics import precision_score
 from sklearn.metrics import r2_score as r2
 from sklearn.metrics import recall_score, roc_auc_score
+from sklearn.preprocessing import OneHotEncoder
 
 
 def smae(y_true: ndarray, y_pred: ndarray, **kwargs: Mapping) -> float:
@@ -31,3 +32,32 @@ mad_scorer = make_scorer(mad, greater_is_better=False)
 smad_scorer = make_scorer(smad, greater_is_better=False)
 expl_var_scorer = make_scorer(expl_var, greater_is_better=True)
 r2_scorer = make_scorer(r2, greater_is_better=True)
+
+acc_scorer = make_scorer(accuracy_score, greater_is_better=True)
+acc_bal_scorer = make_scorer(balanced_accuracy_score, greater_is_better=True)
+
+auroc_scorer = make_scorer(
+    lambda y_true, y_pred: roc_auc_score(
+        y_true, y_pred, average="macro", multi_class="ovr"
+    ),
+    greater_is_better=True,
+    needs_proba=True,
+)
+f1_scorer = make_scorer(
+    lambda y_true, y_pred: f1_score(
+        y_true, y_pred, average="macro", zero_division=np.nan
+    ),
+    greater_is_better=True,
+)
+precision_scorer = make_scorer(
+    lambda y_true, y_pred: precision_score(
+        y_true, y_pred, average="macro", zero_division=np.nan
+    ),
+    greater_is_better=True,
+)
+recall_scorer = make_scorer(
+    lambda y_true, y_pred: recall_score(
+        y_true, y_pred, average="macro", zero_division=np.nan
+    ),
+    greater_is_better=True,
+)

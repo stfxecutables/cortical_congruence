@@ -10,6 +10,7 @@ sys.path.append(str(ROOT))  # isort: skip
 from enum import Enum
 from typing import Any, Callable, Mapping, Union
 
+import numpy as np
 from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
 from pandas import DataFrame
@@ -23,19 +24,25 @@ from sklearn.svm import SVC, SVR
 
 from src.constants import DATA
 from src.metrics import (
+    acc_bal_scorer,
+    acc_scorer,
     accuracy_score,
+    auroc_scorer,
     balanced_accuracy_score,
     expl_var,
     expl_var_scorer,
     f1_score,
+    f1_scorer,
     mad,
     mad_scorer,
     mae,
     mae_scorer,
     precision_score,
+    precision_scorer,
     r2,
     r2_scorer,
     recall_score,
+    recall_scorer,
     roc_auc_score,
     smad,
     smad_scorer,
@@ -60,6 +67,7 @@ class Tag(Enum):
     Target = "TARGET"
     Regression = "REG"
     Classification = "CLS"
+    Multiclass = "MULTI"
     # Feature or target construction types
     Reduced = "REDUCED"
     Constructed = "CONSTR"
@@ -390,12 +398,12 @@ class ClassificationMetric(Enum):
 
     def scorer(self) -> Metric:
         metrics = {
-            ClassificationMetric.Accuracy: accuracy_score,
-            ClassificationMetric.AUROC: roc_auc_score,
-            ClassificationMetric.BalancedAccuracy: balanced_accuracy_score,
-            ClassificationMetric.F1: f1_score,
-            ClassificationMetric.Precision: precision_score,
-            ClassificationMetric.Recall: recall_score,
+            ClassificationMetric.Accuracy: acc_scorer,
+            ClassificationMetric.AUROC: auroc_scorer,
+            ClassificationMetric.BalancedAccuracy: acc_bal_scorer,
+            ClassificationMetric.F1: f1_scorer,
+            ClassificationMetric.Precision: precision_scorer,
+            ClassificationMetric.Recall: recall_scorer,
         }
         return metrics[self]
 
@@ -404,7 +412,22 @@ class ClassificationMetric(Enum):
         return {reg.value: reg.scorer() for reg in ClassificationMetric}
 
     def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
-        metric = self.scorer()
+        metric = {
+            ClassificationMetric.Accuracy: accuracy_score,
+            ClassificationMetric.AUROC: lambda y_true, y_pred: roc_auc_score(
+                y_true, y_pred, average="macro", multi_class="ovr"
+            ),
+            ClassificationMetric.BalancedAccuracy: balanced_accuracy_score,
+            ClassificationMetric.F1: lambda y_true, y_pred: f1_score(
+                y_true, y_pred, average="macro", zero_division=np.nan
+            ),
+            ClassificationMetric.Precision: lambda y_true, y_pred: precision_score(
+                y_true, y_pred, average="macro", zero_division=np.nan
+            ),
+            ClassificationMetric.Recall: lambda y_true, y_pred: recall_score(
+                y_true, y_pred, average="macro", zero_division=np.nan
+            ),
+        }[self]
         return metric(y_true, y_pred)
 
 
