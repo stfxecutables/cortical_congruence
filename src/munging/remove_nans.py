@@ -16,7 +16,8 @@ from pandas import DataFrame
 def remove_nans(complete: DataFrame) -> DataFrame:
     # uncontroversial
     df = complete.dropna(axis="columns", how="all")
-    df = df.dropna(axis="rows", how="all")
+    df = df.dropna(axis="rows", how="all")  # type: ignore
+    # NOTE: Need to really limit to the inner join, which gives number of
     nonnull_counts = len(df) - df.isnull().sum()
     # keep features where more than half of subjects not missing data
     keep = nonnull_counts > 0.5 * len(df)

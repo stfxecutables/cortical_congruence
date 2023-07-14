@@ -16,7 +16,10 @@ def smae(y_true: ndarray, y_pred: ndarray, **kwargs: Mapping) -> float:
 
 def smad(y_true: ndarray, y_pred: ndarray, **kwargs: Mapping) -> float:
     y_dummy = np.abs(np.median(y_true) - y_true)
-    return float(mad(y_true, y_pred) / np.median(y_dummy))
+    med = np.median(y_dummy)
+    if med == 0:
+        med = 1.0
+    return float(mad(y_true, y_pred) / med)
 
 
 mae_scorer = make_scorer(mae, greater_is_better=False)

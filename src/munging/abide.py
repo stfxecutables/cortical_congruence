@@ -411,6 +411,9 @@ def load_adhd200_pheno() -> DataFrame:
     df.index = Index(name="sid", data=df["sid"].astype(str))
     df.drop(columns="sid", inplace=True)
     df.columns.name = "feature"
+    df = df.applymap(lambda x: np.nan if (x == "-999" or x == "pending") else x)
+    targ_cols = df.filter(regex="TARGET").columns
+    df.loc[:, targ_cols] = df[targ_cols].astype(float)
     return df
 
 
@@ -418,41 +421,33 @@ def load_abide_i_complete() -> DataFrame:
     pheno = load_abide_i_pheno()
     cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ABIDE_I)
     wide = to_wide_subject_table(cmc)
-    return pd.merge(wide, pheno, on="sid", how="left")
+    # right merges because pheno files are more complete
+    # return pd.merge(wide, pheno, on="sid", how="right")
+    # inner merges are all that make sense due to NaNs...
+    return pd.merge(wide, pheno, on="sid", how="inner")
 
 
 def load_abide_ii_complete() -> DataFrame:
     pheno = load_abide_ii_pheno()
     cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ABIDE_II)
     wide = to_wide_subject_table(cmc)
-    return pd.merge(wide, pheno, on="sid", how="left")
+    # right merges because pheno files are more complete
+    # return pd.merge(wide, pheno, on="sid", how="right")
+    # inner merges are all that make sense due to NaNs...
+    return pd.merge(wide, pheno, on="sid", how="inner")
 
 
 def load_adhd200_complete() -> DataFrame:
-    pheno = load_abide_ii_pheno()
+    pheno = load_adhd200_pheno()
     cmc = compute_CMC_table(dataset=FreesurferStatsDataset.ADHD_200)
     wide = to_wide_subject_table(cmc)
-    return pd.merge(wide, pheno, on="sid", how="left")
+    # right merges because pheno files are more complete
+    # return pd.merge(wide, pheno, on="sid", how="right")
+    # inner merges are all that make sense due to NaNs...
+    return pd.merge(wide, pheno, on="sid", how="inner")
 
 
 if __name__ == "__main__":
-    df_i = load_abide_i_pheno()
-    # print(df_i)
-    df_ii = load_abide_ii_pheno()
-    # print(df_ii)
-    df_adhd = load_adhd200_pheno()
-    # print(df_adhd)
-    phenos = {
-        FreesurferStatsDataset.ABIDE_I: df_i,
-        FreesurferStatsDataset.ABIDE_II: df_ii,
-        FreesurferStatsDataset.ADHD_200: df_adhd,
-    }
-    for dataset, pheno in phenos.items():
-        cmc = compute_CMC_table(dataset=dataset)
-        wide = to_wide_subject_table(cmc)
-        df = pd.merge(wide, pheno, on="sid", how="left")
-        print(df)
-
-    # df = compute_CMC_table(FreesurferStatsDataset.ABIDE_I)
-    # wide = to_wide_subject_table(df)
-    # print(df)
+    load_abide_i_complete()
+    load_abide_ii_complete()
+    load_adhd200_complete()

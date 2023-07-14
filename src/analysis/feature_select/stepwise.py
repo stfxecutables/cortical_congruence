@@ -14,7 +14,7 @@ from enum import Enum
 from math import ceil
 from pathlib import Path
 from random import shuffle
-from typing import Any, Literal, Mapping
+from typing import Any, Literal, Mapping, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -48,9 +48,10 @@ def stepup_feature_select(
     model: RegressionModel = RegressionModel.Lasso,
     scoring: RegressionMetric = RegressionMetric.MeanAbsoluteError,
     max_n_features: int = 100,
-    inner_progress: bool = False,
     holdout: float | None = 0.25,
+    nans: Literal["mean", "drop"] = "mean",
     params: Mapping | None = None,
+    inner_progress: bool = False,
     use_cached: bool = True,
 ) -> DataFrame:
     """
@@ -128,6 +129,13 @@ def stepup_feature_select(
     df = dataset.load_complete(
         focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
     )
+    if nans == "drop":
+        raise NotImplementedError("NaN Dropping not implemented")
+    elif nans == "mean":
+        df = df.fillna(df.mean())
+    else:
+        raise ValueError(f"Undefined nan handling: {nans}")
+
     if holdout is not None:
         df, df_test = train_test_split(df, test_size=holdout)
     else:
@@ -211,14 +219,15 @@ if __name__ == "__main__":
     all_scores = []
     for regex in FeatureRegex:
         scores = stepup_feature_select(
-            dataset=FreesurferStatsDataset.HCP,
+            dataset=FreesurferStatsDataset.ADHD_200,
             feature_regex=regex,
             model=RegressionModel.Lasso,
             scoring=RegressionMetric.MeanAbsoluteError,
             max_n_features=40,
-            inner_progress=True,
             holdout=0.25,
+            nans="mean",
             params=dict(alpha=10.0),
+            inner_progress=True,
         )
         # scores["source"] = regex
         print(scores.drop(columns=["features"]))
