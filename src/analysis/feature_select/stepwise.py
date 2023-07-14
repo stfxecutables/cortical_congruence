@@ -223,7 +223,7 @@ if __name__ == "__main__":
             feature_regex=regex,
             model=RegressionModel.Lasso,
             scoring=RegressionMetric.MeanAbsoluteError,
-            max_n_features=40,
+            max_n_features=50,
             holdout=0.25,
             nans="mean",
             params=dict(alpha=10.0),
