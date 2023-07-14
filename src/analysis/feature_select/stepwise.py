@@ -27,6 +27,7 @@ from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
 from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from src.constants import PLOTS, TABLES
@@ -137,6 +138,11 @@ def stepup_feature_select(
         df = df.fillna(df.mean())
     else:
         raise ValueError(f"Undefined nan handling: {nans}")
+
+    if model is RegressionModel.Lasso:
+        # need to standardize features for co-ordinate descent
+        feature_cols = df.filter(regex=regex).columns
+        df.loc[:, feature_cols] = StandardScaler().fit_transform(df[feature_cols])
 
     if holdout is not None:
         df, df_test = train_test_split(df, test_size=holdout)
