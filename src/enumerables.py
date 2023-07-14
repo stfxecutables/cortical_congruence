@@ -13,23 +13,30 @@ from typing import Any, Callable, Mapping, Union
 from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
 from pandas import DataFrame
+from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.neural_network import MLPRegressor as MLP
-from sklearn.svm import SVR
+from sklearn.svm import SVC, SVR
 
 from src.constants import DATA
 from src.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
     expl_var,
     expl_var_scorer,
+    f1_score,
     mad,
     mad_scorer,
     mae,
     mae_scorer,
+    precision_score,
     r2,
     r2_scorer,
+    recall_score,
+    roc_auc_score,
     smad,
     smad_scorer,
     smae,
@@ -314,6 +321,21 @@ class RegressionModel(Enum):
         }[self]()
 
 
+class ClassificationModel(Enum):
+    Logistic = "logistic"
+    SVC = "svc"
+    Dummy = "dummy"
+
+    def get(self, params: Mapping | None = None) -> Regressor:
+        if params is None:
+            params = dict()
+        return {
+            ClassificationModel.Logistic: lambda: LogisticRegression(**params),
+            ClassificationModel.SVC: lambda: SVC(**params),
+            ClassificationModel.Dummy: lambda: DummyClassifier(strategy="most_frequent"),
+        }[self]()
+
+
 class RegressionMetric(Enum):
     MeanAbsoluteError = "mae"
     ScaledMeanAbsoluteError = "smae"
@@ -355,6 +377,34 @@ class RegressionMetric(Enum):
             RegressionMetric.ExplainedVariance: expl_var,
             RegressionMetric.RSquared: r2,
         }[self]
+        return metric(y_true, y_pred)
+
+
+class ClassificationMetric(Enum):
+    Accuracy = "acc"
+    AUROC = "auroc"
+    BalancedAccuracy = "acc_bal"
+    F1 = "f1"
+    Precision = "precision"
+    Recall = "recall"
+
+    def scorer(self) -> Metric:
+        metrics = {
+            ClassificationMetric.Accuracy: accuracy_score,
+            ClassificationMetric.AUROC: roc_auc_score,
+            ClassificationMetric.BalancedAccuracy: balanced_accuracy_score,
+            ClassificationMetric.F1: f1_score,
+            ClassificationMetric.Precision: precision_score,
+            ClassificationMetric.Recall: recall_score,
+        }
+        return metrics[self]
+
+    @staticmethod
+    def scorers() -> dict[str, Metric]:
+        return {reg.value: reg.scorer() for reg in ClassificationMetric}
+
+    def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
+        metric = self.scorer()
         return metric(y_true, y_pred)
 
 

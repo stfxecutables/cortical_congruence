@@ -2,11 +2,14 @@ from typing import Mapping
 
 import numpy as np
 from numpy import ndarray
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import explained_variance_score as expl_var
-from sklearn.metrics import make_scorer
+from sklearn.metrics import f1_score, make_scorer
 from sklearn.metrics import mean_absolute_error as mae
 from sklearn.metrics import median_absolute_error as mad
+from sklearn.metrics import precision_score
 from sklearn.metrics import r2_score as r2
+from sklearn.metrics import recall_score, roc_auc_score
 
 
 def smae(y_true: ndarray, y_pred: ndarray, **kwargs: Mapping) -> float:
