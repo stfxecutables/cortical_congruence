@@ -340,7 +340,7 @@ def evaluate_HCP_features() -> None:
 
 
 if __name__ == "__main__":
-    # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning,ignore::ConvergenceWarning"
+    os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
     # evaluate_HCP_features()
     # sys.exit()
     all_scores = []
