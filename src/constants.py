@@ -30,12 +30,12 @@ from typing import (
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from joblib import Memory
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 from typing_extensions import Literal
-from joblib import Memory
 
 
 def ensure_dir(path: Path) -> Path:
@@ -63,6 +63,8 @@ ADHD200_PHENO = DATA / "ADHD200_preprocessed_phenotypics.tsv"
 
 HCP_FEATURE_INFO = DATA / "HCP/phenotypic_data/available_feature_details.csv"
 CMC_TABLE = ROOT / "abide_cmc_combined.parquet"
+
+REGULARIZATION_ALPHAS = np.logspace(start=-2, stop=5, num=50, base=10)
 
 """
 Notes

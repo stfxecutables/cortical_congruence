@@ -16,13 +16,14 @@ from numpy import ndarray
 from pandas import DataFrame
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor as Dummy
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import LassoCV
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import LogisticRegressionCV, Ridge
 from sklearn.neural_network import MLPRegressor as MLP
 from sklearn.svm import SVC, SVR
 
 from src.constants import DATA
+from src.constants import REGULARIZATION_ALPHAS as ALPHAS
 from src.metrics import (
     acc_bal_scorer,
     acc_scorer,
@@ -318,6 +319,13 @@ class RegressionModel(Enum):
     def get(self, params: Mapping | None = None) -> Regressor:
         if params is None:
             params = dict()
+        lasso = dict(
+            precompute=True,
+            selection="random",
+            max_iter=5000,
+            alphas=ALPHAS,
+            cv=3,
+        )
         return {
             RegressionModel.LightGBM: lambda: LGB(**params),
             RegressionModel.Linear: lambda: LR(**params),
@@ -325,7 +333,7 @@ class RegressionModel(Enum):
             RegressionModel.Dummy: lambda: Dummy(strategy="mean"),
             RegressionModel.MLP: lambda: MLP(**params),
             RegressionModel.Ridge: lambda: Ridge(**params),
-            RegressionModel.Lasso: lambda: Lasso(**{**params, **dict(max_iter=2000)}),
+            RegressionModel.Lasso: lambda: LassoCV(**{**params, **lasso}),
         }[self]()
 
 
@@ -337,8 +345,20 @@ class ClassificationModel(Enum):
     def get(self, params: Mapping | None = None) -> Regressor:
         if params is None:
             params = dict()
+        logistic = dict(
+            Cs=np.sort(np.array([1 / (2 * alpha) for alpha in ALPHAS])),
+            cv=3,
+            penalty="l1",
+            solver="saga",  # needed for "l1" and multinomial
+            precompute=True,
+            selection="random",
+            multi_class="multinomial",
+            max_iter=500,
+        )
         return {
-            ClassificationModel.Logistic: lambda: LogisticRegression(**params),
+            ClassificationModel.Logistic: lambda: LogisticRegressionCV(
+                **{**params, **logistic}
+            ),
             ClassificationModel.SVC: lambda: SVC(**params),
             ClassificationModel.Dummy: lambda: DummyClassifier(strategy="most_frequent"),
         }[self]()

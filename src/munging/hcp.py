@@ -509,7 +509,7 @@ def load_HCP_complete(
         corrs = targs.corr()  # most correlations differ at most by 0.1 with spearman
         clusters = get_cluster_corrs(corrs)
         targs_reduced, loadings = reduce_HCP_clusters(data=targs, clusters=clusters)
-        targs_reduced.rename(columns=lambda s: f"TARGET__{s}", inplace=True)
+        targs_reduced.rename(columns=lambda s: f"TARGET__REG__{s}", inplace=True)
         others = df.drop(columns=cols, errors="ignore")
         df = pd.concat([others, targs_reduced], axis=1)
     if reduce_cmc:

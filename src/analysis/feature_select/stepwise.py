@@ -317,7 +317,7 @@ if __name__ == "__main__":
     alpha = 10.0
     for regex in FeatureRegex:
         scores = stepup_feature_select(
-            dataset=FreesurferStatsDataset.ADHD_200,
+            dataset=FreesurferStatsDataset.HCP,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.Logistic),
             scoring=(
@@ -327,16 +327,19 @@ if __name__ == "__main__":
             max_n_features=50,
             holdout=0.25,
             nans="mean",
-            reg_params=dict(alpha=alpha),
-            cls_params=dict(C=1.0 / (2.0 * alpha)),
+            reg_params=dict(),
+            cls_params=dict(),
             inner_progress=True,
         )
         # scores["source"] = regex
         print(scores.drop(columns=["features"]))
         all_scores.append(scores)
     df = pd.concat(all_scores, axis=0)
+    classification = df[df.scorer == "acc_bal"].dropna(axis=1).drop(columns="features")
+    regression = df[df.scorer != "acc_bal"].dropna(axis=1).drop(columns="features")
     with pd.option_context("display.max_rows", 500):
-        print(df.sort_values(by="test_exp-var", ascending=True))
+        print(regression.sort_values(by="test_exp-var", ascending=True).round(3))
+        print(classification.sort_values(by="test_f1", ascending=True).round(3))
 
     sys.exit()
     reduce_cmc = False
