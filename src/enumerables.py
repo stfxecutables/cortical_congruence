@@ -354,7 +354,7 @@ class ClassificationModel(Enum):
             multi_class="multinomial",
             max_iter=500,
         )
-        ridge = dict(alphas=np.logspace(start=-5, stop=5, num=200, base=10), cv=3)
+        ridge = dict(alphas=np.logspace(start=-5, stop=5, num=100, base=10), cv=3)
         return {
             ClassificationModel.Logistic: lambda: LogisticRegressionCV(
                 **{**params, **logistic}
