@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -120,6 +120,11 @@ def select_target(
         y_pred = estimator.predict(X_test)
         holdout_info = dict()
         for metric in scorer.__class__:
+            if (
+                isinstance(estimator, RidgeClassifierCV)
+                and metric is ClassificationMetric.AUROC
+            ):
+                continue
             if (
                 isinstance(estimator, LogisticRegression)
                 and metric is ClassificationMetric.AUROC
@@ -267,7 +272,7 @@ def stepup_feature_select(
         raise ValueError(f"Undefined nan handling: {nans}")
 
     if (reg_model is RegressionModel.Lasso) or (
-        cls_model is ClassificationModel.Logistic
+        cls_model in [ClassificationModel.Logistic, ClassificationModel.Ridge]
     ):
         # need to standardize features for co-ordinate descent in LASSO, keep
         # comparisons to Logistic the same
@@ -340,7 +345,7 @@ def evaluate_HCP_features() -> None:
 
 
 if __name__ == "__main__":
-    os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+    # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
     # evaluate_HCP_features()
     # sys.exit()
     all_scores = []

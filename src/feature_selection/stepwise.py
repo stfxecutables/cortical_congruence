@@ -53,12 +53,14 @@ def _get_score(args: SelectArgs) -> tuple[float, DataFrame]:
     if direction == "backward":
         candidate_mask = ~candidate_mask
     X_new = X[:, candidate_mask]
+    scorers = scoring.__class__.no_proba_scorers()
+
     results = cross_validate(
         estimator,
         X_new,
         y,
         cv=cv,
-        scoring=scoring.__class__.scorers(),
+        scoring=scorers,
         n_jobs=1,
     )
     key = f"test_{scoring.value}"
