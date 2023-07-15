@@ -312,12 +312,39 @@ def stepup_feature_select(
     return scores
 
 
-if __name__ == "__main__":
+def evaluate_HCP_features() -> None:
     all_scores = []
-    alpha = 10.0
     for regex in FeatureRegex:
         scores = stepup_feature_select(
             dataset=FreesurferStatsDataset.HCP,
+            feature_regex=regex,
+            models=(RegressionModel.Lasso, ClassificationModel.Logistic),
+            scoring=(
+                RegressionMetric.MeanAbsoluteError,
+                ClassificationMetric.BalancedAccuracy,
+            ),
+            max_n_features=50,
+            holdout=0.25,
+            nans="mean",
+            reg_params=dict(),
+            cls_params=dict(),
+            inner_progress=True,
+        )
+        # scores["source"] = regex
+        print(scores.drop(columns=["features"]))
+        all_scores.append(scores)
+    df = pd.concat(all_scores, axis=0)
+    with pd.option_context("display.max_rows", 500):
+        print(df.sort_values(by="test_exp-var", ascending=True).round(3))
+
+
+if __name__ == "__main__":
+    # evaluate_HCP_features()
+    # sys.exit()
+    all_scores = []
+    for regex in FeatureRegex:
+        scores = stepup_feature_select(
+            dataset=FreesurferStatsDataset.ABIDE_I,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.Logistic),
             scoring=(
