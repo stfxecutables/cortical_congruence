@@ -350,10 +350,8 @@ class ClassificationModel(Enum):
             cv=3,
             penalty="l1",
             solver="saga",  # needed for "l1" and multinomial
-            precompute=True,
-            selection="random",
             multi_class="multinomial",
-            max_iter=500,
+            max_iter=50000,
         )
         return {
             ClassificationModel.Logistic: lambda: LogisticRegressionCV(

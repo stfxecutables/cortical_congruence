@@ -9,6 +9,7 @@ sys.path.append(str(ROOT))  # isort: skip
 
 
 import json
+import os
 import pickle
 import platform
 import sys
@@ -339,6 +340,7 @@ def evaluate_HCP_features() -> None:
 
 
 if __name__ == "__main__":
+    os.environ["PYTHONWARNINGS"] = "ignore::UserWarning,ignore::ConvergenceWarning"
     # evaluate_HCP_features()
     # sys.exit()
     all_scores = []
