@@ -26,7 +26,7 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.linear_model import LassoCV, LogisticRegressionCV
+from sklearn.linear_model import LassoCV, LogisticRegressionCV, RidgeClassifierCV
 from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import (
     MinMaxScaler,
@@ -277,5 +277,66 @@ def test_lr_cv() -> None:
     #    MinMaxScaler       500  0.602634  0.567712  0.574001  0.571443  0.578948      44
 
 
+def test_ridge_cv() -> None:
+    df = FreesurferStatsDataset.ABIDE_I.load_complete()
+    feats = df.filter(regex="FS").copy()
+    feats = feats.fillna(feats.mean())
+    cls = df.filter(regex="CLS").filter(regex="autism")
+    idx_keep = ~cls.iloc[:, 0].isnull()
+    feats = feats.loc[idx_keep]
+    cls = cls.loc[idx_keep]
+    scalers = {
+        # "MinMaxScaler": lambda: MinMaxScaler(),  # consistently better
+        "StandardScaler": lambda: StandardScaler(),
+    }
+    rows = []
+    for scaler_name, constructor in tqdm(scalers.items(), leave=True):
+        scaler = constructor()
+
+        for _ in tqdm(range(50), leave=False):
+            for max_iter in [500]:
+                n_feat = int(np.random.randint(2, 51))
+                idx = np.random.permutation(feats.shape[1])[:n_feat]
+                X = np.asfortranarray(scaler.fit_transform(feats.iloc[:, idx].to_numpy()))
+                y = np.asfortranarray(cls.to_numpy().ravel())
+                # alphas = [1e-2, 1e-1, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0]
+                # alphas = np.logspace(start=-2, stop=2, num=50, base=10)  # 0.019
+                alphas = np.logspace(start=-2, stop=5, num=50, base=10)  # better
+                # alphas = np.logspace(start=-2, stop=5, num=100, base=10)  # not really better
+                alphas = np.logspace(
+                    start=-5, stop=5, num=200, base=10
+                )  # also not better
+                lasso = RidgeClassifierCV(
+                    alphas=alphas,
+                    cv=3,
+                )
+                results = cross_validate(
+                    lasso, X, y, cv=4, n_jobs=4, scoring="balanced_accuracy"
+                )
+                scores = results["test_score"].tolist()
+                row = DataFrame(
+                    data=[
+                        [scaler_name, max_iter] + scores + [np.mean(scores)] + [n_feat]
+                    ],
+                    columns=[
+                        "scaler",
+                        "max_iter",
+                        "fold1",
+                        "fold2",
+                        "fold3",
+                        "fold4",
+                        "mean",
+                        "n_feat",
+                    ],
+                    index=[0],
+                )
+                rows.append(row)
+
+    summary = pd.concat(rows, axis=0, ignore_index=True)
+    with pd.option_context("display.max_rows", 1000):
+        print(summary.sort_values(by="mean", ascending=True))
+
+
 if __name__ == "__main__":
-    test_lr_cv()
+    # test_lr_cv()
+    test_ridge_cv()
