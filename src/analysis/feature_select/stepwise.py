@@ -74,9 +74,10 @@ def select_target(
     count: int,
 ) -> tuple[DataFrame, float, int]:
     is_reg = "REG" in str(target)
-    features = df.filter(regex=regex)
-    X = features.to_numpy()
     y = df[target]
+    idx_nan = y.isnull()
+    df = df.loc[idx_nan].copy()
+
     if holdout is not None:
         stratify = None if is_reg else y
         df, df_test = train_test_split(df, test_size=holdout, stratify=stratify)
@@ -84,8 +85,10 @@ def select_target(
         df_test = df.copy()
     if model in [ClassificationModel.Logistic, ClassificationModel.SVC]:
         params = {**params, **dict()}
-    idx_nan = y.isnull()
-    X, y = X[~idx_nan], y[~idx_nan].to_numpy()
+
+    features = df.filter(regex=regex)
+    X = features.to_numpy()
+    y = y.to_numpy()
     if model is RegressionModel.Lasso:
         X = np.asfortranarray(X)
 
