@@ -402,10 +402,6 @@ class RegressionMetric(Enum):
         return {reg.value: reg.scorer() for reg in RegressionMetric}
 
     @staticmethod
-    def no_proba_scorers() -> dict[str, Metric]:
-        return RegressionMetric.scorers()
-
-    @staticmethod
     def inverted() -> list[RegressionMetric]:
         return [
             RegressionMetric.MeanAbsoluteError,
@@ -448,14 +444,6 @@ class ClassificationMetric(Enum):
     @staticmethod
     def scorers() -> dict[str, Metric]:
         return {reg.value: reg.scorer() for reg in ClassificationMetric}
-
-    @staticmethod
-    def no_proba_scorers() -> dict[str, Metric]:
-        return {
-            reg.value: reg.scorer()
-            for reg in ClassificationMetric
-            if reg is not ClassificationMetric.AUROC
-        }
 
     def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
         metric = {

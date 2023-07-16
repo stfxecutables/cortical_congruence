@@ -153,7 +153,7 @@ def stepup_feature_select(
     ),
     scoring: tuple[RegressionMetric, ClassificationMetric] = (
         RegressionMetric.MeanAbsoluteError,
-        ClassificationMetric.AUROC,
+        ClassificationMetric.BalancedAccuracy,
     ),
     max_n_features: int = 100,
     holdout: float | None = 0.25,
