@@ -22,6 +22,64 @@ from src.enumerables import FreesurferStatsDataset, Tag
 from src.munging.fs_stats.tabularize import compute_CMC_table, to_wide_subject_table
 
 
+def fix_abide_i_iqs(iqs: DataFrame) -> DataFrame:
+    """
+                          fiq
+                        count        mean        std    min     25%    50%     75%    max
+    ftt
+    das_ii_sa            56.0   99.767857  20.115115   41.0   88.00   99.0  114.00  141.0
+    git                   1.0  110.000000        NaN  110.0  110.00  110.0  110.00  110.0
+    hawik_iv             14.0  105.000000  13.983507   79.0  101.00  104.5  113.00  129.0
+    nan                 136.0  106.496324  14.022402   76.0   96.50  107.5  114.50  147.5
+    wais                  3.0  102.666667   3.055050  100.0  101.00  102.0  104.00  106.0
+    wais_iii             63.0  113.888889  15.209410   71.0  102.50  112.0  127.50  146.0
+    wasi                550.0  109.629091  14.443933   65.0  100.00  109.0  120.00  148.0
+    wisc                 28.0  113.785714  11.113412   93.0  106.25  112.5  123.25  134.0
+    wisc_iii             15.0  105.533333  13.222636   79.0  101.50  106.0  113.50  129.0
+    wisc_iii_dutch        0.0         NaN        NaN    NaN     NaN    NaN     NaN    NaN
+    wisc_iv_4_subtests   31.0  110.506452  16.366143   69.6  102.00  112.0  123.00  132.0
+    wisc_iv_full        102.0  102.607843  15.813365   64.0   90.00  102.5  116.50  132.0
+    wst                  41.0  112.829268   9.692529   93.0  110.00  112.0  118.00  133.0
+                    viq
+                  count        mean        std    min     25%    50%     75%    max
+    vtt
+    das_ii_sa      69.0  102.681159  20.852770   42.0   90.00  103.0  115.00  145.0
+    git             8.0  109.125000  12.574776   93.0  100.75  106.5  116.25  133.0
+    nan            84.0  106.738095  17.147214   50.0   97.00  108.5  119.00  137.0
+    ppvt          120.0  111.933333  16.778204   75.0   98.75  110.5  123.00  180.0
+    stanford        1.0  126.000000        NaN  126.0  126.00  126.0  126.00  126.0
+    wais            3.0  109.333333   3.785939  105.0  108.00  111.0  111.50  112.0
+    wais_iii       43.0  112.627907  12.512895   87.0  104.00  113.0  121.00  136.0
+    wasi          512.0  107.925781  15.348985   55.0   98.00  108.0  118.00  149.0
+    wisc           28.0  111.178571  12.322979   89.0  100.75  111.0  121.25  132.0
+    wisc4           1.0   91.000000        NaN   91.0   91.00   91.0   91.00   91.0
+    wisc_iii        1.0  119.000000        NaN  119.0  119.00  119.0  119.00  119.0
+    wisc_iv_full   47.0   98.510638  16.112205   59.0   87.50   99.0  107.00  132.0
+                    piq
+                  count        mean        std    min     25%    50%     75%    max
+    ptt
+    das_ii_sa      70.0  100.100000  19.082696   37.0   88.00  100.0  110.75  148.0
+    git             8.0  118.875000   8.166788  110.0  112.25  120.5  121.00  135.0
+    nan            83.0  106.819277  12.599017   63.0  101.50  107.0  116.00  132.0
+    ravens        134.0  101.544776  15.798837   59.0   92.00  103.0  113.00  133.0
+    stanford        1.0  125.000000        NaN  125.0  125.00  125.0  125.00  125.0
+    wais            3.0   97.333333   2.886751   94.0   96.50   99.0   99.00   99.0
+    wais_iii       43.0  107.697674  16.739652   74.0   98.00  107.0  116.50  155.0
+    wasi          512.0  109.173828  14.502819   67.0  100.00  109.0  119.00  157.0
+    wisc           28.0  113.071429  10.252113   92.0  106.75  110.5  121.50  129.0
+    wisc4           1.0  104.000000        NaN  104.0  104.00  104.0  104.00  104.0
+    wisc_iii        1.0   90.000000        NaN   90.0   90.00   90.0   90.00   90.0
+    wisc_iv_full   47.0   96.425532  12.308966   73.0   89.00   94.0  104.00  122.0
+
+    """
+    iq = iqs.rename(
+        columns={"FIQ_TEST_TYPE": "ftt", "VIQ_TEST_TYPE": "vtt", "PIQ_TEST_TYPE": "ptt"}
+    ).applymap(lambda x: "NaN" if x in [np.nan, "-9999", "nan"] else x)
+    for meas, col in zip(["fiq", "viq", "piq"], ["ftt", "vtt", "ptt"]):
+        iq.loc[:, col] = iq[col].str.strip().str.lower()  # lol yes, really
+        print(iq[[meas, col]].groupby(col).describe())
+
+
 @lru_cache
 def load_abide_i_pheno() -> DataFrame:
     dsm_diagnoses = {
@@ -102,6 +160,7 @@ def load_abide_i_pheno() -> DataFrame:
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
         "piq": [Tag.Target, Tag.Regression],
+        "int_g_like": [Tag.Target, Tag.Regression],
     }
     renames = {
         col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
@@ -115,6 +174,11 @@ def load_abide_i_pheno() -> DataFrame:
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
     df["piq"].replace(-9999.0, np.nan, inplace=True)
+    iq = df.filter(regex="fiq|viq|piq")
+    df["int_g_like"] = FA(n_components=1, rotation="varimax").fit_transform(
+        iq.fillna(iq.mean())
+    )
+
     df = df.loc[:, list(keep_cols.keys())].copy()
     df.rename(columns=renames, inplace=True)
     df.index = Index(name="sid", data=df["sid"].astype(str))
@@ -205,6 +269,7 @@ def load_abide_ii_pheno() -> DataFrame:
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
         "piq": [Tag.Target, Tag.Regression],
+        "int_g_like": [Tag.Target, Tag.Regression],
     }
     renames = {
         col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
@@ -219,6 +284,10 @@ def load_abide_ii_pheno() -> DataFrame:
     df["fiq"].replace(-9999.0, np.nan, inplace=True)
     df["viq"].replace(-9999.0, np.nan, inplace=True)
     df["piq"].replace(-9999.0, np.nan, inplace=True)
+    iq = df.filter(regex="fiq|viq|piq")
+    df["int_g_like"] = FA(n_components=1, rotation="varimax").fit_transform(
+        iq.fillna(iq.mean())
+    )
     df = df[list(keep_cols.keys())].copy()
     df.rename(columns=renames, inplace=True)
     df.index = Index(name="sid", data=df["sid"].astype(str))
@@ -436,10 +505,15 @@ def load_adhd200_pheno() -> DataFrame:
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
         "piq": [Tag.Target, Tag.Regression],
+        "int_g_like": [Tag.Target, Tag.Regression],
     }
     renames = {
         col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
     }
+    iq = df.filter(regex="fiq|viq|piq")
+    df["int_g_like"] = FA(n_components=1, rotation="varimax").fit_transform(
+        iq.fillna(iq.mean())
+    )
     df = df.loc[:, list(keep_cols.keys())].copy()
     df["diagnosis"] = df["diagnosis"].apply(lambda x: ternary_dx[x])
     df.rename(columns=renames, inplace=True)
