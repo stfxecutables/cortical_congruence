@@ -267,7 +267,9 @@ def stepup_feature_select(
     if nans == "drop":
         raise NotImplementedError("NaN Dropping not implemented")
     elif nans == "mean":
-        df = df.fillna(df.mean())
+        feats = df.filter(regex=regex)
+        feature_cols = feats.columns
+        df.loc[:, feature_cols] = feats.fillna(feats.mean())
     else:
         raise ValueError(f"Undefined nan handling: {nans}")
 
