@@ -8,6 +8,7 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
+import traceback
 from dataclasses import dataclass
 from numbers import Integral, Real
 from typing import Any, Iterable, Literal, Union
@@ -39,33 +40,37 @@ class SelectArgs:
 
 
 def _get_score(args: SelectArgs) -> tuple[float, DataFrame]:
-    current_mask = args.mask
-    feature_idx = args.idx
-    estimator = args.estimator
-    direction = args.direction
-    X = args.X
-    y = args.y
-    cv = args.cv
-    scoring = args.scoring
+    try:
+        current_mask = args.mask
+        feature_idx = args.idx
+        estimator = args.estimator
+        direction = args.direction
+        X = args.X
+        y = args.y
+        cv = args.cv
+        scoring = args.scoring
 
-    candidate_mask = current_mask.copy()
-    candidate_mask[feature_idx] = True
-    if direction == "backward":
-        candidate_mask = ~candidate_mask
-    X_new = X[:, candidate_mask]
-    scorers = scoring.__class__.no_proba_scorers()
+        candidate_mask = current_mask.copy()
+        candidate_mask[feature_idx] = True
+        if direction == "backward":
+            candidate_mask = ~candidate_mask
+        X_new = X[:, candidate_mask]
+        scorers = scoring.__class__.no_proba_scorers()
 
-    results = cross_validate(
-        estimator,
-        X_new,
-        y,
-        cv=cv,
-        scoring=scorers,
-        n_jobs=1,
-    )
-    key = f"test_{scoring.value}"
-    df = DataFrame(results).rename(columns=lambda s: s.replace("test_", ""))
-    return float(results[key].mean()), df
+        results = cross_validate(
+            estimator,
+            X_new,
+            y,
+            cv=cv,
+            scoring=scorers,
+            n_jobs=1,
+        )
+        key = f"test_{scoring.value}"
+        df = DataFrame(results).rename(columns=lambda s: s.replace("test_", ""))
+        return float(results[key].mean()), df
+    except Exception as e:
+        traceback.print_exc()
+        raise e
     # return cross_val_score(
     #     estimator,
     #     X_new,
