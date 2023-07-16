@@ -76,7 +76,8 @@ def select_target(
     is_reg = "REG" in str(target)
     y = df[target]
     idx_nan = y.isnull()
-    df = df[idx_nan].copy()
+    df = df[~idx_nan].copy()
+    y = y[~idx_nan]
 
     if holdout is not None:
         stratify = None if is_reg else y
@@ -88,7 +89,7 @@ def select_target(
 
     features = df.filter(regex=regex)
     X = features.to_numpy()
-    y = y.to_numpy()
+    y = df[target].to_numpy()
     if model is RegressionModel.Lasso:
         X = np.asfortranarray(X)
 
