@@ -26,7 +26,12 @@ from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.linear_model import LassoCV, LogisticRegressionCV, RidgeClassifierCV
+from sklearn.linear_model import (
+    LassoCV,
+    LogisticRegressionCV,
+    RidgeClassifierCV,
+    SGDClassifier,
+)
 from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import (
     MinMaxScaler,
@@ -337,6 +342,70 @@ def test_ridge_cv() -> None:
         print(summary.sort_values(by="mean", ascending=True))
 
 
+def test_sgd() -> None:
+    df = FreesurferStatsDataset.ABIDE_I.load_complete()
+    feats = df.filter(regex="FS").copy()
+    feats = feats.fillna(feats.mean())
+    cls = df.filter(regex="CLS").filter(regex="autism")
+    idx_keep = ~cls.iloc[:, 0].isnull()
+    feats = feats.loc[idx_keep]
+    cls = cls.loc[idx_keep]
+
+    rows = []
+
+    # for _ in tqdm(range(50), leave=False):
+    for loss in tqdm(
+        # ["log_loss", "hinge", "squared_hinge", "perceptron", "huber"], leave=False
+        ["log_loss"],
+        leave=False,
+    ):
+        for alpha in tqdm(
+            np.logspace(start=-6, stop=-3, num=10, base=10).tolist(), leave=False
+        ):
+            for _ in range(500):
+                n_feat = int(np.random.randint(2, 51))
+                idx = np.random.permutation(feats.shape[1])[:n_feat]
+                # n_feat = "all"
+                # idx = np.arange(feats.shape[1])
+                X = np.asfortranarray(
+                    StandardScaler().fit_transform(feats.iloc[:, idx].to_numpy())
+                )
+                y = np.asfortranarray(cls.to_numpy().ravel())
+                sgd = SGDClassifier(
+                    # loss="log_loss",
+                    # loss="hinge",
+                    loss=loss,
+                    penalty="l1",
+                    alpha=alpha,
+                    early_stopping=True,
+                    n_iter_no_change=10,
+                )
+                results = cross_validate(
+                    sgd, X, y, cv=4, n_jobs=4, scoring="balanced_accuracy"
+                )
+                scores = results["test_score"].tolist()
+                row = DataFrame(
+                    data=[[alpha, loss] + scores + [np.mean(scores)] + [n_feat]],
+                    columns=[
+                        "alpha",
+                        "loss",
+                        "fold1",
+                        "fold2",
+                        "fold3",
+                        "fold4",
+                        "mean",
+                        "n_feat",
+                    ],
+                    index=[0],
+                )
+                rows.append(row)
+
+    summary = pd.concat(rows, axis=0, ignore_index=True)
+    with pd.option_context("display.max_rows", 1000):
+        print(summary.sort_values(by="mean", ascending=True).tail(500))
+
+
 if __name__ == "__main__":
     # test_lr_cv()
-    test_ridge_cv()
+    # test_ridge_cv()
+    test_sgd()

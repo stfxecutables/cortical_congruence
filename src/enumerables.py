@@ -18,7 +18,12 @@ from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.linear_model import LogisticRegressionCV, Ridge, RidgeClassifierCV
+from sklearn.linear_model import (
+    LogisticRegressionCV,
+    Ridge,
+    RidgeClassifierCV,
+    SGDClassifier,
+)
 from sklearn.neural_network import MLPRegressor as MLP
 from sklearn.svm import SVC, SVR
 
@@ -340,6 +345,7 @@ class RegressionModel(Enum):
 class ClassificationModel(Enum):
     Logistic = "logistic"
     Ridge = "ridge"
+    SGD = "sgd"
     SVC = "svc"
     Dummy = "dummy"
 
@@ -355,10 +361,17 @@ class ClassificationModel(Enum):
             max_iter=500,
         )
         ridge = dict(alphas=np.logspace(start=-5, stop=5, num=100, base=10), cv=3)
+        sgd = dict(
+            loss="log_loss",
+            penalty="l1",
+            alpha=1e-4,
+            n_iter_no_change=5,
+        )
         return {
             ClassificationModel.Logistic: lambda: LogisticRegressionCV(
                 **{**params, **logistic}
             ),
+            ClassificationModel.SGD: lambda: SGDClassifier(**{**params, **sgd}),
             ClassificationModel.Ridge: lambda: RidgeClassifierCV(**{**params, **ridge}),
             ClassificationModel.SVC: lambda: SVC(**params),
             ClassificationModel.Dummy: lambda: DummyClassifier(strategy="most_frequent"),

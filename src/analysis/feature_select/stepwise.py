@@ -324,7 +324,7 @@ def evaluate_HCP_features() -> None:
         scores = stepup_feature_select(
             dataset=FreesurferStatsDataset.HCP,
             feature_regex=regex,
-            models=(RegressionModel.Lasso, ClassificationModel.Logistic),
+            models=(RegressionModel.Lasso, ClassificationModel.SGD),
             scoring=(
                 RegressionMetric.MeanAbsoluteError,
                 ClassificationMetric.BalancedAccuracy,
@@ -353,7 +353,7 @@ if __name__ == "__main__":
         scores = stepup_feature_select(
             dataset=FreesurferStatsDataset.ABIDE_I,
             feature_regex=regex,
-            models=(RegressionModel.Lasso, ClassificationModel.Ridge),
+            models=(RegressionModel.Lasso, ClassificationModel.SGD),
             scoring=(
                 RegressionMetric.MeanAbsoluteError,
                 ClassificationMetric.BalancedAccuracy,
