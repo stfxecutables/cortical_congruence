@@ -465,6 +465,12 @@ class ClassificationMetric(Enum):
         return metric(y_true, y_pred)
 
 
+class FeatureRegex(Enum):
+    FS = "FS"
+    CMC = "CMC"
+    FS_OR_CMC = "FS|CMC"
+
+
 if __name__ == "__main__":
     # print(FreesurferStatsDataset.ABIDE_I.load_pheno())
     # print(FreesurferStatsDataset.ABIDE_II.load_pheno())

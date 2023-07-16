@@ -40,6 +40,7 @@ from src.constants import CACHED_RESULTS, MEMORY, PLOTS, TABLES, ensure_dir
 from src.enumerables import (
     ClassificationMetric,
     ClassificationModel,
+    FeatureRegex,
     FreesurferStatsDataset,
     RegressionMetric,
     RegressionModel,
@@ -52,12 +53,6 @@ if platform.system().lower() == "darwin":
 
 STEPUP_RESULTS = ensure_dir(TABLES / "stepup_results")
 STEPUP_CACHE = ensure_dir(CACHED_RESULTS / "stepup_selection")
-
-
-class FeatureRegex(Enum):
-    FS = "FS"
-    CMC = "CMC"
-    FS_OR_CMC = "FS|CMC"
 
 
 @MEMORY.cache(ignore=["df", "inner_progress", "count"], verbose=0)
@@ -330,10 +325,7 @@ def evaluate_HCP_features() -> None:
         print(df.sort_values(by="test_exp-var", ascending=True).round(3))
 
 
-if __name__ == "__main__":
-    # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-    # evaluate_HCP_features()
-    # sys.exit()
+def evaluate_ABIDE_I_features() -> None:
     all_scores = []
     for regex in FeatureRegex:
         scores = stepup_feature_select(
@@ -361,77 +353,37 @@ if __name__ == "__main__":
         print(regression.sort_values(by="test_exp-var", ascending=True).round(3))
         print(classification.sort_values(by="test_f1", ascending=True).round(3))
 
-    sys.exit()
-    reduce_cmc = False
-    reduce_targets = True
-    df = FreesurferStatsDataset.HCP.load_complete(
-        focus=PhenotypicFocus.All, reduce_targets=reduce_targets, reduce_cmc=reduce_cmc
-    )
-    sbn.set_style("darkgrid")
-    targs = df.filter(regex="TARGET").rename(columns=lambda s: s.replace("TARGET__", ""))
-    targs.hist(bins=50, color="black")
-    fig = plt.gcf()
-    fig.set_size_inches(10, 10)
-    fig.tight_layout()
-    fig.savefig(str(PLOTS / "HCP_latent_target_distributions.png"), dpi=300)
-    plt.close()
 
-    print(
-        targs.describe(percentiles=[0.025, 0.25, 0.5, 0.75, 0.975])
-        .round(2)
-        .T.to_markdown(tablefmt="simple", floatfmt="0.2f")
-    )
-
-    sys.exit()
-    # cross_val_score(LGB(max_depth=1, min_data_in_leaf=5, extra_trees=True, max_bin=20, n_jobs=-1), x, y, cv=5, scoring="explained_variance")  # NOTE: for CMC
-
-    scores = [stepup_feature_select(feature_regex=reg) for reg in ["CMC", "FS", "FS|CMC"]]
-    scores = pd.concat(scores, axis=0).reset_index(drop=True)
-    scores.insert(3, "CMC ratio", 0.0)
-    scores["Feat Names"] = ""
-    for i in range(scores.shape[0]):
-        regex = scores.loc[i, "source"]
-        n = int(scores.loc[i, "n_best"])  # type: ignore
-        idx = np.array(eval(scores.loc[i, "features"]), dtype=np.int64)
-        cols = df.filter(regex=regex).columns.to_numpy()[idx]
-        n_cmc = sum("CMC" in col for col in cols)
-        if regex == "CMC":
-            scores.loc[i, "CMC ratio"] = n_cmc / n
-        scores.loc[i, "Feat Names"] = f'"{str(cols)}"'
-
-    scores_out = TABLES / "stepup_selected_scores_linear_all_sources.csv.gz"
-    scores.to_csv(scores_out, compression={"method": "gzip", "compresslevel": 9})
-    print(f"Saved linear scores to {scores_out}")
-    print(scores)
-    sys.exit()
-    pivoted = (
-        scores.drop(columns="features")
-        .groupby("source")
-        .apply(
-            lambda g: g.drop(columns="source").sort_values(
-                by=["test_exp_var", "target"], ascending=[False, True]
-            )
+def evaluate_ABIDE2_features() -> None:
+    all_scores = []
+    for regex in FeatureRegex:
+        scores = stepup_feature_select(
+            dataset=FreesurferStatsDataset.ABIDE_II,
+            feature_regex=regex,
+            models=(RegressionModel.Lasso, ClassificationModel.SGD),
+            scoring=(
+                RegressionMetric.MeanAbsoluteError,
+                ClassificationMetric.BalancedAccuracy,
+            ),
+            max_n_features=50,
+            holdout=0.25,
+            nans="mean",
+            reg_params=dict(),
+            cls_params=dict(),
+            inner_progress=True,
         )
-        .droplevel(1)
-        .reset_index()
-        .pivot(columns="source", index="target")
-    )
-    print(
-        pivoted.sort_values(
-            by=[("Exp.Var", "FS|CMC"), ("Exp.Var", "FS"), ("Exp.Var", "CMC")],
-            ascending=False,
-        )
-        .round(2)
-        .rename(
-            columns={
-                "n_best": "n_selected",
-                "Exp.Var": "Explained Variance (%)",
-                "CMC ratio": "Proportion CMC Features",
-            }
-        )
-    )
+        # scores["source"] = regex
+        print(scores.drop(columns=["features"]))
+        all_scores.append(scores)
+    df = pd.concat(all_scores, axis=0)
+    classification = df[df.scorer == "acc_bal"].dropna(axis=1).drop(columns="features")
+    regression = df[df.scorer != "acc_bal"].dropna(axis=1).drop(columns="features")
+    with pd.option_context("display.max_rows", 500):
+        print(regression.sort_values(by="test_exp-var", ascending=True).round(3))
+        print(classification.sort_values(by="test_f1", ascending=True).round(3))
 
-    # features = df.filter(regex=feature_regex)
 
-    # pd.options.display.max_rows = 500
-    # load_HCP_complete.clear()
+if __name__ == "__main__":
+    # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+    evaluate_ABIDE2_features()
+    sys.exit()
