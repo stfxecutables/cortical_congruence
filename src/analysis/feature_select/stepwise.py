@@ -76,7 +76,7 @@ def select_target(
     is_reg = "REG" in str(target)
     y = df[target]
     idx_nan = y.isnull()
-    df = df.loc[idx_nan].copy()
+    df = df[idx_nan].copy()
 
     if holdout is not None:
         stratify = None if is_reg else y
