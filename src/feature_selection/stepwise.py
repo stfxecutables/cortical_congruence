@@ -64,6 +64,7 @@ def _get_score(args: SelectArgs) -> tuple[float, DataFrame]:
             cv=cv,
             scoring=scorers,
             n_jobs=1,
+            error_score="raise",
         )
         key = f"test_{scoring.value}"
         df = DataFrame(results).rename(columns=lambda s: s.replace("test_", ""))
