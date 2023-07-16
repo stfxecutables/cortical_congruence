@@ -124,27 +124,7 @@ def select_target(
         y_pred = estimator.predict(X_test)
         holdout_info = dict()
         for metric in scorer.__class__:
-            if (
-                isinstance(estimator, RidgeClassifierCV)
-                and metric is ClassificationMetric.AUROC
-            ):
-                continue
-            if (
-                isinstance(estimator, LogisticRegression)
-                and metric is ClassificationMetric.AUROC
-            ):
-                y_prob = estimator.predict_proba(X_test)
-                if y_prob.shape[1] == 2:
-                    # sklearn auc implementation very bugged
-                    y_prob = y_prob[:, 0]
-                    auc = float(
-                        roc_auc_score(y_test, y_pred, average="macro", multi_class="ovr")
-                    )
-                    holdout_info[f"test_{metric.value}"] = max(1 - auc, auc)
-                else:
-                    holdout_info[f"test_{metric.value}"] = metric(y_test, y_prob)
-            else:
-                holdout_info[f"test_{metric.value}"] = metric(y_test, y_pred)
+            holdout_info[f"test_{metric.value}"] = metric(y_test, y_pred)
     else:
         holdout_info = {}
     results = DataFrame(

@@ -428,7 +428,7 @@ class RegressionMetric(Enum):
 
 class ClassificationMetric(Enum):
     Accuracy = "acc"
-    AUROC = "auroc"
+    # AUROC = "auroc"
     BalancedAccuracy = "acc_bal"
     F1 = "f1"
     Precision = "precision"
@@ -437,7 +437,7 @@ class ClassificationMetric(Enum):
     def scorer(self) -> Metric:
         metrics = {
             ClassificationMetric.Accuracy: acc_scorer,
-            ClassificationMetric.AUROC: auroc_scorer,
+            # ClassificationMetric.AUROC: auroc_scorer,
             ClassificationMetric.BalancedAccuracy: acc_bal_scorer,
             ClassificationMetric.F1: f1_scorer,
             ClassificationMetric.Precision: precision_scorer,
@@ -460,9 +460,9 @@ class ClassificationMetric(Enum):
     def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
         metric = {
             ClassificationMetric.Accuracy: accuracy_score,
-            ClassificationMetric.AUROC: lambda y_true, y_pred: roc_auc_score(
-                y_true, y_pred, average="macro", multi_class="ovr"
-            ),
+            # ClassificationMetric.AUROC: lambda y_true, y_pred: roc_auc_score(
+            #     y_true, y_pred, average="macro", multi_class="ovr"
+            # ),
             ClassificationMetric.BalancedAccuracy: balanced_accuracy_score,
             ClassificationMetric.F1: lambda y_true, y_pred: f1_score(
                 y_true, y_pred, average="macro", zero_division=np.nan
