@@ -342,6 +342,7 @@ def evaluate_ABIDE_I_features() -> None:
             reg_params=dict(),
             cls_params=dict(),
             inner_progress=True,
+            use_cached=False,
         )
         # scores["source"] = regex
         print(scores.drop(columns=["features"]))
@@ -371,6 +372,7 @@ def evaluate_ABIDE2_features() -> None:
             reg_params=dict(),
             cls_params=dict(),
             inner_progress=True,
+            use_cached=False,
         )
         # scores["source"] = regex
         print(scores.drop(columns=["features"]))
@@ -400,6 +402,7 @@ def evaluate_ADHD200_features() -> None:
             reg_params=dict(),
             cls_params=dict(),
             inner_progress=True,
+            use_cached=False,
         )
         # scores["source"] = regex
         print(scores.drop(columns=["features"]))
@@ -414,7 +417,7 @@ def evaluate_ADHD200_features() -> None:
 
 if __name__ == "__main__":
     # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-    evaluate_ABIDE_I_features()
-    # evaluate_ABIDE2_features()
-    # evaluate_ADHD200_features()
+    # evaluate_ABIDE_I_features()
+    evaluate_ABIDE2_features()
+    evaluate_ADHD200_features()
     sys.exit()
