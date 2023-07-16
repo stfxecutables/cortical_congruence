@@ -35,9 +35,9 @@ def load_abide_i_pheno() -> DataFrame:
     dsm_labels = {
         "control": 0.0,
         "autism": 1.0,
-        "aspergers": 2.0,
-        "PDD-NOS": 3.0,
-        "aspergers-or-PDD-NOS": 4.0,
+        "aspergers": 2.0,  # only 93
+        "PDD-NOS": 2.0,  # only 36
+        "aspergers-or-PDD-NOS": 2.0,  # only 6
         np.nan: np.nan,
     }
     dsm_spectrum = {
