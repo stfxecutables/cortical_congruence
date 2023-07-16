@@ -383,7 +383,37 @@ def evaluate_ABIDE2_features() -> None:
         print(classification.sort_values(by="test_f1", ascending=True).round(3))
 
 
+def evaluate_ADHD200_features() -> None:
+    all_scores = []
+    for regex in FeatureRegex:
+        scores = stepup_feature_select(
+            dataset=FreesurferStatsDataset.ADHD_200,
+            feature_regex=regex,
+            models=(RegressionModel.Lasso, ClassificationModel.SGD),
+            scoring=(
+                RegressionMetric.MeanAbsoluteError,
+                ClassificationMetric.BalancedAccuracy,
+            ),
+            max_n_features=50,
+            holdout=0.25,
+            nans="mean",
+            reg_params=dict(),
+            cls_params=dict(),
+            inner_progress=True,
+        )
+        # scores["source"] = regex
+        print(scores.drop(columns=["features"]))
+        all_scores.append(scores)
+    df = pd.concat(all_scores, axis=0)
+    classification = df[df.scorer == "acc_bal"].dropna(axis=1).drop(columns="features")
+    regression = df[df.scorer != "acc_bal"].dropna(axis=1).drop(columns="features")
+    with pd.option_context("display.max_rows", 500):
+        print(regression.sort_values(by="test_exp-var", ascending=True).round(3))
+        print(classification.sort_values(by="test_f1", ascending=True).round(3))
+
+
 if __name__ == "__main__":
     # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-    evaluate_ABIDE2_features()
+    # evaluate_ABIDE2_features()
+    evaluate_ADHD200_features()
     sys.exit()

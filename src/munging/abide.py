@@ -255,6 +255,13 @@ def load_adhd200_pheno() -> DataFrame:
         "3": 1.0,
         "pending": np.nan,
     }
+    ternary_dx = {  # too few of ADHD-Hyperactive/Impulsive, drop
+        "0": 0.0,  # 585
+        "1": 1.0,  # 212 - ADHD-Combined
+        "2": np.nan,  #  13 - ADHD-Hyperactive/Impulsive
+        "3": 2.0,  # 137 - ADHD-Inattentive
+        "pending": np.nan,
+    }
 
     path = FreesurferStatsDataset.ADHD_200.phenotypic_file()
     df = pd.read_csv(path, sep="\t")
@@ -434,6 +441,7 @@ def load_adhd200_pheno() -> DataFrame:
         col: f"{Tag.combine(tags)}__{col}" for col, tags in list(keep_cols.items())[1:]
     }
     df = df.loc[:, list(keep_cols.keys())].copy()
+    df["diagnosis"] = df["diagnosis"].apply(lambda x: ternary_dx[x])
     df.rename(columns=renames, inplace=True)
     df.index = Index(name="sid", data=df["sid"].astype(str))
     df.drop(columns="sid", inplace=True)
@@ -441,6 +449,10 @@ def load_adhd200_pheno() -> DataFrame:
     df = df.applymap(lambda x: np.nan if (x == "-999" or x == "pending") else x)
     targ_cols = df.filter(regex="TARGET").columns
     df.loc[:, targ_cols] = df[targ_cols].astype(float)
+    # pandas not respecting above for some reason
+    obj_cols = df.select_dtypes(include="object").columns
+    for col in obj_cols:
+        df[col] = df[col].astype(float)
     return df
 
 
