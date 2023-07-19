@@ -44,11 +44,11 @@ from sklearn.model_selection import (
 from tqdm import tqdm
 from typing_extensions import Literal
 
-from src.constants import TABLES
+from src.constants import TABLES, ensure_dir
 from src.enumerables import FeatureRegex, FreesurferStatsDataset
 from src.munging.hcp import PhenotypicFocus
 
-OUT = TABLES / "lgbm_select"
+OUT = ensure_dir(TABLES / "lgbm_select")
 
 
 @dataclass
@@ -227,7 +227,7 @@ def compare_selection(
     n_reps: int = 5,
 ) -> DataFrame:
     outfile = OUT / (
-        f"{dataset.value}_{feature_regex}_{target_regex}"
+        f"{dataset.value}_{feature_regex.value}_{target_regex}"
         f"_n_reps={n_reps}_lgbm_select_seed_compare.parquet"
     )
     if outfile.exists():
@@ -320,7 +320,7 @@ def _eval_lgb(pargs: LgbmEvalArgs) -> DataFrame:
     )
 
 
-def better_lgbm(
+def lgbm_early_stopping(
     dataset: FreesurferStatsDataset,
     feature_regex: FeatureRegex,
     target_regex: str,
@@ -328,7 +328,12 @@ def better_lgbm(
     val: float | None = 0.25,
     seed: int | None = None,
 ) -> DataFrame:
-    regex = feature_regex.value
+    outfile = OUT / (
+        f"{dataset.value}_{feature_regex.value}_{target_regex}"
+        f"_seed={seed}_lgbm_select_early_stop_seed_compare.parquet"
+    )
+    if outfile.exists():
+        return pd.read_parquet(outfile)
     is_reg, is_bin, X_train, X_test, y_train, y_test = data_setup(
         dataset=dataset,
         feature_regex=feature_regex,
@@ -382,6 +387,8 @@ def better_lgbm(
     dfs: list[DataFrame]
     dfs = Parallel(n_jobs=-1, verbose=10)(delayed(_eval_lgb)(parg) for parg in all_pargs)  # type: ignore  # noqa
     df = pd.concat(dfs, axis=0, ignore_index=True)
+    df.to_parquet(outfile)
+    print(f"Saved results to {outfile}")
     print(df)
     return df
 
@@ -391,7 +398,7 @@ if __name__ == "__main__":
     pd.options.display.max_info_rows = 1000
     pd.options.display.max_colwidth = 180
 
-    better_lgbm(
+    lgbm_early_stopping(
         dataset=FreesurferStatsDataset.ABIDE_I,
         feature_regex=FeatureRegex.FS,
         # target_regex="int_g_like",
