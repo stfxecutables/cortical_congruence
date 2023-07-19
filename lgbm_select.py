@@ -19,18 +19,28 @@ from typing import (
     cast,
     no_type_check,
 )
+from warnings import filterwarnings
 
+import lightgbm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+from lightgbm import Booster, CVBooster
+from lightgbm import Dataset as LGBMDataset
 from lightgbm import LGBMClassifier, LGBMRegressor
+from lightgbm.sklearn import LGBMClassifier, LGBMRegressor
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.metrics import balanced_accuracy_score, explained_variance_score
-from sklearn.model_selection import ParameterGrid, cross_val_score, train_test_split
+from sklearn.model_selection import (
+    ParameterGrid,
+    StratifiedShuffleSplit,
+    cross_val_score,
+    train_test_split,
+)
 from tqdm import tqdm
 from typing_extensions import Literal
 
@@ -47,8 +57,20 @@ class FitArgs:
     lgb_args: Mapping
     X_train: DataFrame
     X_test: DataFrame
-    y_train: DataFrame
-    y_test: DataFrame
+    y_train: ndarray
+    y_test: ndarray
+
+
+@dataclass
+class LgbmEvalArgs:
+    base_params: dict
+    params: dict
+    data_train: LGBMDataset
+    is_reg: bool
+    X_train: DataFrame
+    X_test: DataFrame
+    y_train: ndarray
+    y_test: ndarray
 
 
 def fit_lgb(fit_args: FitArgs) -> DataFrame:
@@ -71,6 +93,7 @@ def fit_lgb(fit_args: FitArgs) -> DataFrame:
     y_test = fit_args.y_test
 
     args = {**defaults, **param}
+
     estimator = LGBMRegressor(**args) if is_reg else LGBMClassifier(**args)
     scoring = "explained_variance" if is_reg else "balanced_accuracy"
     exp_cv = np.mean(
@@ -97,13 +120,13 @@ def fit_lgb(fit_args: FitArgs) -> DataFrame:
     )
 
 
-def lgbm_feature_select(
+def data_setup(
     dataset: FreesurferStatsDataset,
     feature_regex: FeatureRegex,
     target_regex: str,
     holdout: float | None = 0.25,
     seed: int | None = None,
-) -> DataFrame:
+) -> tuple[bool, bool, DataFrame, DataFrame, ndarray, ndarray]:
     regex = feature_regex.value
     df = dataset.load_complete(
         focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
@@ -114,6 +137,7 @@ def lgbm_feature_select(
     df = df.loc[idx_keep.index]
 
     is_reg = "REG" in target_col.item()
+    is_bin = "CLS" in target_col.item()
 
     X = df.filter(regex=regex)
     y = df[target_col]
@@ -128,7 +152,10 @@ def lgbm_feature_select(
     else:
         X_train = X_test = X
         y_train = y_test = y
+    return is_reg, is_bin, X_train, X_test, y_train, y_test
 
+
+def get_params() -> list[dict]:
     max_depth = 4
     depths = list(range(1, max_depth + 1)) if max_depth > -1 else [-1]
     num_leaves = list(range(2, min(64, int(2**max_depth)))) if max_depth > -1 else [64]
@@ -148,7 +175,26 @@ def lgbm_feature_select(
     )
     params = params[np.random.permutation(len(params))]
     print(f"n_params: {len(params)}")
-    params = params.tolist()[:128]
+    return params.tolist()
+
+
+def lgbm_feature_select(
+    dataset: FreesurferStatsDataset,
+    feature_regex: FeatureRegex,
+    target_regex: str,
+    holdout: float | None = 0.25,
+    seed: int | None = None,
+) -> DataFrame:
+    is_reg, is_bin, X_train, X_test, y_train, y_test = data_setup(
+        dataset=dataset,
+        feature_regex=feature_regex,
+        target_regex=target_regex,
+        holdout=holdout,
+        seed=seed,
+    )
+
+    params = get_params()
+    params = params[:128]
     args = [
         FitArgs(
             is_reg=is_reg,
@@ -161,6 +207,7 @@ def lgbm_feature_select(
         for param in params
     ]
 
+    results: list[DataFrame]
     results = Parallel(n_jobs=-1, verbose=10)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
 
     result = pd.concat(results, axis=0, ignore_index=True)
@@ -179,9 +226,9 @@ def compare_selection(
     holdout: float | None = 0.25,
     n_reps: int = 5,
 ) -> DataFrame:
-    outfile = (
-        OUT
-        / f"{dataset.value}_{feature_regex}_{target_regex}_n_reps={n_reps}_lgbm_select_seed_compare.parquet"
+    outfile = OUT / (
+        f"{dataset.value}_{feature_regex}_{target_regex}"
+        f"_n_reps={n_reps}_lgbm_select_seed_compare.parquet"
     )
     if outfile.exists():
         return pd.read_parquet(outfile)
@@ -209,17 +256,156 @@ def compare_selection(
     return df
 
 
+def get_val_score(model: Booster, is_reg: bool) -> float:
+    X = model.valid_sets[0].get_data()
+    y = model.valid_sets[0].get_label()
+    preds = model.predict(X)
+    if is_reg:
+        return float(explained_variance_score(y, preds))
+    if preds.ndim == 1:
+        preds = preds.round()
+        return balanced_accuracy_score(y, preds)
+    preds = np.argmax(preds, axis=1)
+    return balanced_accuracy_score(y, preds)
+
+
+def get_score(model: Booster, X: DataFrame, y: ndarray, is_reg: bool) -> float:
+    preds = model.predict(X)
+    if is_reg:
+        return float(explained_variance_score(y, preds))
+    if preds.ndim == 1:
+        preds = preds.round()
+        return balanced_accuracy_score(y, preds)
+    preds = np.argmax(preds, axis=1)
+    return balanced_accuracy_score(y, preds)
+
+
+def _eval_lgb(pargs: LgbmEvalArgs) -> DataFrame:
+    callbacks = lightgbm.early_stopping(stopping_rounds=10, verbose=False)
+
+    filterwarnings("ignore", message="Overriding", category=UserWarning)
+    filterwarnings("ignore", message=".*n_estimators", category=UserWarning)
+    results = lightgbm.cv(
+        params=pargs.params,
+        train_set=pargs.data_train,
+        nfold=5,
+        stratified=True,
+        callbacks=[callbacks],
+        return_cvbooster=True,
+    )
+    cv_model: CVBooster = results["cvbooster"]
+    val_scores = [get_val_score(m, pargs.is_reg) for m in cv_model.boosters]
+    cv_score = np.mean(val_scores)
+    model = lightgbm.train(
+        params=pargs.params,
+        train_set=pargs.data_train,
+        callbacks=[callbacks],
+    )
+    test_score = get_score(model, pargs.X_test, pargs.y_test, pargs.is_reg)
+    train_score = get_score(model, pargs.X_train, pargs.y_train, pargs.is_reg)
+    args = pargs.params.copy()
+    for key in pargs.base_params.keys():
+        args.pop(key)
+    args.pop("n_jobs")
+
+    cols = (
+        ["exp_tr", "exp_cv", "exp_test", "args"]
+        if pargs.is_reg
+        else ["acc_tr", "acc_cv", "acc_test", "args"]
+    )
+    return DataFrame(
+        data=[(train_score, cv_score, test_score, args)],
+        columns=cols,
+        index=[0],
+    )
+
+
+def better_lgbm(
+    dataset: FreesurferStatsDataset,
+    feature_regex: FeatureRegex,
+    target_regex: str,
+    holdout: float | None = 0.25,
+    val: float | None = 0.25,
+    seed: int | None = None,
+) -> DataFrame:
+    regex = feature_regex.value
+    is_reg, is_bin, X_train, X_test, y_train, y_test = data_setup(
+        dataset=dataset,
+        feature_regex=feature_regex,
+        target_regex=target_regex,
+        holdout=holdout,
+        seed=seed,
+    )
+    data = LGBMDataset(data=X_train, label=y_train, free_raw_data=False)
+    data_test = LGBMDataset(data=X_test, label=y_test, free_raw_data=False)
+    data_val = ""
+    data_train = data
+    if val is not None:
+        idx_train, idx_val = next(
+            StratifiedShuffleSplit(n_splits=1, test_size=val, random_state=seed).split(
+                y_train, y_train
+            )
+        )
+        data_train = data.subset(used_indices=idx_train.tolist())
+        data_val = data.subset(used_indices=idx_val.tolist())
+        data_train.create_valid(data_val)
+
+    objective = "regression" if is_reg else "binary" if is_bin else "multiclass"
+    num_class = len(np.unique(y_train)) if objective == "multiclass" else 1
+    is_unbalance = not is_reg
+    base_params = dict(
+        objective=objective,
+        num_class=num_class,
+        # data=data_train,
+        # valid=data_val,
+        force_col_wise=True,
+        verbosity=-1,
+        is_unbalance=is_unbalance,
+    )
+    all_params = get_params()[:128]
+    all_params = [{**base_params, **params} for params in all_params]
+    filterwarnings("ignore", message="Overriding", category=UserWarning)
+    filterwarnings("ignore", message=".*n_estimators", category=UserWarning)
+    all_pargs = [
+        LgbmEvalArgs(
+            base_params=base_params,
+            params=params,
+            data_train=data_train,
+            is_reg=is_reg,
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
+        for params in all_params
+    ]
+    dfs: list[DataFrame]
+    dfs = Parallel(n_jobs=-1, verbose=10)(delayed(_eval_lgb)(parg) for parg in all_pargs)  # type: ignore  # noqa
+    df = pd.concat(dfs, axis=0, ignore_index=True)
+    print(df)
+    return df
+
+
 if __name__ == "__main__":
     pd.options.display.max_rows = 1000
     pd.options.display.max_info_rows = 1000
     pd.options.display.max_colwidth = 180
 
+    better_lgbm(
+        dataset=FreesurferStatsDataset.ABIDE_I,
+        feature_regex=FeatureRegex.FS,
+        # target_regex="int_g_like",
+        # target_regex="autism",
+        target_regex="MULTI__dsm_iv",
+        holdout=0.25,
+    )
     # lgbm_feature_select(
     #     dataset=FreesurferStatsDataset.ABIDE_I,
     #     feature_regex=FeatureRegex.FS,
-    #     target_regex="autism",
+    #     target_regex="MULTI__dsm_iv",
     #     holdout=0.25,
     # )
+    sys.exit()
 
     compare_selection(
         dataset=FreesurferStatsDataset.ABIDE_I,
