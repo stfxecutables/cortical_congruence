@@ -477,8 +477,8 @@ if __name__ == "__main__":
     # print(FreesurferStatsDataset.ADHD_200.load_pheno())
     # print(FreesurferStatsDataset.HCP.load_pheno())
 
-    print(FreesurferStatsDataset.ABIDE_I.load_complete())
-    print(FreesurferStatsDataset.ABIDE_II.load_complete())
-    print(FreesurferStatsDataset.ADHD_200.load_complete())
-    print(FreesurferStatsDataset.HCP.load_complete())
+    df = FreesurferStatsDataset.ABIDE_I.load_complete()
+    df = FreesurferStatsDataset.ABIDE_II.load_complete()
+    df = FreesurferStatsDataset.ADHD_200.load_complete()
+    df = FreesurferStatsDataset.HCP.load_complete()
     # print(FreesurferStatsDataset.HBN.load_pheno())

@@ -417,7 +417,8 @@ def evaluate_ADHD200_features() -> None:
 
 if __name__ == "__main__":
     # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+    evaluate_HCP_features()
     # evaluate_ABIDE_I_features()
-    evaluate_ABIDE2_features()
-    evaluate_ADHD200_features()
+    # evaluate_ABIDE2_features()
+    # evaluate_ADHD200_features()
     sys.exit()
