@@ -34,6 +34,10 @@ RS = np.arange(start=0.0, stop=0.2, step=0.01)
 FEATURE_MAX = 5
 
 
+def noise_from_percent(percent: ndarray) -> ndarray:
+    return percent / (1 - percent)
+
+
 def count_corrs(
     dist: str,
     n_uninformative: int = 5000,
@@ -44,14 +48,19 @@ def count_corrs(
     m = n_informative
     weights = np.random.uniform(0, 5, [m, 1])
     informatives = np.empty([n, m])
-    noise_maxes = -np.sort(-np.linspace(0.0, 10, 11))
+    # must not include endpoint or get divide by zero error
+    noise_maxes = noise_from_percent(
+        -np.sort(-np.array(np.linspace(0.0, 1.0, 20, endpoint=False).tolist()))
+    )
+    fmaxes = []
     noises = np.empty([len(noise_maxes), n, m])
     for i in range(m):
         fmax = float(np.random.uniform(0, FEATURE_MAX, [1]))
+        fmaxes.append(fmax)
         informatives[:, i] = np.random.uniform(0, fmax, [n])
         for k in range(len(noise_maxes)):
             noise_max = noise_maxes[k]
-            noise = np.random.normal(0, noise_max, [n])
+            noise = np.random.uniform(0, noise_max * fmax, [n])
             noises[k, :, i] = noise
 
     if dist in ["norm", "normal"]:
@@ -77,11 +86,14 @@ def count_corrs(
         inf_cnts = []
         for r in RS:
             inf_cnts.append(np.sum(inf_corrs >= r))
-        nmax = np.round(noise_maxes[k] / FEATURE_MAX * 100, 0)
+        # if noise in Unif(-M, M), data has range from -rM to rM, and final is
+        # data + noise, then noise is (M / (rM + M)) = 1 / (r*M) 50%.
+        nmax = noise_maxes[k] / (1 + noise_maxes[k])
+        noise_percent = np.round(nmax * 100, 0)
         dfs.append(
             DataFrame(
-                {f"noise={nmax}%": inf_cnts},
-                index=Series(data=RS, name="r >="),
+                {f"{noise_percent}": inf_cnts},
+                index=Series(data=RS, name="|r| >="),
             )
         )
 
@@ -89,15 +101,17 @@ def count_corrs(
     uninf_corrs = uninformative.corrwith(target).abs()
     for r in RS:
         cnts.append(np.sum(uninf_corrs >= r))
-    rands = Series(name=dist, data=cnts, index=Series(data=RS, name="r >="))
-    return pd.concat([rands, *dfs], axis=1)
+    rands = Series(name=dist, data=cnts, index=Series(data=RS, name="|r| >="))
+    results = pd.concat([rands, *dfs], axis=1)
+    results.columns.name = "noise (%)"
+    return results
 
 
 if __name__ == "__main__":
     dfs = []
-    for dist in ["norm", "skew", "exp"]:
-        print(count_corrs(dist))
-        break
+    for dist in ["norm", "skew"]:
+        print(count_corrs(dist, n_informative=50))
+        print(count_corrs(dist, n_informative=500))
     sys.exit()
     df = (
         pd.concat(dfs, axis=1)
