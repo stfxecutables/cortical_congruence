@@ -110,8 +110,8 @@ def count_corrs(
 if __name__ == "__main__":
     dfs = []
     for dist in ["norm", "skew"]:
-        print(count_corrs(dist, n_informative=50))
-        print(count_corrs(dist, n_informative=500))
+        print(count_corrs(dist, n_informative=50).T)
+        print(count_corrs(dist, n_informative=500).T)
     sys.exit()
     df = (
         pd.concat(dfs, axis=1)

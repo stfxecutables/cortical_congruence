@@ -310,7 +310,7 @@ def evaluate_HCP_features() -> None:
                 RegressionMetric.MeanAbsoluteError,
                 ClassificationMetric.BalancedAccuracy,
             ),
-            max_n_features=50,
+            max_n_features=20,
             holdout=0.25,
             nans="mean",
             reg_params=dict(),
