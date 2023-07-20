@@ -265,7 +265,7 @@ def load_abide_ii_pheno() -> DataFrame:
         "age": [Tag.Demographics, Tag.Feature],
         "autism": [Tag.Target, Tag.Classification],
         "dsm_iv": [Tag.Target, Tag.Multiclass],
-        "dsm5_spectrum": [Tag.Target, Tag.Multiclass],
+        "dsm5_spectrum": [Tag.Target, Tag.Classification],
         "fiq": [Tag.Target, Tag.Regression],
         "viq": [Tag.Target, Tag.Regression],
         "piq": [Tag.Target, Tag.Regression],

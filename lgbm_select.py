@@ -50,6 +50,17 @@ from src.munging.hcp import PhenotypicFocus
 
 OUT = ensure_dir(TABLES / "lgbm_select")
 
+DEFAULTS = dict(
+    num_leaves=31,
+    max_depth=-1,
+    min_child_samples=20,
+    subsample=1.0,
+    n_estimators=100,
+    reg_alpha=0.0,
+    n_jobs=-1,
+    verbose=-1,
+)
+
 
 @dataclass
 class FitArgs:
@@ -74,16 +85,7 @@ class LgbmEvalArgs:
 
 
 def fit_lgb(fit_args: FitArgs) -> DataFrame:
-    defaults = dict(
-        num_leaves=31,
-        max_depth=-1,
-        min_child_samples=20,
-        subsample=1.0,
-        n_estimators=100,
-        reg_alpha=0.0,
-        n_jobs=-1,
-        verbose=-1,
-    )
+    defaults = DEFAULTS
 
     param = fit_args.lgb_args
     is_reg = fit_args.is_reg
@@ -168,7 +170,7 @@ def get_params() -> list[dict]:
                 min_child_samples=[5, 25, 100],
                 subsample=[0.05, 0.2, 0.4, 0.6, 0.8, 1.0],
                 n_estimators=[100],
-                reg_alpha=np.logspace(-6, 2, num=10, base=10).tolist(),
+                reg_alpha=np.logspace(-3, 2, num=10, base=10).tolist(),
                 n_jobs=[1],
             )
         )
@@ -184,7 +186,14 @@ def lgbm_feature_select(
     target_regex: str,
     holdout: float | None = 0.25,
     seed: int | None = None,
+    use_cached: bool = True,
 ) -> DataFrame:
+    outfile = OUT / (
+        f"{dataset.value}_{feature_regex.value}_{target_regex}"
+        f"_seed={seed}_lgbm_select.parquet"
+    )
+    if outfile.exists() and use_cached:
+        return pd.read_parquet(outfile)
     is_reg, is_bin, X_train, X_test, y_train, y_test = data_setup(
         dataset=dataset,
         feature_regex=feature_regex,
@@ -211,11 +220,13 @@ def lgbm_feature_select(
     results = Parallel(n_jobs=-1, verbose=10)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
 
     result = pd.concat(results, axis=0, ignore_index=True)
+    result.to_parquet(outfile)
     print(
         result.sort_values(by="exp_cv" if is_reg else "acc_cv", ascending=True)
         .round(4)
         .tail(500)
     )
+    print(f"Saved results to {outfile}")
     return result
 
 
@@ -281,7 +292,7 @@ def get_score(model: Booster, X: DataFrame, y: ndarray, is_reg: bool) -> float:
 
 
 def _eval_lgb(pargs: LgbmEvalArgs) -> DataFrame:
-    callbacks = lightgbm.early_stopping(stopping_rounds=10, verbose=False)
+    callbacks = lightgbm.early_stopping(stopping_rounds=20, verbose=False)
 
     filterwarnings("ignore", message="Overriding", category=UserWarning)
     filterwarnings("ignore", message=".*n_estimators", category=UserWarning)
@@ -342,7 +353,6 @@ def lgbm_early_stopping(
         seed=seed,
     )
     data = LGBMDataset(data=X_train, label=y_train, free_raw_data=False)
-    data_test = LGBMDataset(data=X_test, label=y_test, free_raw_data=False)
     data_val = ""
     data_train = data
     if val is not None:
@@ -398,20 +408,24 @@ if __name__ == "__main__":
     pd.options.display.max_info_rows = 1000
     pd.options.display.max_colwidth = 180
 
-    lgbm_early_stopping(
-        dataset=FreesurferStatsDataset.ABIDE_I,
-        feature_regex=FeatureRegex.FS,
-        # target_regex="int_g_like",
-        # target_regex="autism",
-        target_regex="MULTI__dsm_iv",
-        holdout=0.25,
-    )
-    # lgbm_feature_select(
+    # lgbm_early_stopping(
     #     dataset=FreesurferStatsDataset.ABIDE_I,
     #     feature_regex=FeatureRegex.FS,
+    #     # target_regex="int_g_like",
+    #     # target_regex="autism",
     #     target_regex="MULTI__dsm_iv",
     #     holdout=0.25,
     # )
+    df = lgbm_feature_select(
+        dataset=FreesurferStatsDataset.HCP,
+        feature_regex=FeatureRegex.FS_OR_CMC,
+        # target_regex="MULTI__dsm_iv",
+        # target_regex="autism",
+        target_regex="language_perf",
+        holdout=0.25,
+    )
+    col = df.filter(regex="cv").columns.item()
+    print(df.drop(columns="args").sort_values(by=col).round(3).tail(10))
     sys.exit()
 
     compare_selection(
