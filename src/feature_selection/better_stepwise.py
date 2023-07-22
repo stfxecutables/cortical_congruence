@@ -102,7 +102,8 @@ class ForwardSelect:
         fold_info = pd.concat(fold_infos, axis=0, ignore_index=True)
         needs_inversion = [metric.value for metric in RegressionMetric.inverted()]
         for colname in needs_inversion:
-            fold_info.loc[:, colname] = -fold_info[colname].copy()
+            if colname in fold_info:
+                fold_info.loc[:, colname] = -fold_info[colname].copy()
 
         return fold_info
 
