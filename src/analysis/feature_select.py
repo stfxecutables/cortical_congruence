@@ -8,6 +8,7 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
+import platform
 import sys
 from argparse import Namespace
 from math import ceil
@@ -32,7 +33,8 @@ from src.enumerables import FreesurferStatsDataset, RegressionMetric, Regression
 from src.feature_selection.stepwise import StepwiseSelect
 from src.munging.hcp import PhenotypicFocus
 
-matplotlib.use("QtAgg")
+if platform.system().lower() == "darwin":
+    matplotlib.use("QtAgg")
 
 
 def get_stepup_args(
