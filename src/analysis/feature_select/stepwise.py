@@ -693,7 +693,7 @@ if __name__ == "__main__":
         bin_stratify=True,
         inner_progress=True,
         use_outer_cached=False,
-        use_inner_cached=True,
+        use_inner_cached=False,
     )
     sys.exit()
 
