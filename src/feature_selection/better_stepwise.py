@@ -87,34 +87,33 @@ class ForwardSelect:
         self.mask = np.zeros(shape=self.n_features, dtype=bool)
 
     @cached_property
-    def results(self) -> tuple[DataFrame, DataFrame]:
+    def results(self) -> DataFrame:
+        # folds.iloc[:, 4:].drop(columns=["inner_fold"]).groupby(
+        #     ["outer_fold", "selection_iter"]
+        # ).apply(
+        #     lambda g: g.nlargest(1, "exp-var").drop(
+        #         columns=["outer_fold", "selection_iter"]
+        #     )
+        # ).droplevel(
+        #     2
+        # )
         if len(self.iteration_metrics) == 0:
             raise RuntimeError(
                 f"Must call `{self.__class__.__name__}.select()` before returning results."
             )
-        fold_infos, means = [], []
+        fold_infos = []
         for i, info in enumerate(self.iteration_metrics):
             fold_info = info.reset_index(names="inner_fold")
             fold_info.insert(0, "selected", self.iteration_features[i])
-            fold_info.insert(0, "iter", i)
-
+            fold_info.insert(0, "selection_iter", i)
             fold_infos.append(fold_info)
-            mean_info = info.mean().to_frame().T.copy()
-            mean_info.insert(0, "selected", self.iteration_features[i])
-            mean_info.insert(0, "iter", i)
-            means.append(mean_info)
 
         fold_info = pd.concat(fold_infos, axis=0, ignore_index=True)
-        mean_info = pd.concat(means, axis=0)
         needs_inversion = [metric.value for metric in RegressionMetric.inverted()]
         for colname in needs_inversion:
             fold_info.loc[:, colname] = -fold_info[colname].copy()
-            mean_info.loc[:, colname] = -mean_info[colname].copy()
 
-        mean_info["features"] = ""
-        for i in range(len(self.iteration_features)):
-            mean_info.loc[i, "features"] = str(self.iteration_features[: i + 1])
-        return mean_info, fold_info
+        return fold_info
 
     def select(self) -> ForwardSelect:
         for _ in tqdm(

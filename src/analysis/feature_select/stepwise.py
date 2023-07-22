@@ -198,7 +198,7 @@ def forward_select_target(
     max_n_features: int,
     bin_stratify: bool,
     inner_progress: bool,
-) -> tuple[DataFrame, DataFrame]:
+) -> DataFrame:
     if model in [ClassificationModel.Logistic, ClassificationModel.SVC]:
         params = {**params, **dict()}
 
@@ -223,7 +223,7 @@ def forward_select_target(
         n_jobs=-1,
     )
     selector.select()
-    mean_info, fold_info = selector.results
+    fold_info = selector.results
 
     addons = {
         0: ("source", regex.value),
@@ -233,9 +233,8 @@ def forward_select_target(
     }
 
     for position, (colname, value) in addons.items():
-        mean_info.insert(position, colname, value)
         fold_info.insert(position, colname, value)
-    return mean_info, fold_info
+    return fold_info
 
 
 def stepup_feature_select_holdout(
@@ -416,7 +415,7 @@ def nested_stepup_feature_select(
     inner_progress: bool = False,
     use_outer_cached: bool = True,
     use_inner_cached: bool = True,
-) -> tuple[DataFrame, DataFrame]:
+) -> DataFrame:
     """
     Perform stepup feature selection
 
@@ -476,7 +475,7 @@ def nested_stepup_feature_select(
         f"_forward_{reg_scoring.value}_{cls_scoring.value}_selected"
         f"_{r}_n={max_n_features}"
     )
-    if (use_inner_cached is True) and (use_outer_cached is False):
+    if (use_inner_cached is False) and (use_outer_cached is True):
         raise ValueError(
             "Cannot use cached results of outer loop if recomputing inner loops"
         )
@@ -487,7 +486,6 @@ def nested_stepup_feature_select(
 
     df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
 
-    all_mean_infos = []
     all_fold_infos = []
 
     pbar = tqdm(
@@ -513,21 +511,18 @@ def nested_stepup_feature_select(
         else:
             cv = StratifiedKFold()
         y = df_select[target]
-        all_mean_results: list[DataFrame] = []
         all_fold_results: list[DataFrame] = []
         tname = str(target).replace("TARGET__", "")
-        mean_out = FORWARD_CACHE / f"{fbase}_{tname}_means.parquet"
         fold_out = FORWARD_CACHE / f"{fbase}_{tname}_folds.parquet"
 
-        if mean_out.exists() and fold_out.exists() and use_inner_cached:
-            mean_info = pd.read_parquet(mean_out)
+        if fold_out.exists() and use_inner_cached:
             fold_info = pd.read_parquet(fold_out)
         else:
             for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
                 desc = f"Outer fold {outer_fold + 1}"
                 inner_pbar.set_description(f"{desc:>{PBAR_PAD}}")
                 df_train, df_test = df_select.iloc[idx_train], df_select.iloc[idx_test]
-                mean_results, fold_results = forward_select_target(
+                fold_results = forward_select_target(
                     df_train=df_train,
                     df_test=df_test,
                     target=target,
@@ -539,32 +534,23 @@ def nested_stepup_feature_select(
                     bin_stratify=bin_stratify,
                     inner_progress=inner_progress,
                 )
-                mean_results.insert(4, "outer_fold", outer_fold)
                 fold_results.insert(4, "outer_fold", outer_fold)
-                all_mean_results.append(mean_results)
                 all_fold_results.append(fold_results)
                 inner_pbar.update()
             inner_pbar.reset()
 
-            mean_info = pd.concat(all_mean_results, axis=0, ignore_index=True)
             fold_info = pd.concat(all_fold_results, axis=0, ignore_index=True)
-            mean_info.to_parquet(mean_out)
             fold_info.to_parquet(fold_out)
 
-        all_mean_infos.append(mean_info)
         all_fold_infos.append(fold_info)
         pbar.update()
     pbar.close()
 
-    all_mean_info = pd.concat(all_mean_infos, axis=0, ignore_index=True)
     all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)
-    all_mean_info.to_parquet(all_mean_out)
     all_fold_info.to_parquet(all_fold_out)
 
-    print(
-        f"Saved nested forward selection results to files:\n{all_mean_out}\n{all_fold_out}"
-    )
-    return all_mean_info, all_fold_info
+    print(f"Saved nested forward selection results to: {all_fold_out}")
+    return all_fold_info
 
 
 def evaluate_HCP_features(n_features: int) -> DataFrame:
@@ -686,10 +672,10 @@ def evaluate_ADHD200_features() -> None:
 
 if __name__ == "__main__":
     # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-    means, folds = nested_stepup_feature_select(
+    info = nested_stepup_feature_select(
         dataset=FreesurferStatsDataset.HCP,
         feature_regex=FeatureRegex.FS,
-        max_n_features=2,
+        max_n_features=5,
         bin_stratify=True,
         inner_progress=True,
         use_outer_cached=False,
