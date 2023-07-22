@@ -8,33 +8,26 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
-import platform
 import sys
 from argparse import Namespace
-from math import ceil
 from pathlib import Path
 from random import shuffle
-from typing import Any, Mapping
+from typing import Mapping
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sbn
-from joblib import Parallel, delayed
 from pandas import DataFrame
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
-from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.constants import PLOTS, TABLES
 from src.enumerables import FreesurferStatsDataset, RegressionMetric, RegressionModel
 from src.feature_selection.stepwise import StepwiseSelect
 from src.munging.hcp import PhenotypicFocus
-
-if platform.system().lower() == "darwin":
-    matplotlib.use("QtAgg")
 
 
 def get_stepup_args(
