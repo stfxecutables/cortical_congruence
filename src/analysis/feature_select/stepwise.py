@@ -414,7 +414,8 @@ def nested_stepup_feature_select(
     cls_params: Mapping | None = None,
     bin_stratify: bool = True,
     inner_progress: bool = False,
-    use_cached: bool = True,
+    use_outer_cached: bool = True,
+    use_inner_cached: bool = True,
 ) -> tuple[DataFrame, DataFrame]:
     """
     Perform stepup feature selection
@@ -475,9 +476,13 @@ def nested_stepup_feature_select(
         f"_forward_{reg_scoring.value}_{cls_scoring.value}_selected"
         f"_{r}_n={max_n_features}"
     )
+    if (use_inner_cached is True) and (use_outer_cached is False):
+        raise ValueError(
+            "Cannot use cached results of outer loop if recomputing inner loops"
+        )
     all_mean_out = FORWARD_RESULTS / f"{fbase}_nested_means.parquet"
     all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
-    if all_mean_out.exists() and all_fold_out.exists() and use_cached:
+    if all_mean_out.exists() and all_fold_out.exists() and use_outer_cached:
         return pd.read_parquet(all_mean_out), pd.read_parquet(all_fold_out)
 
     df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
@@ -511,7 +516,7 @@ def nested_stepup_feature_select(
         mean_out = FORWARD_CACHE / f"{fbase}_{tname}_means.parquet"
         fold_out = FORWARD_CACHE / f"{fbase}_{tname}_folds.parquet"
 
-        if mean_out.exists() and fold_out.exists():
+        if mean_out.exists() and fold_out.exists() and use_inner_cached:
             mean_info = pd.read_parquet(mean_out)
             fold_info = pd.read_parquet(fold_out)
         else:
@@ -687,7 +692,8 @@ if __name__ == "__main__":
         max_n_features=5,
         bin_stratify=True,
         inner_progress=True,
-        use_cached=False,
+        use_outer_cached=False,
+        use_inner_cached=True,
     )
     sys.exit()
 
