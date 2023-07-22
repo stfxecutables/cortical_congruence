@@ -509,7 +509,6 @@ def nested_stepup_feature_select(
             fold_info.to_parquet(fold_out)
 
         all_fold_infos.append(fold_info)
-        pbar.update()
     pbar.close()
 
     all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)
