@@ -496,6 +496,9 @@ def nested_stepup_feature_select(
         desc=f"{'Target loop':>{PBAR_PAD}}",
         ncols=PBAR_COLS,
     )
+    inner_pbar = tqdm(
+        desc=f"{'Outer fold':>{PBAR_PAD}}", total=5, leave=True, ncols=PBAR_COLS
+    )
     for target in pbar:
         is_reg = "REG" in str(target)
 
@@ -520,9 +523,6 @@ def nested_stepup_feature_select(
             mean_info = pd.read_parquet(mean_out)
             fold_info = pd.read_parquet(fold_out)
         else:
-            inner_pbar = tqdm(
-                desc=f"{'Outer fold':>{PBAR_PAD}}", total=5, leave=True, ncols=PBAR_COLS
-            )
             for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
                 desc = f"Outer fold {outer_fold + 1}"
                 inner_pbar.set_description(f"{desc:>{PBAR_PAD}}")
@@ -544,7 +544,7 @@ def nested_stepup_feature_select(
                 all_mean_results.append(mean_results)
                 all_fold_results.append(fold_results)
                 inner_pbar.update()
-            inner_pbar.close()
+            inner_pbar.reset()
 
             mean_info = pd.concat(all_mean_results, axis=0, ignore_index=True)
             fold_info = pd.concat(all_fold_results, axis=0, ignore_index=True)
@@ -689,7 +689,7 @@ if __name__ == "__main__":
     means, folds = nested_stepup_feature_select(
         dataset=FreesurferStatsDataset.HCP,
         feature_regex=FeatureRegex.FS,
-        max_n_features=5,
+        max_n_features=2,
         bin_stratify=True,
         inner_progress=True,
         use_outer_cached=False,
