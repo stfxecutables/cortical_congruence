@@ -41,7 +41,15 @@ from sklearn.model_selection import (
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-from src.constants import CACHED_RESULTS, MEMORY, PLOTS, TABLES, ensure_dir
+from src.constants import (
+    CACHED_RESULTS,
+    MEMORY,
+    PBAR_COLS,
+    PBAR_PAD,
+    PLOTS,
+    TABLES,
+    ensure_dir,
+)
 from src.enumerables import (
     ClassificationMetric,
     ClassificationModel,
@@ -477,7 +485,12 @@ def nested_stepup_feature_select(
     all_mean_infos = []
     all_fold_infos = []
 
-    pbar = tqdm(df.filter(regex="TARGET").columns.to_list(), leave=True)
+    pbar = tqdm(
+        df.filter(regex="TARGET").columns.to_list(),
+        leave=True,
+        desc=f"{'Target loop':>{PBAR_PAD}}",
+        ncols=PBAR_COLS,
+    )
     for target in pbar:
         is_reg = "REG" in str(target)
 
@@ -502,9 +515,12 @@ def nested_stepup_feature_select(
             mean_info = pd.read_parquet(mean_out)
             fold_info = pd.read_parquet(fold_out)
         else:
-            inner_pbar = tqdm(desc="Outer fold", total=5, leave=True)
+            inner_pbar = tqdm(
+                desc=f"{'Outer fold':>{PBAR_PAD}}", total=5, leave=True, ncols=PBAR_COLS
+            )
             for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
-                inner_pbar.set_description(f"Outer fold {outer_fold + 1}")
+                desc = f"Outer fold {outer_fold + 1}"
+                inner_pbar.set_description(f"{desc:>{PBAR_PAD}}")
                 df_train, df_test = df_select.iloc[idx_train], df_select.iloc[idx_test]
                 mean_results, fold_results = forward_select_target(
                     df_train=df_train,
@@ -532,7 +548,6 @@ def nested_stepup_feature_select(
 
         all_mean_infos.append(mean_info)
         all_fold_infos.append(fold_info)
-        pbar.set_description(f"Last completed: {tname}")
         pbar.update()
     pbar.close()
 

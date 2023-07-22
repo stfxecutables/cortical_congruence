@@ -65,6 +65,8 @@ HCP_FEATURE_INFO = DATA / "HCP/phenotypic_data/available_feature_details.csv"
 CMC_TABLE = ROOT / "abide_cmc_combined.parquet"
 
 REGULARIZATION_ALPHAS = np.logspace(start=-2, stop=5, num=50, base=10)
+PBAR_PAD = 20
+PBAR_COLS = 140
 
 """
 Notes
@@ -821,12 +823,3 @@ def load_adhd200_pheno() -> DataFrame:
     df["site"] = df["site"].apply(lambda x: site[x])
 
     return df.loc[:, keep_cols].copy()
-
-
-if __name__ == "__main__":
-    # df_i = load_abide_i_pheno()
-    # df_ii = load_abide_ii_pheno()
-    df_adhd = load_adhd200_pheno()
-    # print(df_i)
-    # print(df_ii)
-    print(df_adhd)

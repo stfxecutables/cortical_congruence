@@ -26,6 +26,7 @@ from sklearn.model_selection import BaseCrossValidator, cross_validate
 from sklearn.model_selection._split import BaseShuffleSplit, check_cv
 from tqdm import tqdm
 
+from src.constants import PBAR_COLS, PBAR_PAD
 from src.enumerables import ClassificationMetric, RegressionMetric
 
 
@@ -116,7 +117,13 @@ class ForwardSelect:
         return mean_info, fold_info
 
     def select(self) -> ForwardSelect:
-        for _ in tqdm(range(self.n_select), leave=False, disable=not self.inner_progress):
+        for _ in tqdm(
+            range(self.n_select),
+            leave=False,
+            disable=not self.inner_progress,
+            desc=f"{'Selection loop':>{PBAR_PAD}}",
+            ncols=PBAR_COLS,
+        ):
             idx_selected, score, info = self._get_selected_feat_info()
             self.iteration_features.append(idx_selected)
             self.iteration_metrics.append(info)
