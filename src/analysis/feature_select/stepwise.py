@@ -32,7 +32,12 @@ from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LinearRegression as LR
 from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.model_selection import (
+    KFold,
+    StratifiedKFold,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
@@ -45,14 +50,49 @@ from src.enumerables import (
     RegressionMetric,
     RegressionModel,
 )
-from src.feature_selection.stepwise import StepwiseSelect
+
+# from src.feature_selection.stepwise import StepwiseSelect
+from src.feature_selection.better_stepwise import ForwardSelect
+from src.feature_selection.kfold import BinStratifiedKFold
 from src.munging.hcp import PhenotypicFocus
 
 if platform.system().lower() == "darwin":
     matplotlib.use("QtAgg")
 
 STEPUP_RESULTS = ensure_dir(TABLES / "stepup_results")
+FORWARD_RESULTS = ensure_dir(TABLES / "forward_results")
 STEPUP_CACHE = ensure_dir(CACHED_RESULTS / "stepup_selection")
+FORWARD_CACHE = ensure_dir(CACHED_RESULTS / "forward_selection")
+
+
+def load_preprocessed(
+    dataset: FreesurferStatsDataset,
+    regex: FeatureRegex,
+    models: tuple[RegressionModel, ClassificationModel],
+) -> DataFrame:
+    df = dataset.load_complete(
+        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+    )
+    feats = df.filter(regex=regex.value)
+    feature_cols = feats.columns
+    df.loc[:, feature_cols] = feats.fillna(feats.mean())
+
+    reg_model, cls_model = models
+    if (reg_model is RegressionModel.Lasso) or (
+        cls_model in [ClassificationModel.Logistic, ClassificationModel.Ridge]
+    ):
+        # need to standardize features for co-ordinate descent in LASSO, keep
+        # comparisons to Logistic the same
+        df.loc[:, feature_cols] = StandardScaler().fit_transform(df[feature_cols])
+    return df
+
+
+def drop_target_nans(df: DataFrame, target: str) -> DataFrame:
+    df = df.copy()
+    y = df[target]
+    idx_nan = y.isnull()
+    df = df[~idx_nan]
+    return df
 
 
 @MEMORY.cache(ignore=["df", "inner_progress", "count"], verbose=0)
@@ -139,7 +179,58 @@ def select_target(
     return results, best, n_best
 
 
-def stepup_feature_select(
+def forward_select_target(
+    df_train: DataFrame,
+    df_test: DataFrame,
+    target: str,
+    regex: FeatureRegex,
+    model: Union[RegressionModel, ClassificationModel],
+    params: Mapping,
+    scorer: Union[RegressionMetric, ClassificationMetric],
+    max_n_features: int,
+    bin_stratify: bool,
+    inner_progress: bool,
+) -> tuple[DataFrame, DataFrame]:
+    if model in [ClassificationModel.Logistic, ClassificationModel.SVC]:
+        params = {**params, **dict()}
+
+    X_train = df_train.filter(regex=regex.value).to_numpy()
+    X_test = df_test.filter(regex=regex.value).to_numpy()
+    y_train = df_train[target].to_numpy()
+    y_test = df_test[target].to_numpy()
+    if model is RegressionModel.Lasso:
+        X_train = np.asfortranarray(X_train)
+        X_test = np.asfortranarray(X_test)
+
+    selector = ForwardSelect(
+        estimator=model.get(params),  # type: ignore
+        X_train=X_train,
+        X_test=X_test,
+        y_train=y_train,
+        y_test=y_test,
+        n_features_to_select=max_n_features,
+        scoring=scorer,
+        cv=5 if not bin_stratify else BinStratifiedKFold(5),
+        inner_progress=inner_progress,
+        n_jobs=-1,
+    )
+    selector.select()
+    mean_info, fold_info = selector.results
+
+    addons = {
+        0: ("source", regex.value),
+        1: ("model", model.value),
+        2: ("target", str(target).replace("TARGET__", "")),
+        3: ("scorer", scorer.value),
+    }
+
+    for position, (colname, value) in addons.items():
+        mean_info.insert(position, colname, value)
+        fold_info.insert(position, colname, value)
+    return mean_info, fold_info
+
+
+def stepup_feature_select_holdout(
     dataset: FreesurferStatsDataset,
     feature_regex: FeatureRegex,
     models: tuple[RegressionModel, ClassificationModel] = (
@@ -299,10 +390,162 @@ def stepup_feature_select(
     return scores
 
 
-def evaluate_HCP_features() -> None:
+def nested_stepup_feature_select(
+    dataset: FreesurferStatsDataset,
+    feature_regex: FeatureRegex,
+    models: tuple[RegressionModel, ClassificationModel] = (
+        RegressionModel.Lasso,
+        ClassificationModel.SGD,
+    ),
+    scoring: tuple[RegressionMetric, ClassificationMetric] = (
+        RegressionMetric.ExplainedVariance,
+        ClassificationMetric.BalancedAccuracy,
+    ),
+    max_n_features: int = 100,
+    reg_params: Mapping | None = None,
+    cls_params: Mapping | None = None,
+    bin_stratify: bool = True,
+    inner_progress: bool = False,
+    use_cached: bool = True,
+) -> tuple[DataFrame, DataFrame]:
+    """
+    Perform stepup feature selection
+
+    Parameters
+    ----------
+    dataset: FreesurferStatsDataset
+        Dataset to use for selection.
+
+    feature_regex: Literal["FS", "CMC", "FS|CMC"]
+        Regex to use with `df.filter(regex=feature_regex)`
+
+    models: tuple[RegressionModel, ClassificationModel]
+        Models to use for performing feature selection.
+
+    scoring: tuple[RegressionMetric, ClassificationMetric]
+        Evaluation metrics for selection.
+
+    max_n_features: int = 100
+        Number of features after which to stop selection.
+
+    inner_progress: bool = False
+        If True, show a progress bar for the inner loop over the `max_n_features`
+        iters.
+
+    holdout: float | None = 0.25
+        If a value in (0, 1), evaluate selected features on a random holdout.
+
+    reg_params: Mapping | None = None
+        Params to pass to `reg_model`.
+
+    cls_params: Mapping | None = None
+        Params to pass to `cls_model`.
+
+    use_cached: bool = True
+        If True, load saved results if available.
+
+    Returns
+    -------
+    means: DataFrame
+        DataFrame with columns:
+
+    folds: DataFrame
+
+    """
+
+    if reg_params is None:
+        reg_params = dict()
+    if cls_params is None:
+        cls_params = dict()
+    reg_model, cls_model = models
+    reg_scoring, cls_scoring = scoring
+    regex = feature_regex.value
+
+    r = regex.replace("|", "+")
+    fbase = (
+        f"{dataset.value}_{reg_model.value}_{cls_model.value}"
+        f"_forward_{reg_scoring.value}_{cls_scoring.value}_selected"
+        f"_{r}_n={max_n_features}"
+    )
+    all_mean_out = FORWARD_RESULTS / f"{fbase}_nested_means.parquet"
+    all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
+    if all_mean_out.exists() and all_fold_out.exists() and use_cached:
+        return pd.read_parquet(all_mean_out), pd.read_parquet(all_fold_out)
+
+    df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
+
+    all_mean_infos = []
+    all_fold_infos = []
+
+    pbar = tqdm(df.filter(regex="TARGET").columns.to_list(), leave=True)
+    for target in pbar:
+        is_reg = "REG" in str(target)
+
+        model = reg_model if is_reg else cls_model
+        params = reg_params if is_reg else cls_params
+        scorer = reg_scoring if is_reg else cls_scoring
+        df_select = drop_target_nans(df, target)
+        if is_reg and bin_stratify:
+            cv = BinStratifiedKFold()
+        elif is_reg:
+            cv = KFold()
+        else:
+            cv = StratifiedKFold()
+        y = df_select[target]
+        all_mean_results: list[DataFrame] = []
+        all_fold_results: list[DataFrame] = []
+        tname = str(target).replace("TARGET__", "")
+        mean_out = FORWARD_CACHE / f"{fbase}_{tname}_means.parquet"
+        fold_out = FORWARD_CACHE / f"{fbase}_{tname}_folds.parquet"
+
+        if mean_out.exists() and fold_out.exists():
+            mean_info = pd.read_parquet(mean_out)
+            fold_info = pd.read_parquet(fold_out)
+        else:
+            for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
+                df_train, df_test = df_select.iloc[idx_train], df_select.iloc[idx_test]
+                mean_results, fold_results = forward_select_target(
+                    df_train=df_train,
+                    df_test=df_test,
+                    target=target,
+                    regex=feature_regex,
+                    model=model,
+                    params=params,
+                    scorer=scorer,
+                    max_n_features=max_n_features,
+                    bin_stratify=bin_stratify,
+                    inner_progress=inner_progress,
+                )
+                mean_results.insert(4, "outer_fold", outer_fold)
+                fold_results.insert(4, "outer_fold", outer_fold)
+                all_mean_results.append(mean_results)
+                all_fold_results.append(fold_results)
+
+            mean_info = pd.concat(all_mean_results, axis=0, ignore_index=True)
+            fold_info = pd.concat(all_fold_results, axis=0, ignore_index=True)
+            mean_info.to_parquet(mean_out)
+            fold_info.to_parquet(fold_out)
+
+        all_mean_infos.append(mean_info)
+        all_fold_infos.append(fold_info)
+        pbar.set_description(f"Last completed: {tname}")
+        pbar.update()
+
+    all_mean_info = pd.concat(all_mean_infos, axis=0, ignore_index=True)
+    all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)
+    all_mean_info.to_parquet(all_mean_out)
+    all_fold_info.to_parquet(all_fold_out)
+
+    print(
+        f"Saved nested forward selection results to files:\n{all_mean_out}\n{all_fold_out}"
+    )
+    return all_mean_info, all_fold_info
+
+
+def evaluate_HCP_features(n_features: int) -> DataFrame:
     all_scores = []
     for regex in FeatureRegex:
-        scores = stepup_feature_select(
+        scores = stepup_feature_select_holdout(
             dataset=FreesurferStatsDataset.HCP,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.SGD),
@@ -310,7 +553,7 @@ def evaluate_HCP_features() -> None:
                 RegressionMetric.MeanAbsoluteError,
                 ClassificationMetric.BalancedAccuracy,
             ),
-            max_n_features=20,
+            max_n_features=n_features,
             holdout=0.25,
             nans="mean",
             reg_params=dict(),
@@ -323,12 +566,13 @@ def evaluate_HCP_features() -> None:
     df = pd.concat(all_scores, axis=0)
     with pd.option_context("display.max_rows", 500):
         print(df.sort_values(by="test_exp-var", ascending=True).round(3))
+    return df
 
 
 def evaluate_ABIDE_I_features() -> None:
     all_scores = []
     for regex in FeatureRegex:
-        scores = stepup_feature_select(
+        scores = stepup_feature_select_holdout(
             dataset=FreesurferStatsDataset.ABIDE_I,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.SGD),
@@ -358,7 +602,7 @@ def evaluate_ABIDE_I_features() -> None:
 def evaluate_ABIDE2_features() -> None:
     all_scores = []
     for regex in FeatureRegex:
-        scores = stepup_feature_select(
+        scores = stepup_feature_select_holdout(
             dataset=FreesurferStatsDataset.ABIDE_II,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.SGD),
@@ -388,7 +632,7 @@ def evaluate_ABIDE2_features() -> None:
 def evaluate_ADHD200_features() -> None:
     all_scores = []
     for regex in FeatureRegex:
-        scores = stepup_feature_select(
+        scores = stepup_feature_select_holdout(
             dataset=FreesurferStatsDataset.ADHD_200,
             feature_regex=regex,
             models=(RegressionModel.Lasso, ClassificationModel.SGD),
@@ -417,7 +661,53 @@ def evaluate_ADHD200_features() -> None:
 
 if __name__ == "__main__":
     # os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
-    evaluate_HCP_features()
+    means, folds = nested_stepup_feature_select(
+        dataset=FreesurferStatsDataset.HCP,
+        feature_regex=FeatureRegex.FS,
+        max_n_features=5,
+        bin_stratify=True,
+        inner_progress=True,
+        use_cached=False,
+    )
+    sys.exit()
+
+    df20 = evaluate_HCP_features(n_features=20)
+    df21 = evaluate_HCP_features(n_features=21)
+    df50 = evaluate_HCP_features(n_features=50)
+    df51 = evaluate_HCP_features(n_features=51)
+    for df, n_feat in zip([df20, df21, df50, df51], [20, 21, 50, 51]):
+        df["features"] = df["features"].apply(lambda f: sorted(eval(f)))
+        print(f"Selecting up to {n_feat} features:")
+        corrs = df.loc[
+            :, ["mae", "test_mae", "exp-var", "test_exp-var", "smae", "test_smae"]
+        ].corr()
+        print(f"MAE/MAE_test correlation:   {corrs.loc['mae', 'test_mae'].round(3): .3f}")
+        print(
+            f"sMAE/sMAE_test correlation: {corrs.loc['smae', 'test_smae'].round(3): .3f}"
+        )
+        print(
+            f"Exp/Exp_test correlation:   {corrs.loc['exp-var', 'test_exp-var'].round(3): .3f}"
+        )
+        print(
+            df.sort_values(by="exp-var", ascending=False)
+            .head(10)
+            .round(3)
+            .loc[
+                :,
+                [
+                    "source",
+                    "target",
+                    "smae",
+                    "test_smae",
+                    "mae",
+                    "test_mae",
+                    "exp-var",
+                    "test_exp-var",
+                    "features",
+                ],
+            ]
+        )
+
     # evaluate_ABIDE_I_features()
     # evaluate_ABIDE2_features()
     # evaluate_ADHD200_features()

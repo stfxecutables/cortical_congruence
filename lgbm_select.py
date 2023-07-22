@@ -51,10 +51,11 @@ from src.munging.hcp import PhenotypicFocus
 OUT = ensure_dir(TABLES / "lgbm_select")
 
 DEFAULTS = dict(
+    # boosting_type="rf",
     num_leaves=31,
     max_depth=-1,
     min_child_samples=20,
-    subsample=1.0,
+    # subsample=1.0,
     n_estimators=100,
     reg_alpha=0.0,
     n_jobs=-1,
@@ -168,7 +169,9 @@ def get_params() -> list[dict]:
                 # max_depth=[-1, 1, 2, 3, 4, 5, 6],
                 max_depth=depths,
                 min_child_samples=[5, 25, 100],
-                subsample=[0.05, 0.2, 0.4, 0.6, 0.8, 1.0],
+                # subsample=[0.05, 0.2, 0.4, 0.6, 0.8, 1.0],
+                subsample=[0.05, 0.2, 0.4, 0.6, 0.8, 0.9],  # for rf
+                subsample_freq=[1],  # for rf
                 n_estimators=[100],
                 reg_alpha=np.logspace(-3, 2, num=10, base=10).tolist(),
                 n_jobs=[1],
@@ -423,6 +426,7 @@ if __name__ == "__main__":
         # target_regex="autism",
         target_regex="language_perf",
         holdout=0.25,
+        use_cached=False,
     )
     col = df.filter(regex="cv").columns.item()
     print(df.drop(columns="args").sort_values(by=col).round(3).tail(10))
