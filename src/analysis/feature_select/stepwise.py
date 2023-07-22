@@ -502,7 +502,9 @@ def nested_stepup_feature_select(
             mean_info = pd.read_parquet(mean_out)
             fold_info = pd.read_parquet(fold_out)
         else:
+            inner_pbar = tqdm(desc="Outer fold", total=5, leave=True)
             for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
+                inner_pbar.set_description(f"Outer fold {outer_fold + 1}")
                 df_train, df_test = df_select.iloc[idx_train], df_select.iloc[idx_test]
                 mean_results, fold_results = forward_select_target(
                     df_train=df_train,
@@ -520,6 +522,8 @@ def nested_stepup_feature_select(
                 fold_results.insert(4, "outer_fold", outer_fold)
                 all_mean_results.append(mean_results)
                 all_fold_results.append(fold_results)
+                inner_pbar.update()
+            inner_pbar.close()
 
             mean_info = pd.concat(all_mean_results, axis=0, ignore_index=True)
             fold_info = pd.concat(all_fold_results, axis=0, ignore_index=True)
@@ -530,6 +534,7 @@ def nested_stepup_feature_select(
         all_fold_infos.append(fold_info)
         pbar.set_description(f"Last completed: {tname}")
         pbar.update()
+    pbar.close()
 
     all_mean_info = pd.concat(all_mean_infos, axis=0, ignore_index=True)
     all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)

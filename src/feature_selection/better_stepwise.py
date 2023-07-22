@@ -116,7 +116,7 @@ class ForwardSelect:
         return mean_info, fold_info
 
     def select(self) -> ForwardSelect:
-        for _ in tqdm(range(self.n_select), leave=True, disable=not self.inner_progress):
+        for _ in tqdm(range(self.n_select), leave=False, disable=not self.inner_progress):
             idx_selected, score, info = self._get_selected_feat_info()
             self.iteration_features.append(idx_selected)
             self.iteration_metrics.append(info)
