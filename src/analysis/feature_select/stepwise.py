@@ -479,10 +479,9 @@ def nested_stepup_feature_select(
         raise ValueError(
             "Cannot use cached results of outer loop if recomputing inner loops"
         )
-    all_mean_out = FORWARD_RESULTS / f"{fbase}_nested_means.parquet"
     all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
-    if all_mean_out.exists() and all_fold_out.exists() and use_outer_cached:
-        return pd.read_parquet(all_mean_out), pd.read_parquet(all_fold_out)
+    if all_fold_out.exists() and use_outer_cached:
+        return pd.read_parquet(all_fold_out)
 
     df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
 
@@ -551,6 +550,42 @@ def nested_stepup_feature_select(
 
     print(f"Saved nested forward selection results to: {all_fold_out}")
     return all_fold_info
+
+
+def nested_results_to_means(folds: DataFrame) -> DataFrame:
+    def accumulate_features(g: DataFrame) -> DataFrame:
+        df = g.copy().reset_index(drop=True)
+        df["features"] = ""
+        selected = g["selected"].to_list()
+        for i in range(len(selected)):
+            df.loc[i, "features"] = str(selected[: i + 1])
+        return df
+
+    means = (
+        folds.drop(columns=["inner_fold"])
+        .groupby(["source", "model", "target", "outer_fold", "selection_iter"])
+        .mean(numeric_only=True)
+        .reset_index()
+    )
+    means["selected"] = means["selected"].astype(int)
+    df = (
+        means.groupby(["source", "model", "target", "outer_fold"])
+        .apply(accumulate_features)
+        .reset_index(drop=True)
+        .drop(columns="selected")
+    )
+    return df
+
+
+def means_to_best_n_feats(
+    means: DataFrame, metric: RegressionMetric | ClassificationMetric
+) -> DataFrame:
+    leading_cols = ["source", "model", "target", "outer_fold"]
+    return (
+        means.groupby(leading_cols)
+        .apply(lambda g: g.nlargest(1, metric.value))
+        .reset_index(drop=True)
+    )
 
 
 def evaluate_HCP_features(n_features: int) -> DataFrame:
@@ -678,9 +713,21 @@ if __name__ == "__main__":
         max_n_features=5,
         bin_stratify=True,
         inner_progress=True,
-        use_outer_cached=False,
-        use_inner_cached=False,
+        use_outer_cached=True,
+        use_inner_cached=True,
     )
+    pd.options.display.max_rows = 500
+    means = nested_results_to_means(info)
+    bests = means_to_best_n_feats(means, metric=RegressionMetric.ExplainedVariance)
+    print(bests.round(3))
+    final = (
+        bests.groupby(bests.columns.to_list()[:3])
+        .mean(numeric_only=True)
+        .drop(columns="outer_fold")
+        .rename(columns={"selection_iter": "mean_n_iter"})
+        .sort_values(by=RegressionMetric.ExplainedVariance.value)
+    )
+    print(final.round(3))
     sys.exit()
 
     df20 = evaluate_HCP_features(n_features=20)

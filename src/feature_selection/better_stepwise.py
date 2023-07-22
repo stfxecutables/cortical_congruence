@@ -88,15 +88,6 @@ class ForwardSelect:
 
     @cached_property
     def results(self) -> DataFrame:
-        # folds.iloc[:, 4:].drop(columns=["inner_fold"]).groupby(
-        #     ["outer_fold", "selection_iter"]
-        # ).apply(
-        #     lambda g: g.nlargest(1, "exp-var").drop(
-        #         columns=["outer_fold", "selection_iter"]
-        #     )
-        # ).droplevel(
-        #     2
-        # )
         if len(self.iteration_metrics) == 0:
             raise RuntimeError(
                 f"Must call `{self.__class__.__name__}.select()` before returning results."
