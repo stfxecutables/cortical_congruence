@@ -710,7 +710,7 @@ if __name__ == "__main__":
     info = nested_stepup_feature_select(
         dataset=FreesurferStatsDataset.HCP,
         feature_regex=FeatureRegex.FS,
-        max_n_features=5,
+        max_n_features=50,
         bin_stratify=True,
         inner_progress=True,
         use_outer_cached=True,
