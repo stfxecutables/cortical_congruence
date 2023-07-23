@@ -380,8 +380,7 @@ def nested_stepup_feature_select(
     cls_params: Mapping | None = None,
     bin_stratify: bool = True,
     inner_progress: bool = False,
-    use_outer_cached: bool = True,
-    use_inner_cached: bool = True,
+    use_cached: bool = True,
 ) -> DataFrame:
     """
     Perform stepup feature selection
@@ -442,13 +441,6 @@ def nested_stepup_feature_select(
         f"_forward_{reg_scoring.value}_{cls_scoring.value}_selected"
         f"_{r}_n={max_n_features}"
     )
-    if (use_inner_cached is False) and (use_outer_cached is True):
-        raise ValueError(
-            "Cannot use cached results of outer loop if recomputing inner loops"
-        )
-    all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
-    if all_fold_out.exists() and use_outer_cached:
-        return pd.read_parquet(all_fold_out)
 
     df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
 
@@ -481,7 +473,7 @@ def nested_stepup_feature_select(
         tname = str(target).replace("TARGET__", "")
         fold_out = FORWARD_CACHE / f"{fbase}_{tname}_folds.parquet"
 
-        if fold_out.exists() and use_inner_cached:
+        if fold_out.exists() and use_cached:
             fold_info = pd.read_parquet(fold_out)
         else:
             for outer_fold, (idx_train, idx_test) in enumerate(cv.split(y, y)):
@@ -512,9 +504,10 @@ def nested_stepup_feature_select(
     pbar.close()
 
     all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)
+    all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
     all_fold_info.to_parquet(all_fold_out)
-
     print(f"Saved nested forward selection results to: {all_fold_out}")
+
     return all_fold_info
 
 
@@ -682,8 +675,7 @@ if __name__ == "__main__":
                 max_n_features=50,
                 bin_stratify=True,
                 inner_progress=True,
-                use_outer_cached=True,
-                use_inner_cached=True,
+                use_cached=True,
             )
         )
     pd.options.display.max_rows = 500

@@ -32,8 +32,7 @@ if __name__ == "__main__":
         max_n_features=50,
         bin_stratify=True,
         inner_progress=True,
-        use_outer_cached=True,
-        use_inner_cached=True,
+        use_cached=True,
     )
     pd.options.display.max_rows = 500
     means = nested_results_to_means(info)

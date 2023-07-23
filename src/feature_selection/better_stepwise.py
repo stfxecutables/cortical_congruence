@@ -11,7 +11,6 @@ sys.path.append(str(ROOT))  # isort: skip
 import traceback
 from dataclasses import dataclass
 from functools import cached_property
-from numbers import Integral, Real
 from typing import Any, Iterable, Literal, Protocol, Union
 
 import numpy as np
@@ -19,7 +18,6 @@ import pandas as pd
 from joblib import Parallel, delayed
 from numpy import ndarray
 from pandas import DataFrame, Index, Series
-from sklearn.base import _fit_context  # type: ignore
 from sklearn.base import BaseEstimator, clone, is_classifier
 from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.model_selection import BaseCrossValidator, cross_validate
@@ -41,8 +39,8 @@ class Estimator(Protocol):
 @dataclass
 class SelectArgs:
     estimator: Any
-    X_train: DataFrame | ndarray
-    y_train: Series | ndarray
+    X_train: ndarray
+    y_train: ndarray
     mask: ndarray
     idx: ndarray
     scoring: Union[RegressionMetric, ClassificationMetric]
@@ -53,10 +51,10 @@ class ForwardSelect:
     def __init__(
         self,
         estimator: BaseEstimator | Estimator,
-        X_train: DataFrame | ndarray,
-        y_train: Series | ndarray,
-        X_test: DataFrame | ndarray,
-        y_test: Series | ndarray,
+        X_train: ndarray,
+        y_train: ndarray,
+        X_test: ndarray,
+        y_test: ndarray,
         n_features_to_select: int = 50,
         scoring: Union[
             RegressionMetric, ClassificationMetric
@@ -90,7 +88,8 @@ class ForwardSelect:
     def results(self) -> DataFrame:
         if len(self.iteration_metrics) == 0:
             raise RuntimeError(
-                f"Must call `{self.__class__.__name__}.select()` before returning results."
+                f"Must call `{self.__class__.__name__}.select()` "
+                "before returning results."
             )
         fold_infos = []
         for i, info in enumerate(self.iteration_metrics):
@@ -119,7 +118,6 @@ class ForwardSelect:
             self.iteration_features.append(idx_selected)
             self.iteration_metrics.append(info)
             self.iteration_scores.append(score)
-            self.mask[idx_selected] = True
 
         return self
 
@@ -161,19 +159,23 @@ class ForwardSelect:
         for feature_idx, (score, info) in zip(remaining_idx, results):
             scores[feature_idx] = (score, info)
 
-        selected_idx = max(scores, key=lambda feature_idx: scores[feature_idx][0])
-        best_score, best_info = scores[selected_idx]
+        idx_selected = max(scores, key=lambda feature_idx: scores[feature_idx][0])
+        self.mask[idx_selected] = True
+        best_score, best_info = scores[idx_selected]
 
-        X_test = self.X_test
+        X_train = self.X_train[:, self.mask]
+        y_train = np.asarray(self.y_train)
+        X_test = self.X_test[:, self.mask]
         y_test = np.asarray(self.y_test)
         test: Estimator = clone(estimator, safe=False)  # type: ignore
-        test.fit(self.X_train, self.y_train)
+        # use features only!!!!
+        test.fit(X_train, y_train)
         y_pred = np.asarray(test.predict(X_test))
         for metric in self.scoring.__class__:
-            best_info[f"test_{metric.value}"] = metric(y_test, y_pred)
+            best_info[f"test_{metric.value}"] = metric(y_test, y_pred)  # type: ignore
         best_info.drop(columns=["fit_time", "score_time"], inplace=True)
 
-        return selected_idx, best_score, best_info
+        return idx_selected, best_score, best_info
 
     def validate_args(self) -> None:
         assert self.n_features == self.X_train.shape[1]
