@@ -9,7 +9,7 @@
 #SBATCH --job-name=abide_i_select
 #SBATCH --array=0-2
 #SBATCH --output=abide_i_select_%A_%a_%j.out
-#SBATCH --time=00-08:00:00
+#SBATCH --time=00-24:00:00
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=80
 
