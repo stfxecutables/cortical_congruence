@@ -381,6 +381,7 @@ def nested_stepup_feature_select(
     bin_stratify: bool = True,
     inner_progress: bool = False,
     use_cached: bool = True,
+    load_complete: bool = False,
 ) -> DataFrame:
     """
     Perform stepup feature selection
@@ -441,6 +442,9 @@ def nested_stepup_feature_select(
         f"_forward_{reg_scoring.value}_{cls_scoring.value}_selected"
         f"_{r}_n={max_n_features}"
     )
+    all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
+    if use_cached and load_complete and all_fold_out.exists():
+        return pd.read_parquet(all_fold_out)
 
     df = load_preprocessed(dataset=dataset, regex=feature_regex, models=models)
 
@@ -504,22 +508,22 @@ def nested_stepup_feature_select(
     pbar.close()
 
     all_fold_info = pd.concat(all_fold_infos, axis=0, ignore_index=True)
-    all_fold_out = FORWARD_RESULTS / f"{fbase}_nested_folds.parquet"
     all_fold_info.to_parquet(all_fold_out)
     print(f"Saved nested forward selection results to: {all_fold_out}")
 
     return all_fold_info
 
 
-def nested_results_to_means(folds: DataFrame) -> DataFrame:
-    def accumulate_features(g: DataFrame) -> DataFrame:
-        df = g.copy().reset_index(drop=True)
-        df["features"] = ""
-        selected = g["selected"].to_list()
-        for i in range(len(selected)):
-            df.loc[i, "features"] = str(selected[: i + 1])
-        return df
+def accumulate_features(g: DataFrame) -> DataFrame:
+    df = g.copy().reset_index(drop=True)
+    df["features"] = ""
+    selected = g["selected"].to_list()
+    for i in range(len(selected)):
+        df.loc[i, "features"] = str(selected[: i + 1])
+    return df
 
+
+def nested_results_to_means(folds: DataFrame) -> DataFrame:
     means = (
         folds.drop(columns=["inner_fold"])
         .groupby(["source", "model", "target", "outer_fold", "selection_iter"])
@@ -537,12 +541,13 @@ def nested_results_to_means(folds: DataFrame) -> DataFrame:
 
 
 def means_to_best_n_feats(
-    means: DataFrame, metric: RegressionMetric | ClassificationMetric
+    means: DataFrame, metric: RegressionMetric | ClassificationMetric, test: bool
 ) -> DataFrame:
     leading_cols = ["source", "model", "target", "outer_fold"]
+    t = "test_" if test else ""
     return (
         means.groupby(leading_cols)
-        .apply(lambda g: g.nlargest(1, metric.value))
+        .apply(lambda g: g.nlargest(1, f"{t}{metric.value}"))
         .reset_index(drop=True)
     )
 
