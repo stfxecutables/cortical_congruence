@@ -7,35 +7,14 @@ ROOT = Path(__file__).resolve().parent.parent  # isort: skip
 sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
-import os
 import sys
-from argparse import ArgumentParser, Namespace
-from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-    no_type_check,
-)
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from joblib import Memory
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from numpy import ndarray
-from pandas import DataFrame, Series
-from typing_extensions import Literal
+from pandas import DataFrame
 
 
 def ensure_dir(path: Path) -> Path:
@@ -68,6 +47,50 @@ REGULARIZATION_ALPHAS = np.logspace(start=-2, stop=5, num=50, base=10)
 PBAR_PAD = 20
 PBAR_COLS = 140
 
+METRIC_PALETTE = {
+    # "mae": "#f2830d",
+    "smae": "#0d7ff2",
+    "exp-var": "#000000",
+    "acc": "#0d7ff2",
+    "acc_bal": "#f2830d",
+    "f1": "#000000",
+    # "test_mae": "#f2830d",
+    "test_smae": "#0d7ff2",
+    "test_exp-var": "#000000",
+    "test_acc": "#0d7ff2",
+    "test_acc_bal": "#f2830d",
+    "test_f1": "#000000",
+}
+METRIC_LINE_STYLES = {  # first element of tuple is segment width, second element is space
+    # "mae": (1, 1),  # densely dotted
+    "smae": (1, 1),
+    "exp-var": (1, 1),
+    "acc": (1, 1),
+    "acc_bal": (1, 1),
+    "f1": (1, 1),
+    # "test_mae": (1, 0),  # solid?
+    "test_smae": (1, 0),
+    "test_exp-var": (1, 0),
+    "test_acc": (1, 0),
+    "test_acc_bal": (1, 0),
+    "test_f1": (1, 0),
+}
+METRIC_MARKERS = {
+    # "mae": "*",
+    "smae": "*",
+    "exp-var": "*",
+    "acc": "*",
+    "acc_bal": "*",
+    "f1": "*",
+    # "test_mae": ".",  # solid?
+    "test_smae": ".",
+    "test_exp-var": ".",
+    "test_acc": ".",
+    "test_acc_bal": ".",
+    "test_f1": ".",
+}
+PLOT_CLS_METRICS = ["acc", "acc_bal", "f1"]
+SOURCE_ORDER = ["FS", "CMC", "FS|CMC"]
 """
 Notes
 -----

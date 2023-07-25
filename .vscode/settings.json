@@ -4,7 +4,7 @@
     "commands": [
       {
         "match": "\\.py$",
-        "cmd": "isort ${file} && black ${file}"
+        "cmd": "autoflake --in-place --remove-all-unused-imports ${file} && isort ${file} && black ${file}"
       }
     ]
   }
