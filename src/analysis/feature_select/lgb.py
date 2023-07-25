@@ -334,7 +334,7 @@ if __name__ == "__main__":
                 dataset=data,
                 feature_regex=regex,
                 bin_stratify=True,
-                use_cached=False,
+                use_cached=True,
             )
         )
     info = pd.concat(infos, axis=0, ignore_index=True)
