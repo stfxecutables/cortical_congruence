@@ -147,7 +147,7 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.ABIDE_II: root / "ABIDEII_Composite_Phenotypic.csv",
             FreesurferStatsDataset.ADHD_200: root
             / "ADHD200_preprocessed_phenotypics.tsv",
-            FreesurferStatsDataset.HBN: root / "HBN_R10_Pheno.csv",
+            FreesurferStatsDataset.HBN: root / "data-2023-07-11T00 15 46.185Z.csv",
             FreesurferStatsDataset.HCP: root / "unrestricted_behavioral.csv",
             FreesurferStatsDataset.QTAB: root / "phenotypic_data.tsv",
             FreesurferStatsDataset.QTIM: root / "participants.tsv",
@@ -222,7 +222,7 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.ABIDE_II: root / "ABIDEII_Composite_Phenotypic.csv",
             FreesurferStatsDataset.ADHD_200: root
             / "ADHD200_preprocessed_phenotypics.tsv",
-            FreesurferStatsDataset.HBN: root / "HBN_R10_Pheno.csv",
+            FreesurferStatsDataset.HBN: root / "data_dict_all.parquet",
             FreesurferStatsDataset.HCP: root / "unrestricted_behavioral.csv",
             FreesurferStatsDataset.QTAB: root / "phenotypic_data.tsv",
             FreesurferStatsDataset.QTIM: root / "participants.tsv",

@@ -39,6 +39,7 @@ ABIDE_II_ENCODING = "iso8859_2"
 ABIDE_I_PHENO = DATA / "ABIDE_I_Phenotypic_V1_0b.csv"
 ABIDE_II_PHENO = DATA / "ABIDEII_Composite_Phenotypic.csv"
 ADHD200_PHENO = DATA / "ADHD200_preprocessed_phenotypics.tsv"
+HBN_PHENO = DATA / "HBN/phenotypic_data/data_dict_all.parquet"
 
 HCP_FEATURE_INFO = DATA / "HCP/phenotypic_data/available_feature_details.csv"
 CMC_TABLE = ROOT / "abide_cmc_combined.parquet"
