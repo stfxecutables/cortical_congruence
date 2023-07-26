@@ -8,12 +8,13 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 from enum import Enum
-from typing import Any, Callable, Mapping, Union
+from typing import Any, Callable, Mapping, Union, overload
 
 import numpy as np
 from lightgbm import LGBMRegressor as LGB
 from numpy import ndarray
-from pandas import DataFrame
+from numpy.typing import NDArray
+from pandas import DataFrame, Series
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor as Dummy
 from sklearn.linear_model import LassoCV
@@ -33,7 +34,6 @@ from src.metrics import (
     acc_bal_scorer,
     acc_scorer,
     accuracy_score,
-    auroc_scorer,
     balanced_accuracy_score,
     expl_var,
     expl_var_scorer,
@@ -49,7 +49,6 @@ from src.metrics import (
     r2_scorer,
     recall_score,
     recall_scorer,
-    roc_auc_score,
     smad,
     smad_scorer,
     smae,
@@ -410,6 +409,36 @@ class RegressionMetric(Enum):
             RegressionMetric.ScaledMedianAbsoluteDeviation,
         ]
 
+    @overload
+    def better_than_guess(self, x: ndarray) -> NDArray[np.bool_]:
+        ...
+
+    @overload
+    def better_than_guess(self, x: Series) -> Series[bool]:
+        ...
+
+    @overload
+    def better_than_guess(self, x: float) -> bool:
+        ...
+
+    def better_than_guess(
+        self,
+        x: ndarray | Series | float,
+        data: FreesurferStatsDataset | None = None,
+    ) -> NDArray[np.bool_] | Series[bool] | bool:
+        def throw() -> None:
+            raise ValueError(f"Cannot define a guess baseline for metric {self.name}")
+
+        comparers = {
+            RegressionMetric.MeanAbsoluteError: lambda x: throw,
+            RegressionMetric.ScaledMeanAbsoluteError: lambda x: x < 1.0,
+            RegressionMetric.MedianAbsoluteDeviation: lambda x: throw,
+            RegressionMetric.ScaledMedianAbsoluteDeviation: lambda x: x < 1.0,
+            RegressionMetric.ExplainedVariance: lambda x: x > 0.0,
+            RegressionMetric.RSquared: lambda x: x > 0.0,
+        }
+        return comparers[self](x)
+
     def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
         metric = {
             RegressionMetric.MeanAbsoluteError: mae,
@@ -444,6 +473,13 @@ class ClassificationMetric(Enum):
     @staticmethod
     def scorers() -> dict[str, Metric]:
         return {reg.value: reg.scorer() for reg in ClassificationMetric}
+
+    def better_than_guess(
+        self,
+        x: ndarray | Series | float,
+        data: FreesurferStatsDataset | None = None,
+    ) -> NDArray[np.bool_] | Series[bool] | bool:
+        raise NotImplementedError(f"No simple way to define a guess baseline for {self}")
 
     def __call__(self, y_true: ndarray, y_pred: ndarray) -> float:
         metric = {

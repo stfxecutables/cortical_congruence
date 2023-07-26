@@ -156,7 +156,8 @@ def lgbm_select_target(
     regex: FeatureRegex,
     scoring: tuple[RegressionMetric, ClassificationMetric],
     bin_stratify: bool,
-    n_tune: int = 8,
+    batch_size: int = 80,
+    max_n_batches: int = 10,
 ) -> DataFrame:
     feats = np.array(df_train.filter(regex=regex.value).columns.to_list())
     X_train = df_train.filter(regex=regex.value).to_numpy()
@@ -168,38 +169,58 @@ def lgbm_select_target(
     X_test = np.asfortranarray(X_test)
 
     is_reg = "REG" in target
-
-    params = get_params()
-    params = params[:n_tune]
-    args = [
-        FitArgs(
-            lgb_args=param,
-            X_train=X_train,
-            X_test=X_test,
-            y_train=y_train,
-            y_test=y_test,
-            is_reg=is_reg,
-            bin_stratify=bin_stratify,
-            iter=tune_iter,
-        )
-        for tune_iter, param in enumerate(params)
-    ]
-
-    fits: list[DataFrame]
-    # results = [fit_lgb(arg) for arg in args]  # debug
-    fits = Parallel(n_jobs=-1, verbose=0)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
-    tune_results = pd.concat(fits, axis=0, ignore_index=True)
-    means = (
-        tune_results.groupby("tune_iter")
-        .mean(numeric_only=True)
-        .drop(columns="inner_fold")
-    )
     reg_sort = f"inner_test_{scoring[0].value}"
     cls_sort = f"inner_test_{scoring[1].value}"
+    metric = scoring[0] if is_reg else scoring[1]
     sorter = reg_sort if is_reg else cls_sort
 
-    best_idx = means.sort_values(by=sorter, ascending=is_reg).head(10).index
-    results = tune_results[tune_results["tune_iter"].isin(best_idx)]
+    params = get_params()
+    # params = params[:n_tune]
+    # now keep fitting batches until best 5 mean values by `sorter` are
+    all_results = []
+    all_mean_results = []
+    results = None
+    for batch_iter in range(max_n_batches):
+        iter_params = params[batch_iter * batch_size : (batch_iter + 1) * batch_size]
+        args = [
+            FitArgs(
+                lgb_args=param,
+                X_train=X_train,
+                X_test=X_test,
+                y_train=y_train,
+                y_test=y_test,
+                is_reg=is_reg,
+                bin_stratify=bin_stratify,
+                iter=tune_iter,
+            )
+            for tune_iter, param in enumerate(iter_params)
+        ]
+
+        fits: list[DataFrame]
+        # results = [fit_lgb(arg) for arg in args]  # debug
+        fits = Parallel(n_jobs=-1, verbose=0)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
+        tune_results = pd.concat(fits, axis=0, ignore_index=True)
+        means = (
+            tune_results.groupby("tune_iter")
+            .mean(numeric_only=True)
+            .drop(columns="inner_fold")
+        )
+
+        all_results.append(tune_results)
+        all_mean_results.append(means)
+
+        running_results = pd.concat(all_results, axis=0, ignore_index=True)
+        running_means = pd.concat(all_mean_results, axis=0, ignore_index=True)
+        #
+
+        best_means = running_means.sort_values(by=sorter, ascending=not is_reg).head(5)
+        best_idx = best_means.index
+        results = running_results[running_results["tune_iter"].isin(best_idx)]
+        if is_reg and np.all(metric.better_than_guess(best_means[sorter])):
+            break
+
+    if results is None:
+        raise ValueError("Must run at least one batch")
 
     addons = {
         0: ("source", regex.value),
@@ -219,7 +240,8 @@ def nested_lgbm_feature_select(
         RegressionMetric.ExplainedVariance,
         ClassificationMetric.BalancedAccuracy,
     ),
-    n_tune: int = 128,
+    batch_size: int = 80,
+    max_n_batches: int = 10,
     bin_stratify: bool = True,
     use_cached: bool = True,
     load_complete: bool = False,
@@ -260,7 +282,7 @@ def nested_lgbm_feature_select(
     regex = feature_regex.value
 
     r = regex.replace("|", "+")
-    fbase = f"{dataset.value}_{r}_lgbm_selected_htune={n_tune}"
+    fbase = f"{dataset.value}_{r}_lgbm_selected_nbatch={max_n_batches}_B={batch_size}"
     all_fold_out = LGBM_RESULTS / f"{fbase}_nested.parquet"
     if use_cached and load_complete and all_fold_out.exists():
         return pd.read_parquet(all_fold_out)
@@ -303,7 +325,8 @@ def nested_lgbm_feature_select(
                     target=target,
                     regex=feature_regex,
                     scoring=scoring,
-                    n_tune=n_tune,
+                    batch_size=batch_size,
+                    max_n_batches=max_n_batches,
                     bin_stratify=bin_stratify,
                 )
                 results.insert(2, "outer_fold", outer_fold + 1)
@@ -334,41 +357,26 @@ if __name__ == "__main__":
                 feature_regex=regex,
                 bin_stratify=True,
                 use_cached=True,
-                n_tune=128,
+                batch_size=80,
+                max_n_batches=10,
             )
         )
     info = pd.concat(infos, axis=0, ignore_index=True)
-    bests = (
-        info.groupby(["source", "target", "outer_fold"])
+    inner_means = (
+        info.groupby(["source", "target", "outer_fold", "tune_iter"])
         .mean(numeric_only=True)
         .filter(regex="exp-var|smae")
-        .reset_index()
-        .groupby(["source", "target"])
-        .mean()
-        .sort_values(by="inner_test_exp-var")
-        .drop(columns="outer_fold")
-        .reset_index()
+        .reset_index()  # now inner folds are averaged over
     )
 
-    print(bests.round(4).to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
-
-    # see a lot of https://stats.stackexchange.com/questions/319861/how-to-interpret-lasso-shrinking-all-coefficients-to-0
-    # basically, we don't have linear relationships
-    dfs = []
-    for _, df in info.groupby(["source", "target"]):
-        if all(df["inner_selected"] == "none") and all(df["outer_selected"] == "none"):
-            continue
-        dfs.append(df)
-    sel = pd.concat(dfs, axis=0)
+    N = 1
+    n_best = inner_means.groupby(["source", "target", "outer_fold"]).apply(
+        lambda g: g.nlargest(N, "inner_test_exp-var").reset_index(drop=True)
+    )
+    n_best.index = n_best.index.droplevel(2).droplevel(2)
+    n_best = n_best.reset_index(drop=True)
     bests = (
-        sel.groupby(["source", "target", "outer_fold"])
-        .mean(numeric_only=True)
-        .filter(regex="exp-var")
-        .reset_index()
-        .groupby(["source", "target"])
-        .mean()
-        .sort_values(by="inner_test_exp-var")
-        .drop(columns="outer_fold")
-        .reset_index()
+        n_best.groupby(["source", "target"]).mean().sort_values(by="inner_test_exp-var")
     )
+
     print(bests.round(4).to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
