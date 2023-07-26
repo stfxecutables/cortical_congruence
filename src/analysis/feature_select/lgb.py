@@ -186,8 +186,8 @@ def lgbm_select_target(
     ]
 
     fits: list[DataFrame]
-    fits = Parallel(n_jobs=-1, verbose=0)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
     # results = [fit_lgb(arg) for arg in args]  # debug
+    fits = Parallel(n_jobs=-1, verbose=0)(delayed(fit_lgb)(arg) for arg in args)  # type: ignore  # noqa
     tune_results = pd.concat(fits, axis=0, ignore_index=True)
     means = (
         tune_results.groupby("tune_iter")
@@ -197,10 +197,9 @@ def lgbm_select_target(
     reg_sort = f"inner_test_{scoring[0].value}"
     cls_sort = f"inner_test_{scoring[1].value}"
     sorter = reg_sort if is_reg else cls_sort
-    ascending = is_reg
 
-    best_idx = means.sort_values(by=sorter, ascending=ascending).head(10).index
-    results = tune_results.loc[best_idx]
+    best_idx = means.sort_values(by=sorter, ascending=is_reg).head(10).index
+    results = tune_results[tune_results["tune_iter"].isin(best_idx)]
 
     addons = {
         0: ("source", regex.value),
@@ -335,6 +334,7 @@ if __name__ == "__main__":
                 feature_regex=regex,
                 bin_stratify=True,
                 use_cached=True,
+                n_tune=128,
             )
         )
     info = pd.concat(infos, axis=0, ignore_index=True)
