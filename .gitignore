@@ -12,12 +12,15 @@ data/**/*.nii.gz
 
 data/ABIDE-II/phenotypic_data/ABIDEII_Data_Legend.pdf
 data/ADNI/
+data/all_INDI.txt
 data/FCON1000.txt
+data/HBN_R10_Pheno.csv.1
 data/HBN/phenotypic_data/Release11_DataDic.zip
 data/HBN/phenotypic_data/Release11_DataDic/
-data/HBN_R10_Pheno.csv.1
 data/HCP/README.md
-data/all_INDI.txt
+data/QTAB/phenotypic_data/OpenNeuro_Zenodo_IDs.txt
+data/QTAB/phenotypic_data/restricted/*.json
+data/QTAB/phenotypic_data/restricted/*.tsv
 
 drafts/methods/methods*.html
 drafts/methods/methods*.zip
@@ -31,6 +34,7 @@ cluster_table.txt
 *.gz
 *.json
 *.parquet
+*.pdf
 
 
 
