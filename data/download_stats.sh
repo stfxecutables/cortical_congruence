@@ -102,3 +102,9 @@ wget http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/File/_ph
     --include '*.stats' \
     s3://fcp-indi/data/Projects/HBN/derivatives/Freesurfer_version6.0.0/ \
     HBN/derivatives
+
+"$awscli" s3 sync --no-sign-request \
+    --exclude='*' \
+    --include '*.stats' \
+    s3://fcp-indi/data/Projects/HBN/MRI/ \
+    HBN/derivatives
