@@ -182,6 +182,7 @@ def lgbm_select_target(
     results = None
     for batch_iter in range(max_n_batches):
         iter_params = params[batch_iter * batch_size : (batch_iter + 1) * batch_size]
+        offset = batch_iter * batch_size
         args = [
             FitArgs(
                 lgb_args=param,
@@ -191,7 +192,7 @@ def lgbm_select_target(
                 y_test=y_test,
                 is_reg=is_reg,
                 bin_stratify=bin_stratify,
-                iter=tune_iter,
+                iter=tune_iter + offset,
             )
             for tune_iter, param in enumerate(iter_params)
         ]
@@ -349,6 +350,11 @@ def nested_lgbm_feature_select(
 
 if __name__ == "__main__":
     data = FreesurferStatsDataset.HCP
+    dx = data.load_complete()
+    fs_cols = dx.filter(regex="FS").columns
+    cmc_cols = dx.filter(regex="CMC").columns
+    all_cols = dx.filter(regex="FS|CMC").columns
+
     infos = []
     for regex in FeatureRegex:
         infos.append(
@@ -362,6 +368,9 @@ if __name__ == "__main__":
             )
         )
     info = pd.concat(infos, axis=0, ignore_index=True)
+    # fix offsets...
+    unique_iters = np.array(range(len(info))) // 5
+    info["tune_iter"] = unique_iters
     inner_means = (
         info.groupby(["source", "target", "outer_fold", "tune_iter"])
         .mean(numeric_only=True)
@@ -376,7 +385,30 @@ if __name__ == "__main__":
     n_best.index = n_best.index.droplevel(2).droplevel(2)
     n_best = n_best.reset_index(drop=True)
     bests = (
-        n_best.groupby(["source", "target"]).mean().sort_values(by="inner_test_exp-var")
+        n_best.groupby(["source", "target"])
+        .mean()
+        .sort_values(by="inner_test_exp-var", ascending=False)
+        .drop(columns=["outer_fold", "tune_iter"])
+        .loc[
+            :,
+            [
+                "inner_train_smae",
+                "inner_train_exp-var",
+                "inner_test_smae",
+                "inner_test_exp-var",
+                "outer_train_smae",
+                "outer_train_exp-var",
+                "outer_test_smae",
+                "outer_test_exp-var",
+            ],
+        ]
     )
+    print(bests)
+    index = pd.MultiIndex.from_product(
+        [["inner", "outer"], ["train", "test"], ["smae", "exp-var"]],
+        names=["nesting", "split", "metric"],
+    )
+    df = pd.DataFrame(data=np.nan, index=bests.index, columns=index)
+    df.loc[:, :] = bests.values
 
-    print(bests.round(4).to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
+    print(df.round(3))

@@ -160,6 +160,7 @@ class FreesurferStatsDataset(Enum):
             load_abide_ii_pheno,
             load_adhd200_pheno,
         )
+        from src.munging.hbn import load_hbn_pheno
         from src.munging.hcp import PhenotypicFocus, load_hcp_phenotypic
 
         if focus is None:
@@ -174,7 +175,7 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.ABIDE_I: load_abide_i_pheno,
             FreesurferStatsDataset.ABIDE_II: load_abide_ii_pheno,
             FreesurferStatsDataset.ADHD_200: load_adhd200_pheno,
-            FreesurferStatsDataset.HBN: lambda: not_implemented(),
+            FreesurferStatsDataset.HBN: lambda: load_hbn_pheno,
             FreesurferStatsDataset.HCP: lambda: load_hcp_phenotypic(focus),
             FreesurferStatsDataset.QTAB: lambda: not_implemented(),
             FreesurferStatsDataset.QTIM: lambda: not_implemented(),
@@ -191,6 +192,7 @@ class FreesurferStatsDataset(Enum):
             load_abide_ii_complete,
             load_adhd200_complete,
         )
+        from src.munging.hbn import load_hbn_complete
         from src.munging.hcp import PhenotypicFocus, load_HCP_complete
 
         if focus is None:
@@ -205,7 +207,7 @@ class FreesurferStatsDataset(Enum):
             FreesurferStatsDataset.ABIDE_I: load_abide_i_complete,
             FreesurferStatsDataset.ABIDE_II: load_abide_ii_complete,
             FreesurferStatsDataset.ADHD_200: load_adhd200_complete,
-            FreesurferStatsDataset.HBN: lambda: not_implemented(),
+            FreesurferStatsDataset.HBN: lambda: load_hbn_complete,
             FreesurferStatsDataset.QTAB: lambda: not_implemented(),
             FreesurferStatsDataset.QTIM: lambda: not_implemented(),
             FreesurferStatsDataset.HCP: lambda: load_HCP_complete(

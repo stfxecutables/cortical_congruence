@@ -245,12 +245,20 @@ if __name__ == "__main__":
         .reset_index()
         .groupby(["source", "target"])
         .mean()
-        .sort_values(by="inner_test_exp-var")
+        .sort_values(by="inner_test_exp-var", ascending=False)
         .drop(columns="outer_fold")
         .reset_index()
     )
 
-    print(bests.round(4).to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
+    index = pd.MultiIndex.from_product(
+        [["inner", "outer"], ["train", "test"], ["smae", "exp-var"]],
+        names=["nesting", "split", "metric"],
+    )
+    df = pd.DataFrame(data=np.nan, index=bests.iloc[:, 2:].index, columns=index)
+    df.loc[:, :] = bests.iloc[:, 2:].values
+    df.index = pd.MultiIndex.from_tuples(list(zip(*[bests["source"], bests["target"]])))
+
+    print(df.head(10).round(3))
 
     # see https://stats.stackexchange.com/questions/319861/how-to-interpret-lasso-shrinking-all-coefficients-to-0  # noqa
     # basically, we don't have linear relationships
@@ -263,12 +271,20 @@ if __name__ == "__main__":
     bests = (
         sel.groupby(["source", "target", "outer_fold"])
         .mean(numeric_only=True)
-        .filter(regex="exp-var")
+        .filter(regex="exp-var|smae")
         .reset_index()
         .groupby(["source", "target"])
         .mean()
-        .sort_values(by="inner_test_exp-var")
+        .sort_values(by="inner_test_exp-var", ascending=False)
         .drop(columns="outer_fold")
         .reset_index()
     )
-    print(bests.round(4).to_markdown(tablefmt="simple", index=False, floatfmt="0.4f"))
+
+    index = pd.MultiIndex.from_product(
+        [["inner", "outer"], ["train", "test"], ["smae", "exp-var"]],
+        names=["nesting", "split", "metric"],
+    )
+    df = pd.DataFrame(data=np.nan, index=bests.iloc[:, 2:].index, columns=index)
+    df.loc[:, :] = bests.iloc[:, 2:].values
+    df.index = pd.MultiIndex.from_tuples(list(zip(*[bests["source"], bests["target"]])))
+    print(df.head(10).round(3))
