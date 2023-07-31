@@ -22,14 +22,34 @@ from src.munging.fs_stats.tabularize import compute_CMC_table, to_wide_subject_t
 
 
 def dedup_colname(colname: str) -> str:
+    typo_fixes = {
+        "CBCLpre": "CBCL_Pre",
+        "CBCLPre": "CBCL_Pre",
+        "CELF5_Meta": "",
+        "TRF_Pre": "TRF_P",
+        "SRS_Pre": "SRS_P",
+    }
+    final_removes = [
+        "ESWAN_",
+        "Vineland_",
+        "CELF_Meta_",
+    ]
+    for typo, fix in typo_fixes.items():
+        if typo in colname:
+            colname = colname.replace(typo, fix)
+
     comma = colname.find(",")
     if comma < 0:
         return colname.replace(",", "_")
     label = colname[:comma]
     found = re.findall(label, colname)
     if len(found) > 1:
-        return colname[comma + 1 :]
-    return colname.replace(",", "_")
+        colname = colname[comma + 1 :]
+    colname = colname.replace(",", "_")
+    for remove in final_removes:
+        colname = colname.replace(remove, "")
+
+    return colname
 
 
 @lru_cache
@@ -40,10 +60,67 @@ def load_hbn_pheno() -> DataFrame:
     df.index = Index(data=sids, name="sid")
     df.drop(columns="Identifiers", inplace=True)
     df.dropna(axis=1, how="all", inplace=True)
+    df = df.rename(columns=dedup_colname)
     # df.rename(columns=lambda s: s[s.find(",") + 1 :], inplace=True)
 
     dd = pd.read_parquet(FreesurferStatsDataset.HBN.data_dictionary())
+    celf_idx = dd.name.str.contains("CELF")
+    celf_full = dd.scale_name.str.contains("Full")
+    celf_8_9_idx = celf_idx & dd.scale_name.str.contains("5-8") & celf_full
+    celf_9_21_idx = celf_idx & dd.scale_name.str.contains("9-21") & celf_full
+    dd.loc[celf_8_9_idx, "name"] = dd.loc[celf_8_9_idx, "name"].apply(
+        lambda s: f"CELF_Full_5to8_{s}"
+    )
+    dd.loc[celf_9_21_idx, "name"] = dd.loc[celf_9_21_idx, "name"].apply(
+        lambda s: f"CELF_Full_9to21_{s}"
+    )
+    pre_ints = dd[dd.scale_name.str.contains("Pre-Int")]["name"].to_list()
+    no_dict_cols = [
+        "Administration",
+        "Data_entry",
+        "EID",
+        "START_DATE",
+        "Season",
+        "Site",
+        "Study",
+        "Year",
+        "AUDIT",
+        "Days_Baseline",
+    ]
+    non_pred_cols = [
+        *pre_ints,
+        "ColorVision",
+        "ConsensusDx",  # mostly NaN, unknown meaning
+        "DailyMeds",  # unrelated to MRI
+        "DigitSpan",  #
+        "DMDD",  # ?
+        "DrugScreen",
+        "EEG",  # EEG book-keeping
+        "MRI",  # MRI book-keeping
+        "NIDA",  # ?
+        "Physical",  # transient, unrelated to MRI
+        "Pregnancy",
+        "PreInt",  # pre-screening interview
+        "Quotient",  # ?
+        "PhenX",  # questions about perception of neighbourhood and school
+        "RANRAS",  # ?
+        "SympChck",  # transient symptoms and symptoms
+        "Tanner",  # physical sexual development
+        "YFAS",  # food addiction
+    ]
+    missing_scales = [
+        "Pegboard",
+        "Barratt",
+        "CDI",
+    ]
+    undefined = str("|".join(no_dict_cols + missing_scales + non_pred_cols))
+    drops = df.filter(regex=undefined).columns
+    df = df.drop(columns=drops)
+    missing = sorted(set(df.columns.to_list()).difference(dd["name"].values))
+    print(missing)
+    print(len(missing))
 
+    # len(set(df.rename(columns=dedup_colname).columns).intersection(dd.name))
     return df
     df.rename(
         columns={
