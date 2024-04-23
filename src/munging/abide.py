@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame, Index
 from sklearn.decomposition import FactorAnalysis as FA
-from sklearn.preprocessing import LabelEncoder
 
 from src.constants import ABIDE_II_ENCODING
 from src.enumerables import FreesurferStatsDataset, Tag
@@ -564,6 +563,10 @@ def load_adhd200_complete() -> DataFrame:
 
 
 if __name__ == "__main__":
-    load_abide_i_complete()
-    load_abide_ii_complete()
-    load_adhd200_complete()
+    df = load_abide_i_complete()
+    fs_only = df.drop(columns=df.filter(regex="CMC").columns)
+    fs_only.to_parquet("abide_i_FS_only.parquet")
+    df = load_abide_ii_complete()
+    fs_only = df.drop(columns=df.filter(regex="CMC").columns)
+    fs_only.to_parquet("abide_ii_FS_only.parquet")
+    # load_adhd200_complete()

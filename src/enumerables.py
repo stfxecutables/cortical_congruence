@@ -510,13 +510,45 @@ class FeatureRegex(Enum):
 
 
 if __name__ == "__main__":
+    COMPLETE_OUT = ROOT / "data/complete_tables"
+    COMPLETE_OUT.mkdir(exist_ok=True, parents=True)
+    datasets = [
+        FreesurferStatsDataset.ABIDE_I.load_complete(reduce_targets=True),
+        FreesurferStatsDataset.ABIDE_II.load_complete(reduce_targets=True),
+        FreesurferStatsDataset.ADHD_200.load_complete(reduce_targets=True),
+        FreesurferStatsDataset.HCP.load_complete(reduce_targets=True),
+    ]
+    outs = [
+        "ABIDE_I/ABIDE_I_all_FS_all_CMC_all_phenotypic_reduced_{target}.parquet",
+        "ABIDE_II/ABIDE_II_all_FS_all_CMC_all_phenotypic_reduced_{target}.parquet",
+        "ADHD200/ADHD200_all_FS_all_CMC_all_phenotypic_reduced_{target}.parquet",
+        "HCP/HCP_all_FS_all_CMC_all_phenotypic_reduced_{target}.parquet",
+    ]
+    for outname, df in zip(outs, datasets):
+        targets = df.filter(regex="TARGET__").columns.tolist()
+        for target in targets:
+            out = COMPLETE_OUT / outname.format(target=target)
+            out.parent.mkdir(exist_ok=True, parents=True)
+            dfr = df.drop(columns=targets)
+            dfr[target] = df[target]
+            dfr.to_parquet(out)
+            print(f"Wrote table for target={target} to {out}")
+    sys.exit()
+
     # print(FreesurferStatsDataset.ABIDE_I.load_pheno())
     # print(FreesurferStatsDataset.ABIDE_II.load_pheno())
     # print(FreesurferStatsDataset.ADHD_200.load_pheno())
     # print(FreesurferStatsDataset.HCP.load_pheno())
 
-    df = FreesurferStatsDataset.ABIDE_I.load_complete()
-    df = FreesurferStatsDataset.ABIDE_II.load_complete()
-    df = FreesurferStatsDataset.ADHD_200.load_complete()
-    df = FreesurferStatsDataset.HCP.load_complete()
+    # df = FreesurferStatsDataset.ABIDE_I.load_complete()
+    # df = FreesurferStatsDataset.ABIDE_II.load_complete()
+    # df = FreesurferStatsDataset.ADHD_200.load_complete()
+    df = FreesurferStatsDataset.HCP.load_complete(reduce_targets=False)
+    df_red = df.drop(columns=df.filter(regex="CMC").columns)
+    df_red.to_parquet("HCP_all_FS_phenotypic.parquet")
+    df = FreesurferStatsDataset.HCP.load_complete(reduce_targets=True)
+    df_red = df.drop(columns=df.filter(regex="CMC").columns)
+    df_red.to_parquet("HCP_all_FS_phenotypic_reduced.parquet")
+
+    print()
     # print(FreesurferStatsDataset.HBN.load_pheno())

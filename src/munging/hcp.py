@@ -527,6 +527,10 @@ def load_HCP_complete(
 
 
 if __name__ == "__main__":
-    df = load_HCP_complete(
+    df_red = load_HCP_complete(
         focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
     )
+    df_full = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=False
+    )
+    print()

@@ -307,6 +307,9 @@ def compute_CMC_table(
         return pd.read_parquet(out)
 
     df = tabularize_all_stats_files(dataset=dataset)
+    if dataset is FreesurferStatsDataset.HBN:
+        # See https://www.biorxiv.org/content/10.1101/666289v2.full
+        df.loc[:, "sid"] = df["parent"].apply(lambda s: re.search("sub-(.+?)/", s)[1])
     is_bad, dupes, bad_names = detect_table_issues(df)
     if is_bad:
         print(dupes)
