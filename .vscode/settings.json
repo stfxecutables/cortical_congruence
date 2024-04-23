@@ -1,11 +1,3 @@
 {
-  "editor.formatOnSave": true,
-  "emeraldwalk.runonsave": {
-    "commands": [
-      {
-        "match": "\\.py$",
-        "cmd": "autoflake --in-place --remove-all-unused-imports ${file} && isort ${file} && black ${file}"
-      }
-    ]
-  }
+  "editor.formatOnSave": true
 }
