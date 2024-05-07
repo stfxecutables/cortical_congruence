@@ -17,14 +17,14 @@ from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor as Dummy
-from sklearn.linear_model import LassoCV
-from sklearn.linear_model import LinearRegression as LR
 from sklearn.linear_model import (
+    LassoCV,
     LogisticRegressionCV,
     Ridge,
     RidgeClassifierCV,
     SGDClassifier,
 )
+from sklearn.linear_model import LinearRegression as LR
 from sklearn.neural_network import MLPRegressor as MLP
 from sklearn.svm import SVC, SVR
 
@@ -412,16 +412,13 @@ class RegressionMetric(Enum):
         ]
 
     @overload
-    def better_than_guess(self, x: ndarray) -> NDArray[np.bool_]:
-        ...
+    def better_than_guess(self, x: ndarray) -> NDArray[np.bool_]: ...
 
     @overload
-    def better_than_guess(self, x: Series) -> Series[bool]:
-        ...
+    def better_than_guess(self, x: Series) -> Series[bool]: ...
 
     @overload
-    def better_than_guess(self, x: float) -> bool:
-        ...
+    def better_than_guess(self, x: float) -> bool: ...
 
     def better_than_guess(
         self,
@@ -531,8 +528,17 @@ if __name__ == "__main__":
             out.parent.mkdir(exist_ok=True, parents=True)
             dfr = df.drop(columns=targets)
             dfr[target] = df[target]
+
             dfr.to_parquet(out)
             print(f"Wrote table for target={target} to {out}")
+            outname2 = out.name.replace("_all_CMC", "")
+            out2 = out.parent / outname2
+            dfs = df.drop(columns=df.filter(regex="FS__FEAT").columns)
+            dfs = dfs.drop(columns=targets)
+            dfs[target] = df[target]
+
+            dfs.to_parquet(out2)
+            print(f"Wrote table for target={target} FS only to {out2}")
     sys.exit()
 
     # print(FreesurferStatsDataset.ABIDE_I.load_pheno())
