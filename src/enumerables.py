@@ -533,7 +533,7 @@ if __name__ == "__main__":
             print(f"Wrote table for target={target} to {out}")
             outname2 = out.name.replace("_all_CMC", "")
             out2 = out.parent / outname2
-            dfs = df.drop(columns=df.filter(regex="FS__FEAT").columns)
+            dfs = df.drop(columns=df.filter(regex="CMC").columns)
             dfs = dfs.drop(columns=targets)
             dfs[target] = df[target]
 
