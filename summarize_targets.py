@@ -39,7 +39,9 @@ from joblib import Parallel, delayed
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
-from pandas import DataFrame, Series
+from pandas import DataFrame, Index, Series
+from scipy.stats import mannwhitneyu, wilcoxon
+from statsmodels.stats.multitest import multipletests
 from tqdm import tqdm
 from typing_extensions import Literal
 
@@ -68,7 +70,9 @@ SINGLE_TABLES = {
 }
 
 FIGURES = ROOT / "figures"
+TABLES = ROOT / "tables"
 FIGURES.mkdir(exist_ok=True, parents=True)
+TABLES.mkdir(exist_ok=True, parents=True)
 
 
 def best_rect(m: int) -> tuple[int, int]:
@@ -115,37 +119,188 @@ def target_hists() -> None:
     plt.show()
 
 
+def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame]:
+    sex = df.filter(regex="DEMO(:?__FEAT)?__sex").map(
+        lambda x: "M" if x in [1, "M"] else "F" if x in [0, "F"] else "NA"
+    )
+    sex.columns = ["sex"]
+    ix_male = (sex == "M").values.ravel()
+    ix_female = (sex == "F").values.ravel()
+    n_male = ix_male.sum()
+    n_female = ix_female.sum()
+    pvs = df.filter(regex="pseudoVolume").columns.tolist()
+    asym = df.filter(regex="CMC__FEAT__asym__").columns.tolist()
+    asym_div = df.filter(regex="CMC__FEAT__asym_div").columns.tolist()
+    asym_abs = df.filter(regex="CMC__FEAT__asym_abs").columns.tolist()
+    drps = pvs + asym + asym_div + asym_abs
+
+    bh = df.filter(regex="CMC__FEAT.*__bh").drop(columns=drps, errors="ignore")
+    lh = df.filter(regex="CMC__FEAT.*__lh").drop(columns=drps, errors="ignore")
+    rh = df.filter(regex="CMC__FEAT.*__rh").drop(columns=drps, errors="ignore")
+
+    asym = df.filter(regex="CMC__FEAT__asym__").drop(
+        columns=bh.columns.tolist(), errors="ignore"
+    )
+    asym_div = df.filter(regex="CMC__FEAT__asym_div").drop(
+        columns=bh.columns.tolist(), errors="ignore"
+    )
+    asym_abs = df.filter(regex="CMC__FEAT__asym_abs").drop(
+        columns=bh.columns.tolist(), errors="ignore"
+    )
+    pvs = df[pvs]
+
+    datas = {
+        "Left Lateral CMC Feature": lh,
+        "Right Lateral CMC Feature": rh,
+        "Bilateral CMC Feature": bh,
+        "Asym (signed) CMC Feature": asym,
+        "Asym (unsigned) CMC Feature": asym_abs,
+        "Asym (ratio) CMC Feature": asym_div,
+        "Pseudo-volume CMC Feature": pvs,
+    }
+    return datas, sex
+
+
+def hcp_boxplots() -> None:
+    matplotlib.use("QtAgg")
+    df = pd.read_parquet(SINGLE_TABLES["HCP"])
+    datas, sex = get_hemi_data(df)
+
+    ax: Axes
+    fig, axes = plt.subplots(ncols=1, nrows=len(datas), sharex=False, sharey=False)
+    for k, (label, data) in tqdm(enumerate(datas.items()), total=len(datas)):
+        needs_label = k == len(datas) - 1
+        ax = axes[k]
+        # make have cols: "sex", "feat", "value"
+        dfs = pd.concat([data, sex], axis=1)
+        df_stats = pd.concat(
+            [dfs.mean(numeric_only=True), dfs.std(numeric_only=True, ddof=1)], axis=1
+        )
+        df_stats.columns = ["mean", "sd"]
+        ix = df_stats.sort_values(
+            by=["mean", "sd"], ascending=[False, False]
+        ).index.to_list()
+        dfs = dfs.melt(id_vars="sex", var_name="feat")
+        # dfs = dfs.loc[ix]
+
+        n_feat = data.shape[1]
+        vargs: Mapping = dict(
+            x="feat",
+            hue="sex",
+            order=ix,
+            legend=True and needs_label,
+            linewidth=0.5,
+            # showfliers=False,
+            flier_kws=dict(s=0.5, lw=0.5),
+            # kind="boxen",
+            # split=True,
+            # inner="point",
+            # gap=0.1,
+            # bw_adjust=0.5,
+            # density_norm="count",
+            ax=ax,
+        )
+        sbn.boxenplot(data=dfs, y="value", **vargs)
+
+        shorttitle = label.replace(" CMC Feature", "")
+
+        ticks = np.linspace(0, n_feat, num=8, endpoint=True).round(0).astype(np.int64)
+        ax.set_xticks(ticks, labels=[str(t) for t in ticks], minor=False)
+        ax.set_title(f"{shorttitle}")
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+    fig.supxlabel("Feature Index")
+    fig.supylabel("Feature Values")
+    fig.set_size_inches(h=16, w=18)
+    fig.tight_layout()
+    fig.subplots_adjust(
+        hspace=0.3, wspace=0.2, left=0.05, right=0.95, bottom=0.05, top=0.95
+    )
+    plt.show()
+
+
+def hcp_d_p_plots() -> None:
+    matplotlib.use("QtAgg")
+    df = pd.read_parquet(SINGLE_TABLES["HCP"])
+    datas, sex = get_hemi_data(df)
+    ix_male = (sex == "M").values.ravel()
+    ix_female = (sex == "F").values.ravel()
+    n_male = ix_male.sum()
+    n_female = ix_female.sum()
+
+    ax: Axes
+    fig, axes = plt.subplots(ncols=1, nrows=len(datas), sharex=False, sharey=False)
+    for k, (label, data) in tqdm(enumerate(datas.items()), total=len(datas)):
+        needs_label = k == len(datas) - 1
+        ax = axes[k]
+        # make have cols: "sex", "feat", "value"
+        dfs = pd.concat([data, sex], axis=1)
+        dfm = dfs[dfs["sex"] == "M"].drop(columns="sex")
+        dff = dfs[dfs["sex"] == "F"].drop(columns="sex")
+        sd_pooled = data.std(ddof=1)
+        cohen_ds = (dfm.mean() - dff.mean()) / sd_pooled
+        us, ps = mannwhitneyu(x=dfm, y=dff, axis=0, nan_policy="omit")
+        ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+        # only one is significant after multiple comparisons
+        sig = dfs.iloc[:, :-1].columns[ps_corrected < 0.05].to_list()
+
+        df_stats = pd.concat(
+            [dfs.mean(numeric_only=True), dfs.std(numeric_only=True, ddof=1)], axis=1
+        )
+        df_stats.columns = ["mean", "sd"]
+        ix = df_stats.sort_values(
+            by=["mean", "sd"], ascending=[False, False]
+        ).index.to_list()
+        dfs = dfs.melt(id_vars="sex", var_name="feat")
+        # dfs = dfs.loc[ix]
+
+        n_feat = data.shape[1]
+        vargs: Mapping = dict(
+            x="feat",
+            hue="sex",
+            order=ix,
+            legend=True and needs_label,
+            linewidth=0.5,
+            # showfliers=False,
+            flier_kws=dict(s=0.5, lw=0.5),
+            # kind="boxen",
+            # split=True,
+            # inner="point",
+            # gap=0.1,
+            # bw_adjust=0.5,
+            # density_norm="count",
+            ax=ax,
+        )
+        sbn.boxenplot(data=dfs, y="value", **vargs)
+
+        shorttitle = label.replace(" CMC Feature", "")
+
+        ticks = np.linspace(0, n_feat, num=8, endpoint=True).round(0).astype(np.int64)
+        ax.set_xticks(ticks, labels=[str(t) for t in ticks], minor=False)
+        ax.set_title(f"{shorttitle} - N significant: {len(sig)}")
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+    fig.supxlabel("Feature Index")
+    fig.supylabel("Feature Values")
+    fig.set_size_inches(h=16, w=18)
+    fig.tight_layout()
+    fig.subplots_adjust(
+        hspace=0.45, wspace=0.2, left=0.05, right=0.95, bottom=0.05, top=0.95
+    )
+    plt.show()
+
+
 def figure1() -> None:
     matplotlib.use("QtAgg")
     for dsname, path in SINGLE_TABLES.items():
         if dsname != "HCP":
             continue
         df = pd.read_parquet(path)
-        sex = df.filter(regex="DEMO(:?__FEAT)?__sex").map(
-            lambda x: "M" if x in [1, "M"] else "F" if x in [0, "F"] else "NA"
-        )
+        datas, sex = get_hemi_data(df)
         ix_male = (sex == "M").values.ravel()
         ix_female = (sex == "F").values.ravel()
-        n_male = ix_male.sum()
-        n_female = ix_female.sum()
-        pvs = df.filter(regex="pseudoVolume").columns.tolist()
-        asym = df.filter(regex="CMC__FEAT__asym").columns.tolist()
+        n_male, n_female = ix_male.sum(), ix_female.sum()
 
-        bh = df.filter(regex="CMC__FEAT.*__bh").drop(columns=pvs + asym, errors="ignore")
-        lh = df.filter(regex="CMC__FEAT.*__lh").drop(columns=pvs + asym, errors="ignore")
-        rh = df.filter(regex="CMC__FEAT.*__rh").drop(columns=pvs + asym, errors="ignore")
-        asym = df.filter(regex="CMC__FEAT__asym").drop(
-            columns=bh.columns.tolist(), errors="ignore"
-        )
-        pvs = df[pvs]
-
-        datas = {
-            "Left Lateral CMC Feature": lh,
-            "Right Lateral CMC Feature": rh,
-            "Bilateral CMC Feature": bh,
-            "Asymmetry CMC Feature": asym,
-            "Pseudo-volume CMC Feature": pvs,
-        }
         ax: Axes
         fig, axes = plt.subplots(nrows=3, ncols=len(datas), sharex=False, sharey=False)
         for k, (label, data) in enumerate(datas.items()):
@@ -215,6 +370,96 @@ def figure1() -> None:
         plt.close()
 
 
+def tables() -> None:
+    matplotlib.use("QtAgg")
+    for dsname, path in SINGLE_TABLES.items():
+        if dsname != "HCP":
+            continue
+        df = pd.read_parquet(path)
+        datas, sex = get_hemi_data(df)
+        ix_male = (sex == "M").values.ravel()
+        ix_female = (sex == "F").values.ravel()
+        n_male, n_female = ix_male.sum(), ix_female.sum()
+
+        lh = datas["Left Lateral CMC Feature"]
+        rh = datas["Right Lateral CMC Feature"]
+        lh = lh.rename(columns=lambda s: s.replace("__lh", "__rh"))
+        sd_pooled = pd.concat([lh, rh], axis=0).std(ddof=1)
+        cohen_ds = (lh.mean() - rh.mean()) / sd_pooled
+
+        us, ps = mannwhitneyu(x=lh, y=rh, axis=0, nan_policy="omit")
+        ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+
+        ws, wps = wilcoxon(x=lh, y=rh, axis=0)
+        wps_corrected = multipletests(wps, alpha=0.05, method="holm")[1]
+        df_lat = (
+            DataFrame(
+                {
+                    "d": cohen_ds,
+                    "U": us,
+                    "U (p)": ps_corrected,
+                    "W": ws,
+                    "W (p)": wps_corrected,
+                },
+                index=cohen_ds.index,
+            )
+            .sort_values(by=["U (p)", "W (p)"], ascending=True)
+            .rename(index=lambda s: s.replace("CMC__FEAT__cmc__rh-", ""))
+        )
+        df_lat.index = Index(name="ROI", data=df_lat.index)
+        print(df_lat.round(3).to_markdown(tablefmt="simple", floatfmt="0.3f"))
+        print("Table XX: Measures of Separation of Lateral CMC Features.")
+        csv = TABLES / f"{dsname}_lateral_separations.csv"
+        pqt = TABLES / f"{dsname}_lateral_separations.parquet"
+        df_lat.to_parquet(pqt)
+        df_lat.to_csv(csv, index=True)
+        print(f"Saved lateral separation table to {csv}")
+        print(f"Saved lateral separation table to {pqt}")
+
+        for k, (label, data) in enumerate(datas.items()):
+            dfs = pd.concat([data, sex], axis=1)
+            dfm = dfs[dfs["sex"] == "M"].drop(columns="sex")
+            dff = dfs[dfs["sex"] == "F"].drop(columns="sex")
+            sd_pooled = data.std(ddof=1)
+            cohen_ds = (dfm.mean() - dff.mean()) / sd_pooled
+            us, ps = mannwhitneyu(x=dfm, y=dff, axis=0, nan_policy="omit")
+            ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+
+            df_lr = (
+                DataFrame(
+                    {
+                        "d": cohen_ds,
+                        "U": us,
+                        "U (p)": ps_corrected,
+                    },
+                    index=cohen_ds.index,
+                )
+                .sort_values(by="U (p)", ascending=True)
+                .rename(index=lambda s: s.replace("CMC__FEAT__cmc__rh-", ""))
+            )
+            df_lr.index = Index(name="ROI", data=df_lr.index)
+            reg = r"CMC__FEAT__.*__bh-" if "Bilateral" in label else r"CMC__FEAT__.*__"
+            df_lr.rename(index=lambda s: re.sub(reg, "", s), inplace=True)
+            if (ps_corrected < 0.05).sum() < 1:
+                print(f"No significant separation for {label}s by Sex.")
+            else:
+                print(df_lr.round(3).to_markdown(tablefmt="simple", floatfmt="0.3f"))
+                print(f"Table XX: Measures of Separation of {label}s by Sex.")
+
+            shortlabel = re.sub(
+                r"[\(\) ]+", "_", label.replace(" CMC Feature", "").lower()
+            )
+            csv = TABLES / f"{dsname}_{shortlabel}_sex_separations.csv"
+            pqt = TABLES / f"{dsname}_{shortlabel}_sex_separations.parquet"
+            df_lat.to_parquet(pqt)
+            df_lat.to_csv(csv, index=True)
+            print(f"Saved {label}s separation table to {csv}")
+            print(f"Saved {label}s separation table to {pqt}")
+
+
 if __name__ == "__main__":
     # target_hists()
-    figure1()
+    # figure1()
+    # hcp_boxplots()
+    # hcp_d_p_plots()
+    tables()
