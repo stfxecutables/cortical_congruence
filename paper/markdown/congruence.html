@@ -165,6 +165,70 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <style>
       :root {
@@ -1944,6 +2008,58 @@ using the Holm-Bonferroni stepdown method</caption>
 </table>
 </div>
 <h3 id="predictive-analyses">Predictive Analyses</h3>
+<p>The HCP data provides a wealth of <a
+href="https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms">openly-accessible
+behavioural data</a> on participating subjects. Full details of the
+hundreds of features are <a
+href="https://wiki.humanconnectome.org/docs/HCP-YA%20Data%20Dictionary-%20Updated%20for%20the%201200%20Subject%20Release.html">available
+online</a>.</p>
+<h4 id="sec:cleaning">Behavioural Data Cleaning</h4>
+<p>To investigate the predictive potential of CMC features, a number of
+<em>ad hoc</em> regression targets were constructed from the HCP
+behavioural data. First, behavioural data were cleaned of irrelevant,
+missing, constant, or redundant features (see sec. <a
+href="#sec:cleaning">4.3.2.1</a>).
+(<code>src/munging/hcp.py::load_hcp_phenotypic</code>):</p>
+<div class="sourceCode" id="lst:cleaning"><pre
+class="sourceCode txt"><code class="sourceCode default"><span id="lst:cleaning-1"><a href="#lst:cleaning-1" aria-hidden="true" tabindex="-1"></a>Behavioural Data initial shape</span>
+<span id="lst:cleaning-2"><a href="#lst:cleaning-2" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-3"><a href="#lst:cleaning-3" aria-hidden="true" tabindex="-1"></a>                  (1206, 582)</span>
+<span id="lst:cleaning-4"><a href="#lst:cleaning-4" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-5"><a href="#lst:cleaning-5" aria-hidden="true" tabindex="-1"></a>Remove obvious junk, book-keeping (IDs, scan counts) and</span>
+<span id="lst:cleaning-6"><a href="#lst:cleaning-6" aria-hidden="true" tabindex="-1"></a>subscale items, or features with 200 or more NaN values</span>
+<span id="lst:cleaning-7"><a href="#lst:cleaning-7" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-8"><a href="#lst:cleaning-8" aria-hidden="true" tabindex="-1"></a>                  (1206, 400)</span>
+<span id="lst:cleaning-9"><a href="#lst:cleaning-9" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-10"><a href="#lst:cleaning-10" aria-hidden="true" tabindex="-1"></a>Remove highly-correlated features (e.g. various dexterity_unadj</span>
+<span id="lst:cleaning-11"><a href="#lst:cleaning-11" aria-hidden="true" tabindex="-1"></a>and dexterity_ageadj pairs), with correlations above 0.95, and</span>
+<span id="lst:cleaning-12"><a href="#lst:cleaning-12" aria-hidden="true" tabindex="-1"></a>other features with correlations of 1.0.</span>
+<span id="lst:cleaning-13"><a href="#lst:cleaning-13" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-14"><a href="#lst:cleaning-14" aria-hidden="true" tabindex="-1"></a>                  (1206, 375)</span>
+<span id="lst:cleaning-15"><a href="#lst:cleaning-15" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-16"><a href="#lst:cleaning-16" aria-hidden="true" tabindex="-1"></a>Remove constant and string columns</span>
+<span id="lst:cleaning-17"><a href="#lst:cleaning-17" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-18"><a href="#lst:cleaning-18" aria-hidden="true" tabindex="-1"></a>                  (1206, 369)</span>
+<span id="lst:cleaning-19"><a href="#lst:cleaning-19" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-20"><a href="#lst:cleaning-20" aria-hidden="true" tabindex="-1"></a>Remove subjects with all missing values for all remaining features</span>
+<span id="lst:cleaning-21"><a href="#lst:cleaning-21" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-22"><a href="#lst:cleaning-22" aria-hidden="true" tabindex="-1"></a>                  (1113, 369)</span>
+<span id="lst:cleaning-23"><a href="#lst:cleaning-23" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-24"><a href="#lst:cleaning-24" aria-hidden="true" tabindex="-1"></a>Remove sex and age class as potential target features</span>
+<span id="lst:cleaning-25"><a href="#lst:cleaning-25" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-26"><a href="#lst:cleaning-26" aria-hidden="true" tabindex="-1"></a>                  (1113, 367)</span></code></pre></div>
+<p>Then, the remaining behavioural features were reduced in an
+exploratory fashion.</p>
+<p>First, clustering was performed on the features using HDBSCAN [cite
+paper, cite sklearn algorithm] with the absolute value of the Pearson
+correlation as the feature distance metric. HDBSCAN does not require
+specifying the number of clusters, and allows for assignment to “noise”
+or “background” clusters, and thus acts as a natural method to notice
+patterns of correlation in the data.</p>
+<p>Second, feature clusters were reduced to a single dimension via
+factor analysis.</p>
+<p>The resulting feature clusters are shown in <a
+href="#appendix-b">Appendix B</a>.</p>
 <p>A &lt;get Derek to provide a little description of the psychological
 explained variance test with citation(s)&gt; was performed. Anything
 interesting from the machine learning analysis? Can you run this again
@@ -2175,7 +2291,7 @@ aspects of healthy and abnormal brain, reliably and reproducibly.</p>
 in future versions of FreeSurfer and whether he has any feedback that
 might be relevant and may want to join on this project as a
 co-author.</p>
-<h1 id="appendix">Appendix</h1>
+<h1 id="sec:appendix_a">Appendix A</h1>
 <div id="tbl:lateral_fs">
 <table>
 <caption>Table 3: Measures of Separation of base FreeSurfer Features
@@ -3210,6 +3326,717 @@ comparisons using the Holm-Bonferroni stepdown method</caption>
 <td style="text-align: right;">-0.009</td>
 <td style="text-align: right;">215625.000</td>
 <td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="appendix-b">Appendix B</h1>
+<p>In the tables below, names follow HCP data naming conventions, unless
+otherwise indicated. The right column label indicates the name given to
+the single-factor synthetic target.</p>
+<p>_perf = test performance, i.e. test score _rt = reaction time,
+i.e. reaction times on a test wm = working memory</p>
+<div id="tbl:gambling_perf">
+<table>
+<caption>Table 4: Synthetic target <code>gambling_perf</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">gambling_perf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">gambling_task_perc_larger</td>
+<td style="text-align: right;">-1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_task_reward_perc_larger</td>
+<td style="text-align: right;">-0.8926</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_task_punish_perc_larger</td>
+<td style="text-align: right;">-0.8337</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:emotion_perf">
+<table>
+<caption>Table 5: Synthetic target <code>emotion_perf</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">emotion_perf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">emotion_task_acc</td>
+<td style="text-align: right;">-1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_task_shape_acc</td>
+<td style="text-align: right;">-0.8952</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_task_face_acc</td>
+<td style="text-align: right;">-0.8298</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:language_rt">
+<table>
+<caption>Table 6: Synthetic target <code>language_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">language_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">language_task_median_rt</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_task_story_median_rt</td>
+<td style="text-align: right;">0.8261</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_task_math_median_rt</td>
+<td style="text-align: right;">0.8138</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:relational_rt">
+<table>
+<caption>Table 7: Synthetic target <code>relational_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">relational_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">relational_task_median_rt</td>
+<td style="text-align: right;">-1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_task_rel_median_rt</td>
+<td style="text-align: right;">-0.9503</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_task_match_median_rt</td>
+<td style="text-align: right;">-0.8610</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:emotion_rt">
+<table>
+<caption>Table 8: Synthetic target <code>emotion_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">emotion_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">emotion_task_median_rt</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_task_face_median_rt</td>
+<td style="text-align: right;">0.9528</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_task_shape_median_rt</td>
+<td style="text-align: right;">0.9373</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:language_perf">
+<table>
+<caption>Table 9: Synthetic target <code>language_perf</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">language_perf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">language_task_math_acc</td>
+<td style="text-align: right;">-0.9975</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_task_acc</td>
+<td style="text-align: right;">-0.8386</td>
+</tr>
+<tr>
+<td
+style="text-align: left;">language_task_story_avg_difficulty_level</td>
+<td style="text-align: right;">-0.7606</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:p_matrices">
+<table>
+<caption>Table 10: Synthetic target <code>p_matrices</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">p_matrices</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">pmat24_a_cr</td>
+<td style="text-align: right;">0.7158</td>
+</tr>
+<tr>
+<td style="text-align: left;">pmat24_a_si</td>
+<td style="text-align: right;">-0.7005</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:social_rt">
+<table>
+<caption>Table 11: Synthetic target <code>social_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">social_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">social_task_median_rt_random</td>
+<td style="text-align: right;">0.9838</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_random_median_rt_random</td>
+<td style="text-align: right;">0.9826</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_tom_median_rt_tom</td>
+<td style="text-align: right;">0.4105</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_median_rt_tom</td>
+<td style="text-align: right;">0.4017</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:psqi_latent">
+<table>
+<caption>Table 12: Synthetic target <code>psqi_latent</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">psqi_latent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">psqi_score</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_comp1</td>
+<td style="text-align: right;">0.6853</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_comp4</td>
+<td style="text-align: right;">0.6379</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_comp3</td>
+<td style="text-align: right;">0.6266</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_comp7</td>
+<td style="text-align: right;">0.4649</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:gambling_rt">
+<table>
+<caption>Table 13: Synthetic target <code>gambling_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">gambling_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">gambling_task_median_rt_smaller</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td
+style="text-align: left;">gambling_task_reward_median_rt_smaller</td>
+<td style="text-align: right;">0.9512</td>
+</tr>
+<tr>
+<td
+style="text-align: left;">gambling_task_punish_median_rt_smaller</td>
+<td style="text-align: right;">0.9504</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_task_median_rt_larger</td>
+<td style="text-align: right;">0.8836</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_task_reward_median_rt_larger</td>
+<td style="text-align: right;">0.8451</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_task_punish_median_rt_larger</td>
+<td style="text-align: right;">0.8357</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:social_random_perf">
+<table>
+<caption>Table 14: Synthetic target <code>social_random_perf</code>
+factor loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">social_random_perf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">social_task_random_perc_random</td>
+<td style="text-align: right;">-1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_perc_random</td>
+<td style="text-align: right;">-0.9096</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_random_perc_unsure</td>
+<td style="text-align: right;">0.8121</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_perc_unsure</td>
+<td style="text-align: right;">0.7238</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_random_perc_tom</td>
+<td style="text-align: right;">0.5595</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_perc_tom</td>
+<td style="text-align: right;">0.3081</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_tom_perc_tom</td>
+<td style="text-align: right;">-0.1047</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_tom_perc_unsure</td>
+<td style="text-align: right;">0.0870</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_task_tom_perc_random</td>
+<td style="text-align: right;">0.0638</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:int_g_like">
+<table>
+<caption>Table 15: Synthetic target <code>int_g_like</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">int_g_like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">cogtotalcomp_unadj</td>
+<td style="text-align: right;">-1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">cogearlycomp_unadj</td>
+<td style="text-align: right;">-0.8750</td>
+</tr>
+<tr>
+<td style="text-align: left;">cogfluidcomp_unadj</td>
+<td style="text-align: right;">-0.8501</td>
+</tr>
+<tr>
+<td style="text-align: left;">cogcrystalcomp_unadj</td>
+<td style="text-align: right;">-0.7735</td>
+</tr>
+<tr>
+<td style="text-align: left;">readeng_unadj</td>
+<td style="text-align: right;">-0.7230</td>
+</tr>
+<tr>
+<td style="text-align: left;">picvocab_unadj</td>
+<td style="text-align: right;">-0.6767</td>
+</tr>
+<tr>
+<td style="text-align: left;">listsort_unadj</td>
+<td style="text-align: right;">-0.5698</td>
+</tr>
+<tr>
+<td style="text-align: left;">cardsort_unadj</td>
+<td style="text-align: right;">-0.5668</td>
+</tr>
+<tr>
+<td style="text-align: left;">procspeed_unadj</td>
+<td style="text-align: right;">-0.5640</td>
+</tr>
+<tr>
+<td style="text-align: left;">flanker_unadj</td>
+<td style="text-align: right;">-0.5116</td>
+</tr>
+<tr>
+<td style="text-align: left;">picseq_unadj</td>
+<td style="text-align: right;">-0.4938</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:neg_emotionality">
+<table>
+<caption>Table 16: Synthetic target <code>neg_emotionality</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">neg_emotionality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">percstress_unadj</td>
+<td style="text-align: right;">0.8250</td>
+</tr>
+<tr>
+<td style="text-align: left;">sadness_unadj</td>
+<td style="text-align: right;">0.8165</td>
+</tr>
+<tr>
+<td style="text-align: left;">loneliness_unadj</td>
+<td style="text-align: right;">0.7812</td>
+</tr>
+<tr>
+<td style="text-align: left;">neofac_n</td>
+<td style="text-align: right;">0.7596</td>
+</tr>
+<tr>
+<td style="text-align: left;">angaffect_unadj</td>
+<td style="text-align: right;">0.7127</td>
+</tr>
+<tr>
+<td style="text-align: left;">fearaffect_unadj</td>
+<td style="text-align: right;">0.7000</td>
+</tr>
+<tr>
+<td style="text-align: left;">percreject_unadj</td>
+<td style="text-align: right;">0.6994</td>
+</tr>
+<tr>
+<td style="text-align: left;">lifesatisf_unadj</td>
+<td style="text-align: right;">-0.6571</td>
+</tr>
+<tr>
+<td style="text-align: left;">posaffect_unadj</td>
+<td style="text-align: right;">-0.6541</td>
+</tr>
+<tr>
+<td style="text-align: left;">anghostil_unadj</td>
+<td style="text-align: right;">0.6524</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotsupp_unadj</td>
+<td style="text-align: right;">-0.6347</td>
+</tr>
+<tr>
+<td style="text-align: left;">meanpurp_unadj</td>
+<td style="text-align: right;">-0.6078</td>
+</tr>
+<tr>
+<td style="text-align: left;">friendship_unadj</td>
+<td style="text-align: right;">-0.5947</td>
+</tr>
+<tr>
+<td style="text-align: left;">selfeff_unadj</td>
+<td style="text-align: right;">-0.5589</td>
+</tr>
+<tr>
+<td style="text-align: left;">perchostil_unadj</td>
+<td style="text-align: right;">0.5512</td>
+</tr>
+<tr>
+<td style="text-align: left;">neofac_e</td>
+<td style="text-align: right;">-0.4649</td>
+</tr>
+<tr>
+<td style="text-align: left;">instrusupp_unadj</td>
+<td style="text-align: right;">-0.4578</td>
+</tr>
+<tr>
+<td style="text-align: left;">neofac_a</td>
+<td style="text-align: right;">-0.3779</td>
+</tr>
+<tr>
+<td style="text-align: left;">fearsomat_unadj</td>
+<td style="text-align: right;">0.3752</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:wm_rt">
+<table>
+<caption>Table 17: Synthetic target <code>wm_rt</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">wm_rt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">wm_task_median_rt</td>
+<td style="text-align: right;">1.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_median_rt</td>
+<td style="text-align: right;">0.9059</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_median_rt</td>
+<td style="text-align: right;">0.8999</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_median_rt</td>
+<td style="text-align: right;">0.7928</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_tool_median_rt</td>
+<td style="text-align: right;">0.7924</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_body_median_rt</td>
+<td style="text-align: right;">0.7914</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_median_rt</td>
+<td style="text-align: right;">0.7913</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_tool_median_rt_nontarget</td>
+<td style="text-align: right;">0.7911</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_face_median_rt</td>
+<td style="text-align: right;">0.7886</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_median_rt_nontarget</td>
+<td style="text-align: right;">0.7847</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_median_rt_nontarget</td>
+<td style="text-align: right;">0.7826</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_body_median_rt_nontarget</td>
+<td style="text-align: right;">0.7816</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_place_median_rt</td>
+<td style="text-align: right;">0.7638</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_face_median_rt_nontarget</td>
+<td style="text-align: right;">0.7573</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_median_rt</td>
+<td style="text-align: right;">0.7409</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_place_median_rt_nontarget</td>
+<td style="text-align: right;">0.7372</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_median_rt_nontarget</td>
+<td style="text-align: right;">0.7083</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_body_median_rt</td>
+<td style="text-align: right;">0.6629</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_median_rt_target</td>
+<td style="text-align: right;">0.6306</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_body_median_rt_nontarget</td>
+<td style="text-align: right;">0.6159</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_median_rt_target</td>
+<td style="text-align: right;">0.5825</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_face_median_rt_target</td>
+<td style="text-align: right;">0.5699</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_median_rt_target</td>
+<td style="text-align: right;">0.5302</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:wm_perf">
+<table>
+<caption>Table 18: Synthetic target <code>wm_perf</code> factor
+loadings.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">wm_perf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">wm_task_acc</td>
+<td style="text-align: right;">-0.9931</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_acc</td>
+<td style="text-align: right;">-0.8816</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_acc</td>
+<td style="text-align: right;">-0.7975</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_body_acc</td>
+<td style="text-align: right;">-0.7361</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_tool_acc</td>
+<td style="text-align: right;">-0.7269</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_acc</td>
+<td style="text-align: right;">-0.6881</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_tool_acc_nontarget</td>
+<td style="text-align: right;">-0.6827</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_body_acc_nontarget</td>
+<td style="text-align: right;">-0.6796</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_acc</td>
+<td style="text-align: right;">-0.6730</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_body_acc</td>
+<td style="text-align: right;">-0.6715</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_acc_nontarget</td>
+<td style="text-align: right;">-0.6543</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_acc_nontarget</td>
+<td style="text-align: right;">-0.6469</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_face_acc</td>
+<td style="text-align: right;">-0.6418</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_acc</td>
+<td style="text-align: right;">-0.6395</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_place_acc</td>
+<td style="text-align: right;">-0.6326</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_body_acc_target</td>
+<td style="text-align: right;">-0.6263</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_tool_acc_target</td>
+<td style="text-align: right;">-0.5900</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_body_acc_nontarget</td>
+<td style="text-align: right;">-0.5782</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_face_acc_target</td>
+<td style="text-align: right;">-0.5502</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_0bk_place_acc_target</td>
+<td style="text-align: right;">-0.5501</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_body_acc_target</td>
+<td style="text-align: right;">-0.5481</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_acc_nontarget</td>
+<td style="text-align: right;">-0.5383</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_tool_acc_target</td>
+<td style="text-align: right;">-0.4792</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_face_acc_target</td>
+<td style="text-align: right;">-0.4539</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_task_2bk_place_acc_target</td>
+<td style="text-align: right;">-0.4516</td>
 </tr>
 </tbody>
 </table>

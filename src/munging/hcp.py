@@ -29,6 +29,8 @@ from src.munging.fs_stats.tabularize import (
     to_wide_subject_table,
 )
 
+TABLES = ROOT / "tables"
+
 
 class PhenotypicFocus(Enum):
     All = "all"
@@ -485,7 +487,7 @@ def load_HCP_CMC_table() -> DataFrame:
     return df
 
 
-@MEMORY.cache
+# @MEMORY.cache
 def load_HCP_complete(
     *,
     focus: PhenotypicFocus = PhenotypicFocus.Reduced,
@@ -508,8 +510,22 @@ def load_HCP_complete(
         targs = targs.rename(columns=lambda s: s.replace("TARGET__", ""))
         corrs = targs.corr()  # most correlations differ at most by 0.1 with spearman
         clusters = get_cluster_corrs(corrs)
-        targs_reduced, loadings = reduce_HCP_clusters(data=targs, clusters=clusters)
+        targs_reduced, all_loadings = reduce_HCP_clusters(data=targs, clusters=clusters)
         targs_reduced.rename(columns=lambda s: f"TARGET__REG__{s}", inplace=True)
+        out = TABLES / "cluster_tables.md"
+        lines = []
+        for cluster, loadings, target in zip(
+            clusters, all_loadings, targs_reduced.columns.to_list()
+        ):
+            # table = cluster.data.to_markdown(index=False, floatfmt="0.4f")
+            label = str(target).replace("TARGET__REG__", "")
+            lines.append(loadings.iloc[1:].to_markdown(index=True, floatfmt="0.4f"))
+            lines.append("\n")
+            lines.append(f": Synthetic target `{label}` factor loadings.")
+            lines.append(f"{{#tbl:{label}}}")
+            lines.append("\n")
+        out.write_text("\n".join(lines))
+
         others = df.drop(columns=cols, errors="ignore")
         df = pd.concat([others, targs_reduced], axis=1)
     if reduce_cmc:
@@ -530,7 +546,7 @@ if __name__ == "__main__":
     df_red = load_HCP_complete(
         focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
     )
-    df_full = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=False
-    )
+    # df_full = load_HCP_complete(
+    #     focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=False
+    # )
     print()
