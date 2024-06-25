@@ -137,15 +137,14 @@ def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame]:
     bh = df.filter(regex="CMC__FEAT.*__bh").drop(columns=drps, errors="ignore")
     lh = df.filter(regex="CMC__FEAT.*__lh").drop(columns=drps, errors="ignore")
     rh = df.filter(regex="CMC__FEAT.*__rh").drop(columns=drps, errors="ignore")
+    rl = lh.columns.to_list() + rh.columns.to_list()
 
-    asym = df.filter(regex="CMC__FEAT__asym__").drop(
-        columns=bh.columns.tolist(), errors="ignore"
+    asym = df.filter(regex="CMC__FEAT__asym__.*bh-").drop(columns=rl, errors="ignore")
+    asym_div = df.filter(regex="CMC__FEAT__asym_div.*bh-").drop(
+        columns=rl, errors="ignore"
     )
-    asym_div = df.filter(regex="CMC__FEAT__asym_div").drop(
-        columns=bh.columns.tolist(), errors="ignore"
-    )
-    asym_abs = df.filter(regex="CMC__FEAT__asym_abs").drop(
-        columns=bh.columns.tolist(), errors="ignore"
+    asym_abs = df.filter(regex="CMC__FEAT__asym_abs.*bh-").drop(
+        columns=rl, errors="ignore"
     )
     pvs = df[pvs]
 
@@ -153,9 +152,9 @@ def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame]:
         "Left Lateral CMC Feature": lh,
         "Right Lateral CMC Feature": rh,
         "Bilateral CMC Feature": bh,
-        "Asym (signed) CMC Feature": asym,
-        "Asym (unsigned) CMC Feature": asym_abs,
-        "Asym (ratio) CMC Feature": asym_div,
+        "Asym (signed diff) CMC Feature": asym,
+        "Asym (unsigned diff) CMC Feature": asym_abs,
+        "Asym (signed ratio) CMC Feature": asym_div,
         "Pseudo-volume CMC Feature": pvs,
     }
     return datas, sex
@@ -216,7 +215,9 @@ def hcp_boxplots() -> None:
     fig.subplots_adjust(
         hspace=0.3, wspace=0.2, left=0.05, right=0.95, bottom=0.05, top=0.95
     )
-    plt.show()
+    out = FIGURES / "HCP_boxplots.png"
+    fig.savefig(out, dpi=600)
+    plt.close()
 
 
 def hcp_d_p_plots() -> None:
@@ -287,7 +288,10 @@ def hcp_d_p_plots() -> None:
     fig.subplots_adjust(
         hspace=0.45, wspace=0.2, left=0.05, right=0.95, bottom=0.05, top=0.95
     )
-    plt.show()
+    out = FIGURES / "HCP_d_p_plots.png"
+    fig.savefig(out, dpi=600)
+    print(f"Saved plot to {out}")
+    plt.close()
 
 
 def figure1() -> None:
@@ -370,7 +374,7 @@ def figure1() -> None:
         plt.close()
 
 
-def tables() -> None:
+def lateral_tables() -> None:
     matplotlib.use("QtAgg")
     for dsname, path in SINGLE_TABLES.items():
         if dsname != "HCP":
@@ -407,7 +411,7 @@ def tables() -> None:
             .rename(index=lambda s: s.replace("CMC__FEAT__cmc__rh-", ""))
         )
         df_lat.index = Index(name="ROI", data=df_lat.index)
-        print(df_lat.round(3).to_markdown(tablefmt="simple", floatfmt="0.3f"))
+        print(df_lat.round(3).to_markdown(floatfmt="0.3f"))
         print("Table XX: Measures of Separation of Lateral CMC Features.")
         csv = TABLES / f"{dsname}_lateral_separations.csv"
         pqt = TABLES / f"{dsname}_lateral_separations.parquet"
@@ -415,6 +419,71 @@ def tables() -> None:
         df_lat.to_csv(csv, index=True)
         print(f"Saved lateral separation table to {csv}")
         print(f"Saved lateral separation table to {pqt}")
+
+
+def fs_tables() -> None:
+    matplotlib.use("QtAgg")
+    for dsname, path in SINGLE_TABLES.items():
+        if dsname != "HCP":
+            continue
+        df = pd.read_parquet(path)
+        dff = df.filter(regex="FS")
+        rh_cols = dff.filter(regex="rh-").columns.tolist()
+        lh_cols = dff.filter(regex="lh-").columns.tolist()
+
+        lh = dff[lh_cols].rename(columns=lambda s: s.replace("lh-", "rh-"))
+        rh = dff[rh_cols]
+        sd_pooled = pd.concat([lh, rh], axis=0).std(ddof=1)
+        cohen_ds = (lh.mean() - rh.mean()) / sd_pooled
+
+        # us, ps = mannwhitneyu(x=lh, y=rh, axis=0, nan_policy="omit")
+        # ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+
+        ws, wps = wilcoxon(x=lh, y=rh, axis=0)
+        wps_corrected = multipletests(wps, alpha=0.05, method="holm")[1]
+        df_lat = (
+            DataFrame(
+                {
+                    "d": cohen_ds,
+                    # "U": us,
+                    # "U (p)": ps_corrected,
+                    "W": ws,
+                    "W (p)": wps_corrected,
+                },
+                index=cohen_ds.index,
+            )
+            # .sort_values(by=["U (p)", "W (p)"], ascending=True)
+            .sort_values(by=["d", "W (p)"], ascending=[False, True], key=abs)
+            .rename(index=lambda s: s.replace("CMC__FEAT__cmc__rh-", ""))
+        )
+        df_lat.index = Index(name="ROI", data=df_lat.index)
+        df_lat.rename(
+            index=lambda s: s.replace("FS__FEAT__", "")
+            .replace("FS__AREA_", "Area__")
+            .replace("FS__THCK", "Thick__")
+            .replace("rh-", ""),
+            inplace=True,
+        )
+        print(df_lat.round(3).to_markdown(floatfmt="0.3f"))
+        print("Table XX: Measures of Separation of Lateral FS Features.")
+        csv = TABLES / f"{dsname}_FS_lateral_separations.csv"
+        pqt = TABLES / f"{dsname}_FS_lateral_separations.parquet"
+        df_lat.to_parquet(pqt)
+        df_lat.to_csv(csv, index=True)
+        print(f"Saved FS lateral separation table to {csv}")
+        print(f"Saved FS lateral separation table to {pqt}")
+
+
+def tables() -> None:
+    matplotlib.use("QtAgg")
+    lateral_tables()
+    fs_tables()
+
+    for dsname, path in SINGLE_TABLES.items():
+        if dsname != "HCP":
+            continue
+        df = pd.read_parquet(path)
+        datas, sex = get_hemi_data(df)
 
         for k, (label, data) in enumerate(datas.items()):
             dfs = pd.concat([data, sex], axis=1)
@@ -443,7 +512,7 @@ def tables() -> None:
             if (ps_corrected < 0.05).sum() < 1:
                 print(f"No significant separation for {label}s by Sex.")
             else:
-                print(df_lr.round(3).to_markdown(tablefmt="simple", floatfmt="0.3f"))
+                print(df_lr.round(3).to_markdown(floatfmt="0.3f"))
                 print(f"Table XX: Measures of Separation of {label}s by Sex.")
 
             shortlabel = re.sub(
@@ -451,15 +520,16 @@ def tables() -> None:
             )
             csv = TABLES / f"{dsname}_{shortlabel}_sex_separations.csv"
             pqt = TABLES / f"{dsname}_{shortlabel}_sex_separations.parquet"
-            df_lat.to_parquet(pqt)
-            df_lat.to_csv(csv, index=True)
+            df_lr.to_parquet(pqt)
+            df_lr.to_csv(csv, index=True)
             print(f"Saved {label}s separation table to {csv}")
             print(f"Saved {label}s separation table to {pqt}")
 
 
 if __name__ == "__main__":
     # target_hists()
-    # figure1()
-    # hcp_boxplots()
-    # hcp_d_p_plots()
+    figure1()
+    hcp_boxplots()
+    hcp_d_p_plots()
     tables()
+    fs_tables()

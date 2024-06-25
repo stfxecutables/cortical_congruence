@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Cortical Congruence</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <style>
+      :root {
+          --p-hover-space: 3px;
+          --p-left-pad: 20px;
+      }
+
+      html,
+      body {
+          /* background-color: #f1ecc1; */
+          background-color: white;
+          color: black;
+          max-width: 120ch;
+          margin: 0 auto;
+      }
+
+      pre,
+      code {
+          font-family: "Operator Mono Lig", monospace;
+      }
+
+      hr {
+          color: black !important;
+          border: 1px solid black !important;
+          background-color: black !important;
+      }
+
+      p {
+          padding-left: var(--p-left-pad);
+          /* font-family: "Cabin", "CMU Serif"; */
+          line-height: 1.2;
+          font-size: 17px;
+      }
+
+      p:not(:last-of-type) {
+          padding-bottom: 0.3ch;
+      }
+
+      h2 {
+          padding-top: 20px;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+          padding-left: 0px;
+      }
+
+      p:before,
+      li:before,
+      ul:before,
+      h1:before,
+      h2:before,
+      h3:before,
+      h4:before,
+      h5:before,
+      h6:before {
+          border-left: 3px solid black !important;
+          margin-left: 3px !important;
+      }
+
+      h1 {
+          padding-top: 25px !important;
+          border-bottom: 1px solid black !important;
+          font-size: 18px;
+          /* color: rgb(121, 121, 121); */
+      }
+
+      code {
+          color: inherit;
+      }
+
+      /* pre {
+      background-color: #292929 !important;
+      color: #b2c6cc !important;
+  } */
+      table {
+          /* margin-top: 20px !important;
+      margin-bottom: 20px !important; */
+          margin-top: 20px;
+          margin-bottom: 20px;
+      }
+
+      figure,
+      img {
+          margin: 0px auto !important;
+          text-align: center !important;
+      }
+
+
+
+      .octicon {
+          display: inline-block;
+          fill: currentColor;
+          vertical-align: text-bottom;
+      }
+
+      .anchor {
+          float: left;
+          line-height: 1;
+          margin-left: -20px;
+          padding-right: 4px;
+      }
+
+      .anchor:focus {
+          outline: none;
+      }
+
+      h1 .octicon-link,
+      h2 .octicon-link,
+      h3 .octicon-link,
+      h4 .octicon-link,
+      h5 .octicon-link,
+      h6 .octicon-link {
+          color: #1b1f23;
+          vertical-align: middle;
+          visibility: hidden;
+      }
+
+      h1:hover .anchor,
+      h2:hover .anchor,
+      h3:hover .anchor,
+      h4:hover .anchor,
+      h5:hover .anchor,
+      h6:hover .anchor {
+          text-decoration: none;
+      }
+
+      h1:hover .anchor .octicon-link,
+      h2:hover .anchor .octicon-link,
+      h3:hover .anchor .octicon-link,
+      h4:hover .anchor .octicon-link,
+      h5:hover .anchor .octicon-link,
+      h6:hover .anchor .octicon-link {
+          visibility: visible;
+      }
+
+      h1:hover .anchor .octicon-link:before,
+      h2:hover .anchor .octicon-link:before,
+      h3:hover .anchor .octicon-link:before,
+      h4:hover .anchor .octicon-link:before,
+      h5:hover .anchor .octicon-link:before,
+      h6:hover .anchor .octicon-link:before {
+          width: 16px;
+          height: 16px;
+          content: ' ';
+          display: inline-block;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' width='16' height='16' aria-hidden='true'%3E%3Cpath fill-rule='evenodd' d='M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z'%3E%3C/path%3E%3C/svg%3E");
+      }
+
+      body {
+          -ms-text-size-adjust: 100%;
+          -webkit-text-size-adjust: 100%;
+          line-height: 1.5;
+          color: #24292e;
+          font-family: Helvetica, Arial, sans-serif;
+          font-size: 16px;
+          line-height: 1.5;
+          word-wrap: break-word;
+      }
+
+      details {
+          display: block;
+      }
+
+      summary {
+          display: list-item;
+      }
+
+      a {
+          background-color: initial;
+      }
+
+      a:active,
+      a:hover {
+          outline-width: 0;
+      }
+
+      strong {
+          font-weight: inherit;
+          font-weight: bolder;
+      }
+
+      h1 {
+          font-size: 2em;
+          margin: .67em 0;
+      }
+
+      img {
+          border-style: none;
+      }
+
+      code,
+      kbd,
+      pre {
+          font-family: monospace, monospace;
+          font-size: 1em;
+      }
+
+      hr {
+          box-sizing: initial;
+          height: 0;
+          overflow: visible;
+      }
+
+      input {
+          font: inherit;
+          margin: 0;
+      }
+
+      input {
+          overflow: visible;
+      }
+
+      [type=checkbox] {
+          box-sizing: border-box;
+          padding: 0;
+      }
+
+      * {
+          box-sizing: border-box;
+      }
+
+      input {
+          font-family: inherit;
+          font-size: inherit;
+          line-height: inherit;
+      }
+
+      a {
+          color: #0366d6;
+          text-decoration: none;
+      }
+
+      a:hover {
+          text-decoration: underline;
+      }
+
+      strong {
+          font-weight: 600;
+      }
+
+      hr {
+          height: 0;
+          margin: 15px 0;
+          overflow: hidden;
+          background: transparent;
+          border: 0;
+          border-bottom: 1px solid #dfe2e5;
+      }
+
+      hr:after,
+      hr:before {
+          display: table;
+          content: "";
+      }
+
+      hr:after {
+          clear: both;
+      }
+
+      table {
+          border-spacing: 0;
+          border-collapse: collapse;
+      }
+
+      td,
+      th {
+          padding: 0;
+      }
+
+      details summary {
+          cursor: pointer;
+      }
+
+      kbd {
+          display: inline-block;
+          padding: 3px 5px;
+          font: 11px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          line-height: 10px;
+          color: #444d56;
+          vertical-align: middle;
+          background-color: #fafbfc;
+          border: 1px solid #d1d5da;
+          border-radius: 3px;
+          box-shadow: inset 0 -1px 0 #d1d5da;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+          margin-top: 0;
+          margin-bottom: 0;
+      }
+
+      h1 {
+          font-size: 32px;
+      }
+
+      h1,
+      h2 {
+          font-weight: 600;
+      }
+
+      h2 {
+          font-size: 24px;
+      }
+
+      h3 {
+          font-size: 20px;
+      }
+
+      h3,
+      h4 {
+          font-weight: 600;
+      }
+
+      h4 {
+          font-size: 16px;
+      }
+
+      h5 {
+          font-size: 14px;
+      }
+
+      h5,
+      h6 {
+          font-weight: 600;
+      }
+
+      h6 {
+          font-size: 12px;
+      }
+
+      p {
+          margin-top: 0;
+          margin-bottom: 10px;
+      }
+
+      blockquote {
+          margin: 0;
+      }
+
+      ol,
+      ul {
+          padding-left: 0;
+          margin-top: 0;
+          margin-bottom: 0;
+      }
+
+      ol ol,
+      ul ol {
+          list-style-type: lower-roman;
+      }
+
+      ol ol ol,
+      ol ul ol,
+      ul ol ol,
+      ul ul ol {
+          list-style-type: lower-alpha;
+      }
+
+      dd {
+          margin-left: 0;
+      }
+
+      code,
+      pre {
+          font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          font-size: 12px;
+      }
+
+      pre {
+          margin-top: 0;
+          margin-bottom: 0;
+      }
+
+      input::-webkit-inner-spin-button,
+      input::-webkit-outer-spin-button {
+          margin: 0;
+          -webkit-appearance: none;
+          appearance: none;
+      }
+
+      :checked+.radio-label {
+          position: relative;
+          z-index: 1;
+          border-color: #0366d6;
+      }
+
+      .border {
+          border: 1px solid #e1e4e8 !important;
+      }
+
+      .border-0 {
+          border: 0 !important;
+      }
+
+      .border-bottom {
+          border-bottom: 1px solid #e1e4e8 !important;
+      }
+
+      .rounded-1 {
+          border-radius: 3px !important;
+      }
+
+      .bg-white {
+          background-color: #fff !important;
+      }
+
+      .bg-gray-light {
+          background-color: #fafbfc !important;
+      }
+
+      .text-gray-light {
+          color: #6a737d !important;
+      }
+
+      .mb-0 {
+          margin-bottom: 0 !important;
+      }
+
+      .my-2 {
+          margin-top: 8px !important;
+          margin-bottom: 8px !important;
+      }
+
+      .pl-0 {
+          padding-left: 0 !important;
+      }
+
+      .py-0 {
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+      }
+
+      .pl-1 {
+          padding-left: 4px !important;
+      }
+
+      .pl-2 {
+          padding-left: 8px !important;
+      }
+
+      .py-2 {
+          padding-top: 8px !important;
+          padding-bottom: 8px !important;
+      }
+
+      .pl-3,
+      .px-3 {
+          padding-left: 16px !important;
+      }
+
+      .px-3 {
+          padding-right: 16px !important;
+      }
+
+      .pl-4 {
+          padding-left: 24px !important;
+      }
+
+      .pl-5 {
+          padding-left: 32px !important;
+      }
+
+      .pl-6 {
+          padding-left: 40px !important;
+      }
+
+      .f6 {
+          font-size: 12px !important;
+      }
+
+      .lh-condensed {
+          line-height: 1.25 !important;
+      }
+
+      .text-bold {
+          font-weight: 600 !important;
+      }
+
+      .pl-c {
+          color: #6a737d;
+      }
+
+      .pl-c1,
+      .pl-s .pl-v {
+          color: #005cc5;
+      }
+
+      .pl-e,
+      .pl-en {
+          color: #6f42c1;
+      }
+
+      .pl-s .pl-s1,
+      .pl-smi {
+          color: #24292e;
+      }
+
+      .pl-ent {
+          color: #22863a;
+      }
+
+      .pl-k {
+          color: #d73a49;
+      }
+
+      .pl-pds,
+      .pl-s,
+      .pl-s .pl-pse .pl-s1,
+      .pl-sr,
+      .pl-sr .pl-cce,
+      .pl-sr .pl-sra,
+      .pl-sr .pl-sre {
+          color: #032f62;
+      }
+
+      .pl-smw,
+      .pl-v {
+          color: #e36209;
+      }
+
+      .pl-bu {
+          color: #b31d28;
+      }
+
+      .pl-ii {
+          color: #fafbfc;
+          background-color: #b31d28;
+      }
+
+      .pl-c2 {
+          color: #fafbfc;
+          background-color: #d73a49;
+      }
+
+      .pl-c2:before {
+          content: "^M";
+      }
+
+      .pl-sr .pl-cce {
+          font-weight: 700;
+          color: #22863a;
+      }
+
+      .pl-ml {
+          color: #735c0f;
+      }
+
+      .pl-mh,
+      .pl-mh .pl-en,
+      .pl-ms {
+          font-weight: 700;
+          color: #005cc5;
+      }
+
+      .pl-mi {
+          font-style: italic;
+          color: #24292e;
+      }
+
+      .pl-mb {
+          font-weight: 700;
+          color: #24292e;
+      }
+
+      .pl-md {
+          color: #b31d28;
+          background-color: #ffeef0;
+      }
+
+      .pl-mi1 {
+          color: #22863a;
+          background-color: #f0fff4;
+      }
+
+      .pl-mc {
+          color: #e36209;
+          background-color: #ffebda;
+      }
+
+      .pl-mi2 {
+          color: #f6f8fa;
+          background-color: #005cc5;
+      }
+
+      .pl-mdr {
+          font-weight: 700;
+          color: #6f42c1;
+      }
+
+      .pl-ba {
+          color: #586069;
+      }
+
+      .pl-sg {
+          color: #959da5;
+      }
+
+      .pl-corl {
+          text-decoration: underline;
+          color: #032f62;
+      }
+
+      .mb-0 {
+          margin-bottom: 0 !important;
+      }
+
+      .my-2 {
+          margin-bottom: 8px !important;
+      }
+
+      .my-2 {
+          margin-top: 8px !important;
+      }
+
+      .pl-0 {
+          padding-left: 0 !important;
+      }
+
+      .py-0 {
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+      }
+
+      .pl-1 {
+          padding-left: 4px !important;
+      }
+
+      .pl-2 {
+          padding-left: 8px !important;
+      }
+
+      .py-2 {
+          padding-top: 8px !important;
+          padding-bottom: 8px !important;
+      }
+
+      .pl-3 {
+          padding-left: 16px !important;
+      }
+
+      .pl-4 {
+          padding-left: 24px !important;
+      }
+
+      .pl-5 {
+          padding-left: 32px !important;
+      }
+
+      .pl-6 {
+          padding-left: 40px !important;
+      }
+
+      .pl-7 {
+          padding-left: 48px !important;
+      }
+
+      .pl-8 {
+          padding-left: 64px !important;
+      }
+
+      .pl-9 {
+          padding-left: 80px !important;
+      }
+
+      .pl-10 {
+          padding-left: 96px !important;
+      }
+
+      .pl-11 {
+          padding-left: 112px !important;
+      }
+
+      .pl-12 {
+          padding-left: 128px !important;
+      }
+
+      hr {
+          border-bottom-color: #eee;
+      }
+
+      kbd {
+          display: inline-block;
+          padding: 3px 5px;
+          font: 11px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          line-height: 10px;
+          color: #444d56;
+          vertical-align: middle;
+          background-color: #fafbfc;
+          border: 1px solid #d1d5da;
+          border-radius: 3px;
+          box-shadow: inset 0 -1px 0 #d1d5da;
+      }
+
+      .markdown-body:after,
+      .markdown-body:before {
+          display: table;
+          content: "";
+      }
+
+      .markdown-body:after {
+          clear: both;
+      }
+
+      .markdown-body>:first-child {
+          margin-top: 0 !important;
+      }
+
+      .markdown-body>:last-child {
+          margin-bottom: 0 !important;
+      }
+
+      a:not([href]) {
+          color: inherit;
+          text-decoration: none;
+      }
+
+      blockquote,
+      details,
+      dl,
+      ol,
+      p,
+      pre,
+      table,
+      ul {
+          margin-top: 0;
+          margin-bottom: 16px;
+      }
+
+      hr {
+          height: .25em;
+          padding: 0;
+          margin: 24px 0;
+          background-color: #e1e4e8;
+          border: 0;
+      }
+
+      blockquote {
+          padding: 0 1em;
+          color: #6a737d;
+          border-left: .25em solid #dfe2e5;
+      }
+
+      blockquote>:first-child {
+          margin-top: 0;
+      }
+
+      blockquote>:last-child {
+          margin-bottom: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+          margin-top: 24px;
+          margin-bottom: 16px;
+          font-weight: 600;
+          line-height: 1.25;
+      }
+
+      h1 {
+          font-size: 2em;
+      }
+
+      h1,
+      h2 {
+          padding-bottom: .3em;
+          border-bottom: 1px solid #eaecef;
+      }
+
+      h2 {
+          font-size: 1.5em;
+      }
+
+      h3 {
+          font-size: 1.25em;
+      }
+
+      h4 {
+          font-size: 1em;
+      }
+
+      h5 {
+          font-size: .875em;
+      }
+
+      h6 {
+          font-size: .85em;
+          color: #6a737d;
+      }
+
+      ol,
+      ul {
+          padding-left: 3em;
+      }
+
+      ol ol,
+      ol ul,
+      ul ol,
+      ul ul {
+          margin-top: 0;
+          margin-bottom: 0;
+      }
+
+      li {
+          word-wrap: break-all;
+      }
+
+      li>p {
+          margin-top: 16px;
+      }
+
+      li+li {
+          margin-top: 0em;
+      }
+
+      dl {
+          padding: 0;
+      }
+
+      dl dt {
+          padding: 0;
+          margin-top: 16px;
+          font-size: 1em;
+          font-style: italic;
+          font-weight: 600;
+      }
+
+      dl dd {
+          padding: 0 16px;
+          margin-bottom: 16px;
+      }
+
+      table {
+          /* display: block; */
+          /* width: 100%; */
+          display: table;
+          overflow: auto;
+          text-align: center;
+          margin: 0 auto;
+          margin-bottom: 20px;
+      }
+
+      table th {
+          font-weight: 600;
+          font-size: 13px;
+      }
+
+      table td,
+      table th {
+          padding: 6px 13px;
+          border: 1px solid #dfe2e5;
+      }
+
+      table tr {
+          background-color: #fff;
+          border-top: 1px solid #c6cbd1;
+      }
+
+      table tr:nth-child(2n) {
+          background-color: #f6f8fa;
+      }
+
+      img {
+          max-width: 100%;
+          margin: 0 auto;
+          box-sizing: initial;
+          background-color: #fff;
+      }
+
+      figure:hover,
+      img:hover {
+          cursor: zoom-in;
+          transform: scale(1.2);
+      }
+
+
+      /*
+      img[align=center] {
+          padding-left: 20px;
+      }
+
+      img[align=center] {
+          padding-right: 20px;
+      } */
+
+      code {
+          padding: .2em .4em;
+          margin: 0;
+          font-size: 85%;
+          background-color: rgba(27, 31, 35, .05);
+          border-radius: 3px;
+      }
+
+      pre {
+          word-wrap: normal;
+      }
+
+      pre>code {
+          padding: 0;
+          margin: 0;
+          font-size: 100%;
+          word-break: normal;
+          white-space: pre;
+          background: transparent;
+          border: 0;
+      }
+
+      .highlight {
+          margin-bottom: 16px;
+      }
+
+      .highlight pre {
+          margin-bottom: 0;
+          word-break: normal;
+      }
+
+      .highlight pre,
+      pre {
+          padding: 16px;
+          overflow: auto;
+          font-size: 85%;
+          line-height: 1.45;
+          background-color: #f6f8fa;
+          border-radius: 3px;
+      }
+
+      pre code {
+          display: inline;
+          max-width: auto;
+          padding: 0;
+          margin: 0;
+          overflow: visible;
+          line-height: inherit;
+          word-wrap: normal;
+          background-color: initial;
+          border: 0;
+      }
+
+      .commit-tease-sha {
+          display: inline-block;
+          font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          font-size: 90%;
+          color: #444d56;
+      }
+
+      .full-commit .btn-outline:not(:disabled):hover {
+          color: #005cc5;
+          border-color: #005cc5;
+      }
+
+      .blob-wrapper {
+          overflow-x: auto;
+          overflow-y: hidden;
+      }
+
+      .blob-wrapper-embedded {
+          max-height: 240px;
+          overflow-y: auto;
+      }
+
+      .blob-num {
+          width: 1%;
+          min-width: 50px;
+          padding-right: 10px;
+          padding-left: 10px;
+          font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          font-size: 12px;
+          line-height: 20px;
+          color: rgba(27, 31, 35, .3);
+          text-align: right;
+          white-space: nowrap;
+          vertical-align: top;
+          cursor: pointer;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+      }
+
+      .blob-num:hover {
+          color: rgba(27, 31, 35, .6);
+      }
+
+      .blob-num:before {
+          content: attr(data-line-number);
+      }
+
+      .blob-code {
+          position: relative;
+          padding-right: 10px;
+          padding-left: 10px;
+          line-height: 20px;
+          vertical-align: top;
+      }
+
+      .blob-code-inner {
+          overflow: visible;
+          font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+          font-size: 12px;
+          color: #24292e;
+          word-wrap: normal;
+          white-space: pre;
+      }
+
+      .pl-token.active,
+      .pl-token:hover {
+          cursor: pointer;
+          background: #ffea7f;
+      }
+
+      .tab-size[data-tab-size="1"] {
+          -moz-tab-size: 1;
+          tab-size: 1;
+      }
+
+      .tab-size[data-tab-size="2"] {
+          -moz-tab-size: 2;
+          tab-size: 2;
+      }
+
+      .tab-size[data-tab-size="3"] {
+          -moz-tab-size: 3;
+          tab-size: 3;
+      }
+
+      .tab-size[data-tab-size="4"] {
+          -moz-tab-size: 4;
+          tab-size: 4;
+      }
+
+      .tab-size[data-tab-size="5"] {
+          -moz-tab-size: 5;
+          tab-size: 5;
+      }
+
+      .tab-size[data-tab-size="6"] {
+          -moz-tab-size: 6;
+          tab-size: 6;
+      }
+
+      .tab-size[data-tab-size="7"] {
+          -moz-tab-size: 7;
+          tab-size: 7;
+      }
+
+      .tab-size[data-tab-size="8"] {
+          -moz-tab-size: 8;
+          tab-size: 8;
+      }
+
+      .tab-size[data-tab-size="9"] {
+          -moz-tab-size: 9;
+          tab-size: 9;
+      }
+
+      .tab-size[data-tab-size="10"] {
+          -moz-tab-size: 10;
+          tab-size: 10;
+      }
+
+      .tab-size[data-tab-size="11"] {
+          -moz-tab-size: 11;
+          tab-size: 11;
+      }
+
+      .tab-size[data-tab-size="12"] {
+          -moz-tab-size: 12;
+          tab-size: 12;
+      }
+
+      .task-list-item {
+          list-style-type: none;
+      }
+
+      .task-list-item+.task-list-item {
+          margin-top: 3px;
+      }
+
+      .task-list-item input {
+          margin: 0 .2em .25em -1.6em;
+          vertical-align: middle;
+      }
+
+      /* MY RULES */
+      body {
+          hyphens: auto;
+      }
+
+
+      blockquote {
+          color: #48525e;
+          border-left: .125em solid #c5c7ca;
+          padding-left: 0px;
+          margin-left: 1.75em;
+          margin-top: 2.5em;
+      }
+
+      blockquote p {
+          padding-left: 0.75em;
+          font-size: 1.25em;
+      }
+
+      blockquote p:not(:last-of-type) {
+          padding-bottom: 0ch;
+          margin-bottom: 1em;
+      }
+
+      blockquote ul,
+      blockquote ol {
+          margin-top: -0.75em;
+          margin-bottom: 0.65em;
+          margin-left: 0.5em;
+          list-style: upper-roman;
+          line-height: 1.3 !important;
+      }
+
+      pre {
+          padding: 10px;
+          margin-left: 1.5em !important;
+          font-size: 75%;
+      }
+
+      .code-updates p {
+          padding-bottom: 0px !important;
+          margin-bottom: 0px !important;
+      }
+
+      .code-updates p strong {
+          font-size: 80%;
+          float: left;
+          width: 30ch;
+          margin-bottom: 0ch;
+          text-align: left;
+          margin-right: -1em;
+          margin-top: 10px;
+      }
+
+      .emails blockquote {
+          position: relative;
+          left: 27ch;
+          width: 100ch;
+          margin-bottom: 0em;
+      }
+
+      .emails p strong {
+          font-size: 80%;
+          float: left;
+          width: 25ch;
+          margin-bottom: 0ch;
+          text-align: right;
+          margin-right: -27ch;
+          margin-top: 1em;
+          position: relative;
+          right: 3ch;
+          top: 0ch;
+      }
+
+      .emails li+li {
+          margin-top: -0.25em;
+      }
+
+      figcaption {
+          padding-bottom: 2ch;
+      }
+
+      div.sourceCode {
+          margin: 0.5em 0;
+      }
+
+      pre.sourceCode {
+          margin-bottom: 0.5ch;
+      }
+
+      sup {
+          line-height: 0;
+          font-weight: bold;
+          /* prevent this from causing hideous spacing in a paragraph */
+      }
+
+      sup::before {
+          content: "["
+      }
+
+      sup::after {
+          content: "]"
+      }
+
+      /* https://tex.stackexchange.com/a/327563 */
+      body {
+          counter-reset: EQU_COUNT 0;
+      }
+
+      .MathJax_Display:after {
+          content: "      (" counter(EQU_COUNT) ")";
+          counter-increment: EQU_COUNT;
+      }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1
+id="cortical-morphological-congruence-as-a-biomarker-of-brain-development-assessed-with-magnetic-resonance-imaging">Cortical
+Morphological Congruence as a Biomarker of Brain Development Assessed
+with Magnetic Resonance Imaging</h1>
+<p>Authors: Jacob Levman <span
+class="math inline">\(^{\text{{1,2,3}}}\)</span>, Derek Berger<span
+class="math inline">\(^{\text{2}}\)</span>, (others maybe Bruce
+Fischl?<span class="math inline">\(^{\text{4}}\)</span>)</p>
+<ol type="1">
+<li>Martinos Center for Biomedical Imaging, Massachusetts General
+Hospital, Harvard Medical School, Charlestown, MA, USA.</li>
+<li>Department of Computer Science, St. Francis Xavier University,
+Antigonish, NS, Canada.</li>
+<li>Nova Scotia Health Authority, Halifax, NS, Canada.</li>
+<li>Harvard Medical School, Department of Radiology, Boston, MA,
+USA.</li>
+</ol>
+<h1 id="abstract">Abstract</h1>
+<p>A set of novel biomarkers are proposed for the extraction of regional
+cortical morphological congruence (CMC) measurements from neurological
+magnetic resonance imaging examinations. These proposed novel biomarkers
+assess a cortical region’s deviation from expectation for a perfectly
+regular structure. The proposed CMC biomarkers have been applied to a
+large sample (n=1113) of neurological MRI examinations of neurotypical
+patients from the Human Connectome Project. Results demonstrate
+consistent patterns of regional brain differences in CMC across the
+cortex, implying differential development regionally in the healthy
+brain characterizable by CMC. Results demonstrate relatively small
+standard deviations of CMC values across a large population, implying
+potential for these biomarkers as a reliable and easily reproducible
+method to characterize brain development. &lt;perhaps a sentence here on
+similarities and differences between males and females as part of this
+baseline analysis. Perhaps Sentence on some other stuff, like our
+ability to predict IQ or something from CMC measurement&gt;. Future work
+will investigate CMC’s potential to further characterize healthy brain
+development, as well as to characterize a variety of different
+pathological conditions.</p>
+<p><strong>Keywords</strong>: morphological, congruence, cortex,
+neurodevelopment, magnetic resonance imaging, healthy</p>
+<h1 id="introduction">Introduction</h1>
+<p>Characterization of human cortical development in vivo requires
+medical imaging technology that provides tissue contrast between gray
+and white matter. Magnetic resonance imaging (MRI) is sensitive to
+hydrogen proton concentration, which is variable across tissues, thus
+MRI provides excellent soft tissue contrast, including between the gray
+and white matter in the brain (Dubois et al., 2021). Automated methods
+for extracting biomarkers of potential interest, such as a regional
+cortical tissue’s volume (mm3), surface area (mm2) or thickness (mm),
+have long been relied upon for the study of the human brain (Fischl,
+2012; Levman et al., 2017, 2019; McCann et al., 2021). However, the
+variability of those volume, surface area, and thickness measurements
+across a given population is known to be quite large (Levman et al.,
+2017, 2019), potentially contributing to known reproducibility
+challenges in modern neuroscience studies (Martinez et al., 2015; Marek
+et al., 2022), and may be part of the reason that these techniques are
+generally not yet relied upon for clinical characterization.</p>
+<p>Very broadly, congruence is analogous to agreement between two or
+more objects, studies, shapes, individual measurements, etc. For
+instance, the results of one study may be congruent with those already
+in the literature, or two objects are deemed congruent if they have the
+same shape and size. Congruence can be applied in many ways, and has
+been the subject of limited and diverse studies focused on the human
+brain. Research has suggested that the development of visual cortical
+properties is dependent on visuo-proprioceptive congruence (Buisseret,
+1993). More recently, a model has been specifically developed for
+congruence of binocular vision (how information from the left and right
+eye are incorporated) in the primary visual cortex (Somaratna and
+Freeman, 2022). Congruence has also been assessed between interoceptive
+predictions and hippocampal-related memory (Edwards-Duric et al., 2020).
+Congruence between the development of the circulatory and nervous
+systems, or neurovascular congruence, has been the subject of a study
+focused on cortical development (Stubbs et al., 2009). Additionally, it
+has been reported that congruence based contextual plausibility
+modulates cortical activity during vibrotactile perception (Kang et
+al. 2022). Neuronal congruency has also been assessed in the macaque
+prefrontal cortex (Yao and Vanduffel, 2022). This manuscript presents a
+novel set of biomarkers for characterization of regional cortical
+morphological congruence (CMC), which can be referred to more simply as
+cortical congruence (CC). The proposed methods assess the degree of
+congruence between multiple cortical measurements, thus providing novel
+biomarkers which we hypothesize may help characterize
+neurodevelopment.</p>
+<h1 id="methods">Methods</h1>
+<h2 id="patient-populations-and-imaging">Patient Populations and
+Imaging</h2>
+<p>Data were provided [in part] by the Human Connectome Project, WU-Minn
+Consortium (Principal Investigators: David Van Essen and Kamil Ugurbil;
+1U54MH091657) funded by the 16 NIH Institutes and Centers that support
+the NIH Blueprint for Neuroscience Research; and by the McDonnell Center
+for Systems Neuroscience at Washington University. This cohort included
+1,113 healthy patients imaged with MRI. Detailed information on the
+magnetic resonance imaging (MRI) scanners and protocols used in the
+Human Connectome Project dataset are available in the literature (Elam
+et al., 2021).</p>
+<h2 id="postprocessing">Postprocessing</h2>
+<p>The Human Connectome Project’s WU-Minn HCP cohort (n=1,113 with MRI
+examinations) was processed by FreeSurfer (Fischl, 2012) and the results
+were made publicly available through the Human Connectome Project’s
+website
+(https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release).</p>
+<h3 id="congruence-features">Congruence Features</h3>
+<p>For each cortical region of interest (ROI) <span
+class="math inline">\(r\)</span> (e.g. <span
+class="math inline">\(r\)</span> = “precuneus”) supported by the
+publicly available FreeSurfer results (see Appendix Table <a
+href="#tbl:lateral_fs">3</a> for the base FreeSurfer features), Cortical
+Morphological Congruence (CMC) measurements were computed in each
+patient.</p>
+<p>Define <span class="math inline">\(V(r)\)</span> to be the volume of
+region (ROI) <span class="math inline">\(r\)</span>, and <span
+class="math inline">\(A(r)\)</span> and <span
+class="math inline">\(d(r)\)</span> to be the surface area and average
+thickness, respectively, of the ROI. Denote the left and right ROIs for
+<span class="math inline">\(r\)</span> as <span
+class="math inline">\(r_l\)</span> and <span
+class="math inline">\(r_r\)</span> respectively (e.g. if <span
+class="math inline">\(r\)</span> = “precuneus”, then <span
+class="math inline">\(r_l\)</span> and <span
+class="math inline">\(r_r\)</span> are the left and right precuneus).
+Then define the <em>lateral</em> CMC metrics to be:</p>
+<p><span class="math display">\[
+\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{ V(r) }{ A(r)
+\cdot d(r) }
+\]</span></p>
+<p>Note that <span class="math inline">\(A(r) \cdot d(r)\)</span> is the
+product of an area and thickness: we thus denote the
+<em>pseudo-volume</em>:</p>
+<p><span class="math display">\[ \hat{V}(r) = \text{CMC}_{pV} = V(r)
+\cdot d(r) \]</span></p>
+<p>Then:</p>
+<p><span id="eq:cmc_laterals"><span class="math display">\[
+\begin{align}
+\text{CMC}_l &amp;= \text{CMC}_{\text{Lateral}}(r_l) \\
+\text{CMC}_r &amp;= \text{CMC}_{\text{Lateral}}(r_r) \\
+\end{align}
+\qquad{(1)}\]</span></span></p>
+<p>Also define “bilateral” CMC as:</p>
+<p><span id="eq:cmc_bilateral"><span class="math display">\[
+\text{CMC}_{lr}
+= \frac{ V(r_l) + V(r_r)}{ \hat{V}(r_l) + \hat{V}(r_r)}
+= \frac{\text{ROI total volume}}{\text{ROI total pseudo-volume}}
+\qquad{(2)}\]</span></span></p>
+<p>Define the <em>asymmetric</em> CMC measures:</p>
+<p><span id="eq:asym_signed_diff"><span class="math display">\[
+\text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
+\qquad{(3)}\]</span></span></p>
+<p>and</p>
+<p><span id="eq:asym_unsigned_diff"><span class="math display">\[
+\text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
+\qquad{(4)}\]</span></span></p>
+<p>which are the <em>signed</em> and <em>unsigned</em> CMC differences,
+respectively. Also define</p>
+<p><span id="eq:asym_ratio"><span class="math display">\[ \text{CMC}_{l
+/ r} = \text{CMC}_{l} / \text{CMC}_{r} \qquad{(5)}\]</span></span></p>
+<p>to be the asymmetric <em>ratio</em> CMC measure.</p>
+<p>Then, for each ROI <span class="math inline">\(r\)</span>, this
+defines seven <span class="math inline">\(\text{CMC}\)</span> measures:
+<span class="math inline">\(\text{CMC}_{pV}\)</span>, <span
+class="math inline">\(\text{CMC}_l\)</span>, <span
+class="math inline">\(\text{CMC}_r\)</span>, <span
+class="math inline">\(\text{CMC}_{lr}\)</span>, <span
+class="math inline">\(\text{CMC}_{l-r}\)</span>, <span
+class="math inline">\(\text{CMC}_{|l-r|}\)</span>, and <span
+class="math inline">\(\text{CMC}_{l/r}\)</span>. The CMC features
+defined in Equation <a href="#eq:cmc_laterals">1</a> and Equation <a
+href="#eq:cmc_bilateral">2</a> are unitless ratios assessing a cortical
+region’s deviation from uniform thickness, where the region
+pseudo-volume would be expected to be equal to the surface area times
+the average cortical thickness. In the case of equality, this produces a
+lateral CMC biomarker value of 1. Deviations from 1 in either direction
+have major implications for structural cortical presentation, imply
+differential neurological development has occurred, and is addressed in
+detail in the Discussion.</p>
+<p>Equation <a href="#eq:asym_signed_diff">3</a> defines a biomarker
+that preserves directionality of asymmetry, with left/right dominant
+regions taking on positive/negative values of <span
+class="math inline">\(\text{CMC}_{l - r}\)</span>, respectively.
+Likewise, Equation <a href="#eq:asym_ratio">5</a> defines a quantity
+which is greater/less than <span class="math inline">\(1\)</span> when
+left/right lateral <span class="math inline">\(\text{CMC}\)</span> is
+larger.</p>
+<h2 id="statistical-analyses-and-machine-learning">Statistical Analyses
+and Machine Learning</h2>
+<p>For each of the 34 cortical regions <span
+class="math inline">\(r\)</span> available from the FreeSurfer analysis
+(see Table <a href="#tbl:lateral_cmc">2</a> below), each of the seven
+CMC features was computed for each subject.</p>
+<h3 id="descriptive-statistics">Descriptive Statistics</h3>
+<h4 id="cmc-features-by-sex">CMC Features by Sex</h4>
+<p>For each CMC feature, we compute a measure of group separation by sex
+using Cohen’s d and the Mann-Whitney U test. While all pseudo-volume
+features are significant (Figure <a href="#fig:cmc_sex_diffs">1</a>),
+otherwise, only some lateral and bilateral CMC metrics differ
+significantly based on sex (Table <a href="#tbl:sig_cmc_sex">1</a>).</p>
+<div id="tbl:sig_cmc_sex">
+<table>
+<caption>Table 1: CMC features with significant separation by sex. d =
+Cohen’s d, U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U. bh =
+both hemisphere, lh/rh = left/right hemisphere. Note: p-values are
+adjusted for multiple comparisons using the Holm-Bonferroni stepdown
+method</caption>
+<thead>
+<tr>
+<th style="text-align: left;">ROI</th>
+<th style="text-align: right;">d</th>
+<th style="text-align: right;">U</th>
+<th style="text-align: right;">U (p)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">bh-temporalpole</td>
+<td style="text-align: right;">-0.294</td>
+<td style="text-align: right;">127593.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-temporalpole</td>
+<td style="text-align: right;">-0.283</td>
+<td style="text-align: right;">129332.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-insula</td>
+<td style="text-align: right;">0.233</td>
+<td style="text-align: right;">174258.000</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-temporalpole</td>
+<td style="text-align: right;">-0.229</td>
+<td style="text-align: right;">134217.000</td>
+<td style="text-align: right;">0.010</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-paracentral</td>
+<td style="text-align: right;">-0.187</td>
+<td style="text-align: right;">136173.000</td>
+<td style="text-align: right;">0.035</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-paracentral</td>
+<td style="text-align: right;">-0.177</td>
+<td style="text-align: right;">136298.000</td>
+<td style="text-align: right;">0.039</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure id="fig:cmc_sex_diffs">
+<img src="../../figures/HCP_d_p_plots.png"
+alt="Figure 1: CMC Feature differences by sex" />
+<figcaption aria-hidden="true">Figure 1: CMC Feature differences by
+sex</figcaption>
+</figure>
+<h4 id="lateral-cmc-features">Lateral CMC Features</h4>
+<p>For each ROI, it is reasonable to ask whether <span
+class="math inline">\(\text{CMC}_l\)</span> and <span
+class="math inline">\(\text{CMC}_r\)</span> differ. We find this to be
+the case for all but the superior frontal and parsopercularis regions
+(Table <a href="#tbl:lateral_cmc">2</a>).</p>
+<div id="tbl:lateral_cmc">
+<table>
+<caption>Table 2: Measures of separation of lateral CMC features (left
+vs. right hemisphere). d = Cohen’s d, U = Mann-Whitney U, U (p) =
+p-value for Mann-Whitney U, W = Wilcoxon signed rank test, W (p) =
+p-value for W. Note: p-values are adjusted for multiple comparisons
+using the Holm-Bonferroni stepdown method</caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 10%" />
+<col style="width: 16%" />
+<col style="width: 11%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">ROI</th>
+<th style="text-align: right;">d</th>
+<th style="text-align: right;">U</th>
+<th style="text-align: right;">U (p)</th>
+<th style="text-align: right;">W</th>
+<th style="text-align: right;">W (p)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">inferiortemporal</td>
+<td style="text-align: right;">-1.890</td>
+<td style="text-align: right;">17.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">insula</td>
+<td style="text-align: right;">-1.778</td>
+<td style="text-align: right;">5616.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">21.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">pericalcarine</td>
+<td style="text-align: right;">-1.883</td>
+<td style="text-align: right;">249.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">precuneus</td>
+<td style="text-align: right;">-1.772</td>
+<td style="text-align: right;">4138.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">precentral</td>
+<td style="text-align: right;">-1.661</td>
+<td style="text-align: right;">19754.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">75.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">rostralanteriorcingulate</td>
+<td style="text-align: right;">1.673</td>
+<td style="text-align: right;">1221463.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">143.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">fusiform</td>
+<td style="text-align: right;">1.706</td>
+<td style="text-align: right;">1225671.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">260.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">superiorparietal</td>
+<td style="text-align: right;">-1.598</td>
+<td style="text-align: right;">28954.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">376.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">postcentral</td>
+<td style="text-align: right;">1.625</td>
+<td style="text-align: right;">1210184.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">534.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">caudalanteriorcingulate</td>
+<td style="text-align: right;">1.630</td>
+<td style="text-align: right;">1209423.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">1092.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">isthmuscingulate</td>
+<td style="text-align: right;">-1.498</td>
+<td style="text-align: right;">47158.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">1886.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">cuneus</td>
+<td style="text-align: right;">-1.648</td>
+<td style="text-align: right;">41310.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">2429.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">transversetemporal</td>
+<td style="text-align: right;">-1.510</td>
+<td style="text-align: right;">64112.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">2995.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lingual</td>
+<td style="text-align: right;">1.531</td>
+<td style="text-align: right;">1170556.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">5488.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">paracentral</td>
+<td style="text-align: right;">-1.406</td>
+<td style="text-align: right;">92294.500</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">593.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lateralorbitofrontal</td>
+<td style="text-align: right;">-1.337</td>
+<td style="text-align: right;">92478.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">1710.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">posteriorcingulate</td>
+<td style="text-align: right;">1.375</td>
+<td style="text-align: right;">1134397.500</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">8640.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">superiortemporal</td>
+<td style="text-align: right;">1.176</td>
+<td style="text-align: right;">1054705.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">18322.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">supramarginal</td>
+<td style="text-align: right;">1.019</td>
+<td style="text-align: right;">1003090.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">59895.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">middletemporal</td>
+<td style="text-align: right;">0.940</td>
+<td style="text-align: right;">960696.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">44794.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">parahippocampal</td>
+<td style="text-align: right;">-0.934</td>
+<td style="text-align: right;">281663.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">39694.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">parsorbitalis</td>
+<td style="text-align: right;">-0.939</td>
+<td style="text-align: right;">288320.500</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">76597.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">frontalpole</td>
+<td style="text-align: right;">0.880</td>
+<td style="text-align: right;">939993.500</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">70533.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lateraloccipital</td>
+<td style="text-align: right;">0.894</td>
+<td style="text-align: right;">935000.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">79894.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">parstriangularis</td>
+<td style="text-align: right;">0.611</td>
+<td style="text-align: right;">891834.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">90160.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">caudalmiddlefrontal</td>
+<td style="text-align: right;">0.589</td>
+<td style="text-align: right;">833330.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">127030.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">inferiorparietal</td>
+<td style="text-align: right;">0.482</td>
+<td style="text-align: right;">791186.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">171122.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bankssts</td>
+<td style="text-align: right;">-0.417</td>
+<td style="text-align: right;">475058.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">187242.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">medialorbitofrontal</td>
+<td style="text-align: right;">-0.357</td>
+<td style="text-align: right;">487862.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">180895.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">entorhinal</td>
+<td style="text-align: right;">-0.364</td>
+<td style="text-align: right;">499072.500</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">192057.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">rostralmiddlefrontal</td>
+<td style="text-align: right;">0.275</td>
+<td style="text-align: right;">706419.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">224623.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">temporalpole</td>
+<td style="text-align: right;">-0.216</td>
+<td style="text-align: right;">543206.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">235096.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">parsopercularis</td>
+<td style="text-align: right;">-0.055</td>
+<td style="text-align: right;">606403.000</td>
+<td style="text-align: right;">0.784</td>
+<td style="text-align: right;">298155.000</td>
+<td style="text-align: right;">0.541</td>
+</tr>
+<tr>
+<td style="text-align: left;">superiorfrontal</td>
+<td style="text-align: right;">0.030</td>
+<td style="text-align: right;">618573.000</td>
+<td style="text-align: right;">0.957</td>
+<td style="text-align: right;">306615.000</td>
+<td style="text-align: right;">0.754</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="predictive-analyses">Predictive Analyses</h3>
+<p>A &lt;get Derek to provide a little description of the psychological
+explained variance test with citation(s)&gt; was performed. Anything
+interesting from the machine learning analysis? Can you run this again
+with current df-analyze? If so is there anything interesting in there
+worth including in this manuscript? If so describe the methods here and
+adapt the text immediately below. If not, cut the text below. Machine
+learning was completed with df-analyze, publicly available machine
+learning software (github.com/stfxecutables/df-analyze), which was
+developed in house, and has previously been applied to a brain MRI
+predictive application focused on schizophrenia diagnostics (Levman et
+al., 2022). In this application, df-analyze is tasked with predicting a
+set of phenotypic features from the patients in our dataset from the
+proposed CMC biomarkers. The targeted phenotypic features include
+&lt;insert list and basic descriptions and justification for their
+selection – input from Derek). The software selects the best combination
+of CMC biomarkers, the best combination of traditional FreeSurfer
+biomarkers, and the best combination of both, while being restricted by
+the user to limit the analysis to a fixed number of biomarkers
+<double check this with Derek>. The number of fixed biomarkers to
+provide to machine learning is varied, and the resultant predictive
+capacity of the models, alongside which biomarkers were selected for, is
+reported. This was just a blurb of what we could/maybe do, any
+df-analyze methods providing something interesting to say is fine,
+please adapt the text. Making df-analyze publicly available
+(github.com/stfxecutables/df-analyze) facilitates reproducibility of our
+study findings, alongside our use of large public datasets of MRI
+examinations. In addition, we have provided our analytic software that
+helps demonstrate to the user how to use df-analyze and how to perform
+the statistical analyses employed in this study (cite another git hub
+thing – get link from Derek).</p>
+<h1 id="results">Results</h1>
+<p>Results from the Human Connectome Project, involving computing
+CMCLateral (equation 1) for each cortical region in each patient, and
+presenting the results as box plots (or violin plots might be slightly
+better) dividing between the left and right hemispheres, as well as
+between males and females, is provided in Figure 1. Note the relatively
+small standard deviations relative to the varying average CMC values
+across cortical regions.</p>
+<p><strong><em>Please create this big ass montage for
+me</em></strong>*</p>
+<p>Figure 1. Boxplots of each brain region (with left and right
+hemispheres paired together) across all patients (n=1113) in the
+neurotypical Human Connectome Project cohort, divided by gender.</p>
+<p><update this section with that explained variance test that Derek did instead></p>
+<p><update this section with the results of any df-analyze experiments Derek completed></p>
+<p>A machine learning predictive analysis was performed and the leading
+models, their predictive accuracy, and the biomarkers on which they
+based their predictions are provided in Table 2.</p>
+<h1 id="discussion">Discussion</h1>
+<p>The human brain’s regional cortical development proceeds with a
+variety of underlying factors maturing in tandem with one another.
+Cortical volume, surface area and thickness are excellent examples of
+measurable biomarkers that clearly exhibit interdependencies with one
+another. However, it should be noted that the relative maturation of
+each of these biomarkers may proceed at varying rates in any particular
+combination of brain region, patient or pathology. Gray matter (GM)
+volume is known to increase with age, as does the surface area, while
+cortical thickness thins with long-term development. These three
+biomarkers are inter-related, and existing studies focused on these
+measurements typically do not consider the inherent interdependence
+between their respective development, even though underlying
+interdependencies are inevitable. This paper presents a novel set of
+cortical morphological congruence (CMC) biomarkers that are based on
+cortical volume, surface area and thickness, and produces measurements
+with relatively small standard deviations (see Figure 1), implying
+potential reliability and reproducibility from the proposed methods.</p>
+<h2
+id="interpretation-of-cmc-and-its-potential-relationship-with-macro-structural-cortical-development">Interpretation
+of CMC and its potential relationship with macro-structural cortical
+development</h2>
+<p>The proposed CMC biomarkers, defined in equations 1 through 4, rely
+on underlying measurements of gray matter volume (measured in mm3),
+surface area (measured in mm2) and average cortical thickness (measured
+in mm). The nature of the proposed equations are such that they each
+produce a unitless index of CMC, different values of which imply
+potentially major differences in the conformation of the local cortical
+region, potentially implying major differences in the tissue’s
+historical neurodevelopment. When a cortical region exhibits a CMC (see
+equations 1 &amp; 2) measurement equal to 1, which is expected for very
+regularly shaped structures, that region exhibits a relatively simple
+cortical morphological presentation, and can be said to have high
+underlying cortical morphological congruence. Examples of this can be
+found consistently across patients in brain structures such as the banks
+of the superior temporal sulcus (n=1,113, mean CMCLateral=1.0<em>, std
+dev CMCLateral=0.025</em>), and the insula (mean CMCLateral=1.0?, std
+dev CMCLateral=???). When CMC values deviate from 1, this implies
+varying degrees of incongruence between the region’s volumetric
+biomarkers and its surface area and cortical thickness biomarkers
+combined. The directionality of that incongruence (i.e. whether CMC is
+above or below 1) has major implications for the presentation of the
+conformation of that tissue, and implies differential cortical
+development has occurred.</p>
+<p>When a cortical region exhibits CMC above 1, the GM volume has
+developed to be larger than the surface area times the mean thickness.
+This can occur when the overall growth of regional cortical tissue
+proceeds more quickly than increases in the surface area. Broadly
+speaking, the morphological structure that maximizes volume relative to
+surface area is the sphere. Thus, it is expected that convex (and thus
+partly spherical) presentation on the surface of the cortical region
+(well-rounded boundaries between the cortex and the pia mater which
+surrounds the cortex) will contribute to CMC measurements above 1.
+Regions such as the entorhinal cortex, which plays a role in working
+memory and thus is a highly relied upon region of cortical tissue,
+exhibits high CMC values (mean = 1.3**, standard deviation = 0.?). This
+implies that the entorhinal region’s development may have involved rapid
+increases in volume relative to its respective increases in surface
+area. These high CMC values may also implicate a distribution of pruning
+locations that supports sulcal formation, leading to more convex (partly
+spherical) local surface areas within the entorhinal cortex adjacent to
+locations of sulcal formation. Thus, we hypothesize that pruning in the
+entorhinal cortex has been more extensive (and possibly proceeded
+faster) than pruning in regions exhibiting cortical morphological
+congruence (CMC = 1) such as the banks of the superior temporal sulcus,
+or the insula. Results demonstrate that in addition to the entorhinal
+cortex, multiple regions exhibit consistently high CMC values, including
+the temporal pole, frontal pole, and pars orbitalis (see Figure 1).</p>
+<p>When a cortical region exhibits CMC values below 1, the combination
+of the surface area times the mean thickness has developed to be larger
+than the gray matter volume. This can occur when the surface area, which
+is expected to be affected by several underlying factors, including
+regional brain growth, cortical folding and pruning, develops more
+rapidly than the growth in overall regional gray matter volume alone.
+Additionally, the distribution of locations of pruning within the cortex
+can result in the emergence of comparatively complex surfaces relative
+to the more spherical/convex surfaces already discussed, potentially
+resulting in comparatively large surface areas yielding reduced values
+for our CMC biomarkers. Regions such as the pericalcarine cortex exhibit
+low CMC values (mean = 0.95*, standard deviation = ??), which could
+imply that surface area growth has outpaced corresponding volumetric
+growth in this region’s development relative to other cortical
+regions.</p>
+<h2
+id="potential-for-cmc-to-characterize-important-aspects-of-brain-development">Potential
+for CMC to characterize important aspects of brain development</h2>
+<p>The combination of regional cortical volume, surface area and mean
+thickness, biomarkers with relatively high variability across patients,
+into a single CMC biomarker with relatively small variability in
+regional cortical measurements is noteworthy. Reliability and
+reproducibility are a major ongoing challenge in neuroscience research
+(Martinez et al., 2015; Marek et al., 2022), so any biomarkers that
+present consistently across a large population, and reliably demonstrate
+differential presentation across cortical regions, has considerable
+potential to assist in reliable and reproducible characterization of the
+human brain.</p>
+<p>For most of the CMC biomarkers evaluated, males and females exhibit
+highly overlapping distributions, implying negligible differences in
+most cortical regions, which could imply the proposed biomarkers provide
+standardization benefits towards reproducible studies, and is consistent
+with largely overlapping functional abilities between the genders in
+most capacities. However, some male-female differences were observed in
+the temporal pole, the frontal pole and the pars opercularis, with
+females exhibiting higher CMC biomarkers on average than their male
+counterparts, though the distributions are still overlapping (see Figure
+1). The temporal pole has been implicated in many functions, including
+emotional processing (Corcoles-Parada et al., 2019), and the frontal
+pole has been reported to contribute to control over emotional
+approach-avoidance actions (Bramson et al., 2020). Thus, gender
+differences in the presentation of the temporal and frontal poles, as
+assessed by CMC, may assist in characterization of known gender
+differences in emotional expression (Chaplin, 2015). The pars
+opercularis is involved in language processing (Grewe et al., 2005), and
+sex differences in the pars opercularis, as assessed with CMC, may be
+indicative of underlying known differences in language development
+between males and females (Sato, 2020). Indeed, it is encouraging that
+group-wise differences are observed in overlapping distributions as
+although we know sex effects exist in emotional expression and language
+development, there is a wide amount of variability in function across
+both genders, which is reflected in our CMC biomarker results exhibiting
+partially overlapping distributions between the sexes.</p>
+<p>***Hopefully there is something related to phenotypic data that
+Derek’s analysis will uncover?</p>
+<p>***Discuss variation explained psychological statistical test results
+here</p>
+<p>***Discuss machine learning predictive capacity and features
+underlying those predictions here</p>
+<p>Although most cortical regions exhibited consistent CMC values in the
+left and right hemispheres, we did observe asymmetries in the transverse
+temporal, entorhinal, caudal anterior cingulate and pericalcarine
+regions. Asymmetries have previously been observed in the entorhinal
+(Simic et al., 2005) cortex, with larger surface areas being reported in
+the left hemisphere, which is consistent with our findings of decreased
+CMC in the left hemisphere (increased surface area results in decreased
+CMC). The transverse temporal cortex is known to exhibit leftward
+asymmetries that are detectable by 31 weeks gestation (Chi et al.,
+1977), which is consistent with our findings of decreased CMC in the
+left hemisphere. Asymmetries have also been previously reported in the
+anterior cingulate (Yan et al. 2009). The pericalcarine cortex has also
+been reported to exhibit asymmetries (Chiarello et al., 2016; Koelkebeck
+et al., 2014), which our analysis was also able to detect with CMC
+biomarkers. Our identification of asymmetries of CMC biomarkers implies
+that our analyses have considerable consistency with known asymmetric
+properties of the human brain.</p>
+<h2 id="potential-for-cmc-to-characterize-pathologies">Potential for CMC
+to characterize pathologies</h2>
+<p>A wide variety of pathological conditions have been demonstrated to
+exhibit abnormal phenotypic presentation of regions of the brain,
+including Down Syndrome (Lee et al., 2016; Levman et al., 2019a),
+attention deficit hyperactivity disorder (ADHD) (Liston et al., 2011;
+Stanley et al., 2008), schizophrenia (Innocenti et al., 2003; Keshavan
+et al., 1994; Feinberg, 1990; Hoffman and Dobscha, 1989; Rimol et al.,
+2010; Narr et al., 2005; Venkatasubramanian et al., 2008; van Haren et
+al., 2011; Schultz et al., 2010; Nesvag et al., 2008; Seitz et al.,
+2018; Qiu et al., 2010; Johnson et al., 2014; MacKinley et al., 2020),
+psychotic disorders (Bakker et al., 2016), autism (Khundrakpam et al.,
+2017; Pereira et al., 2018; Zielinski et al., 2014; Levman et al.,
+2019b; Levman et al., 2021b), and multiple sclerosis (Brex et al., 2002;
+Losseff et al., 1996; Chen et al., 2004; Sailer et al., 2003; Levman et
+al., 2021c).</p>
+<p>Thus, future work will entail the characterization of the development
+of the pathological brain with CMC. As an additional novel biomarker not
+previously available, CMC may characterize regional abnormal development
+of the cortex in a manner not previously characterized, and the feature
+measurements generated by the approach outlined in this manuscript may
+also be a useful addition to future machine learning / artificial
+intelligence technologies that perform predictions for diagnostics,
+prognostics and treatment planning. Future work will investigate the
+potential for a variety of pathologies to be associated with
+macro-structural developmental abnormalities, such as aberrant folding
+and sulcal formation, and thus CMC may assist in the characterization of
+the macro-level phenotypic presentation of the brain. It is hoped that
+the CMC technique presented in this manuscript will be helpful in
+characterizing and understanding the developmental processes and
+etiological factors associated with healthy brain development, as well
+as a variety of neurodevelopmental disorders. It is also hoped that
+congruence based biomarkers will assist in characterizing important
+aspects of healthy and abnormal brain, reliably and reproducibly.</p>
+<hr />
+<p>Talk to Bruce Fischl with Emi about possibility of it being included
+in future versions of FreeSurfer and whether he has any feedback that
+might be relevant and may want to join on this project as a
+co-author.</p>
+<h1 id="appendix">Appendix</h1>
+<div id="tbl:lateral_fs">
+<table>
+<caption>Table 3: Measures of Separation of base FreeSurfer Features
+(left vs. right hemisphere). d = Cohen’s d, W = Wilcoxon signed rank
+test, W (p) = p-value for W. Note: p-values were adjusted for multiple
+comparisons using the Holm-Bonferroni stepdown method</caption>
+<thead>
+<tr>
+<th style="text-align: left;">ROI</th>
+<th style="text-align: right;">d</th>
+<th style="text-align: right;">W</th>
+<th style="text-align: right;">W (p)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">ThickAvg__inferiortemporal</td>
+<td style="text-align: right;">1.913</td>
+<td style="text-align: right;">168552.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__rostralanteriorcingulate</td>
+<td style="text-align: right;">-1.898</td>
+<td style="text-align: right;">4993.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__fusiform</td>
+<td style="text-align: right;">-1.843</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__pericalcarine</td>
+<td style="text-align: right;">1.842</td>
+<td style="text-align: right;">7625.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__postcentral</td>
+<td style="text-align: right;">-1.825</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__precentral</td>
+<td style="text-align: right;">1.824</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__isthmuscingulate</td>
+<td style="text-align: right;">1.780</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__insula</td>
+<td style="text-align: right;">1.774</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__paracentral</td>
+<td style="text-align: right;">1.751</td>
+<td style="text-align: right;">30331.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__precuneus</td>
+<td style="text-align: right;">1.716</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__caudalanteriorcingulate</td>
+<td style="text-align: right;">-1.651</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__cuneus</td>
+<td style="text-align: right;">1.607</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__lateralorbitofrontal</td>
+<td style="text-align: right;">1.599</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__lingual</td>
+<td style="text-align: right;">-1.563</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__transversetemporal</td>
+<td style="text-align: right;">1.538</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__superiortemporal</td>
+<td style="text-align: right;">-1.472</td>
+<td style="text-align: right;">116444.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__posteriorcingulate</td>
+<td style="text-align: right;">-1.470</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__parahippocampal</td>
+<td style="text-align: right;">1.466</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__superiorparietal</td>
+<td style="text-align: right;">1.433</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__frontalpole</td>
+<td style="text-align: right;">-1.360</td>
+<td style="text-align: right;">3510.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__frontalpole</td>
+<td style="text-align: right;">-1.360</td>
+<td style="text-align: right;">47046.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__frontalpole</td>
+<td style="text-align: right;">-1.330</td>
+<td style="text-align: right;">3527.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__transversetemporal</td>
+<td style="text-align: right;">1.319</td>
+<td style="text-align: right;">7695.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__transversetemporal</td>
+<td style="text-align: right;">1.319</td>
+<td style="text-align: right;">12451.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__parsorbitalis</td>
+<td style="text-align: right;">-1.266</td>
+<td style="text-align: right;">4209.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__parsorbitalis</td>
+<td style="text-align: right;">-1.266</td>
+<td style="text-align: right;">88337.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__parsorbitalis</td>
+<td style="text-align: right;">-1.265</td>
+<td style="text-align: right;">2215.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__middletemporal</td>
+<td style="text-align: right;">-1.218</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__inferiorparietal</td>
+<td style="text-align: right;">-1.163</td>
+<td style="text-align: right;">2039.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__parstriangularis</td>
+<td style="text-align: right;">-1.159</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__supramarginal</td>
+<td style="text-align: right;">-1.123</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__transversetemporal</td>
+<td style="text-align: right;">1.104</td>
+<td style="text-align: right;">1464.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__rostralanteriorcingulate</td>
+<td style="text-align: right;">1.084</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__rostralanteriorcingulate</td>
+<td style="text-align: right;">1.084</td>
+<td style="text-align: right;">34500.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__inferiorparietal</td>
+<td style="text-align: right;">-1.078</td>
+<td style="text-align: right;">833.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__inferiorparietal</td>
+<td style="text-align: right;">-1.078</td>
+<td style="text-align: right;">120187.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__frontalpole</td>
+<td style="text-align: right;">-1.037</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___medialorbitofrontal</td>
+<td style="text-align: right;">-1.031</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__rostralanteriorcingulate</td>
+<td style="text-align: right;">1.024</td>
+<td style="text-align: right;">21433.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__lateraloccipital</td>
+<td style="text-align: right;">-1.017</td>
+<td style="text-align: right;">49.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__caudalmiddlefrontal</td>
+<td style="text-align: right;">-0.973</td>
+<td style="text-align: right;">11104.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__parstriangularis</td>
+<td style="text-align: right;">-0.966</td>
+<td style="text-align: right;">41362.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__medialorbitofrontal</td>
+<td style="text-align: right;">-0.955</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__temporalpole</td>
+<td style="text-align: right;">0.929</td>
+<td style="text-align: right;">91259.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__temporalpole</td>
+<td style="text-align: right;">0.929</td>
+<td style="text-align: right;">187447.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__parsorbitalis</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__parsopercularis</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">41545.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__parsopercularis</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">297040.500</td>
+<td style="text-align: right;">0.744</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__parsopercularis</td>
+<td style="text-align: right;">0.896</td>
+<td style="text-align: right;">38251.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__parstriangularis</td>
+<td style="text-align: right;">-0.867</td>
+<td style="text-align: right;">16618.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__parstriangularis</td>
+<td style="text-align: right;">-0.867</td>
+<td style="text-align: right;">29132.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__paracentral</td>
+<td style="text-align: right;">-0.841</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__paracentral</td>
+<td style="text-align: right;">-0.841</td>
+<td style="text-align: right;">62069.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__middletemporal</td>
+<td style="text-align: right;">-0.803</td>
+<td style="text-align: right;">18687.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___bankssts</td>
+<td style="text-align: right;">-0.777</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__temporalpole</td>
+<td style="text-align: right;">-0.770</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__paracentral</td>
+<td style="text-align: right;">-0.766</td>
+<td style="text-align: right;">43831.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___caudalanteriorcingulate</td>
+<td style="text-align: right;">0.753</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___temporalpole</td>
+<td style="text-align: right;">-0.741</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__entorhinal</td>
+<td style="text-align: right;">0.738</td>
+<td style="text-align: right;">126581.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__entorhinal</td>
+<td style="text-align: right;">0.738</td>
+<td style="text-align: right;">150876.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__middletemporal</td>
+<td style="text-align: right;">-0.718</td>
+<td style="text-align: right;">11374.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__middletemporal</td>
+<td style="text-align: right;">-0.718</td>
+<td style="text-align: right;">12275.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__caudalanteriorcingulate</td>
+<td style="text-align: right;">-0.707</td>
+<td style="text-align: right;">469.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__caudalanteriorcingulate</td>
+<td style="text-align: right;">-0.707</td>
+<td style="text-align: right;">151094.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__inferiorparietal</td>
+<td style="text-align: right;">-0.706</td>
+<td style="text-align: right;">226159.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___inferiorparietal</td>
+<td style="text-align: right;">-0.635</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__pericalcarine</td>
+<td style="text-align: right;">-0.593</td>
+<td style="text-align: right;">57421.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__caudalanteriorcingulate</td>
+<td style="text-align: right;">-0.589</td>
+<td style="text-align: right;">106594.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___middletemporal</td>
+<td style="text-align: right;">-0.555</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__pericalcarine</td>
+<td style="text-align: right;">-0.530</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__pericalcarine</td>
+<td style="text-align: right;">-0.530</td>
+<td style="text-align: right;">46557.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__medialorbitofrontal</td>
+<td style="text-align: right;">0.496</td>
+<td style="text-align: right;">22949.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__medialorbitofrontal</td>
+<td style="text-align: right;">0.496</td>
+<td style="text-align: right;">285946.500</td>
+<td style="text-align: right;">0.161</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___parstriangularis</td>
+<td style="text-align: right;">-0.486</td>
+<td style="text-align: right;">8126.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__entorhinal</td>
+<td style="text-align: right;">0.485</td>
+<td style="text-align: right;">62042.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___entorhinal</td>
+<td style="text-align: right;">-0.484</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__entorhinal</td>
+<td style="text-align: right;">-0.471</td>
+<td style="text-align: right;">16634.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__bankssts</td>
+<td style="text-align: right;">0.471</td>
+<td style="text-align: right;">225056.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__bankssts</td>
+<td style="text-align: right;">0.471</td>
+<td style="text-align: right;">268972.000</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__insula</td>
+<td style="text-align: right;">-0.463</td>
+<td style="text-align: right;">16.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__insula</td>
+<td style="text-align: right;">-0.463</td>
+<td style="text-align: right;">106012.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___lateraloccipital</td>
+<td style="text-align: right;">-0.462</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__parahippocampal</td>
+<td style="text-align: right;">0.458</td>
+<td style="text-align: right;">198655.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__isthmuscingulate</td>
+<td style="text-align: right;">0.446</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__isthmuscingulate</td>
+<td style="text-align: right;">0.446</td>
+<td style="text-align: right;">184355.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___transversetemporal</td>
+<td style="text-align: right;">-0.443</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__caudalmiddlefrontal</td>
+<td style="text-align: right;">0.433</td>
+<td style="text-align: right;">66604.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__caudalmiddlefrontal</td>
+<td style="text-align: right;">0.433</td>
+<td style="text-align: right;">179733.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__rostralmiddlefrontal</td>
+<td style="text-align: right;">-0.431</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__precuneus</td>
+<td style="text-align: right;">-0.410</td>
+<td style="text-align: right;">96547.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___superiortemporal</td>
+<td style="text-align: right;">-0.403</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__superiortemporal</td>
+<td style="text-align: right;">0.400</td>
+<td style="text-align: right;">5106.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__superiortemporal</td>
+<td style="text-align: right;">0.400</td>
+<td style="text-align: right;">204111.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__supramarginal</td>
+<td style="text-align: right;">0.398</td>
+<td style="text-align: right;">42292.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__supramarginal</td>
+<td style="text-align: right;">0.398</td>
+<td style="text-align: right;">170684.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___supramarginal</td>
+<td style="text-align: right;">-0.396</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__precuneus</td>
+<td style="text-align: right;">-0.393</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__precuneus</td>
+<td style="text-align: right;">-0.393</td>
+<td style="text-align: right;">85970.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___superiorparietal</td>
+<td style="text-align: right;">-0.376</td>
+<td style="text-align: right;">106136.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__temporalpole</td>
+<td style="text-align: right;">0.374</td>
+<td style="text-align: right;">52650.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__postcentral</td>
+<td style="text-align: right;">0.355</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__postcentral</td>
+<td style="text-align: right;">0.355</td>
+<td style="text-align: right;">182161.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__rostralmiddlefrontal</td>
+<td style="text-align: right;">-0.349</td>
+<td style="text-align: right;">144353.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__insula</td>
+<td style="text-align: right;">-0.343</td>
+<td style="text-align: right;">95660.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___parsopercularis</td>
+<td style="text-align: right;">-0.342</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___parsorbitalis</td>
+<td style="text-align: right;">-0.339</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__isthmuscingulate</td>
+<td style="text-align: right;">0.334</td>
+<td style="text-align: right;">154757.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__supramarginal</td>
+<td style="text-align: right;">0.333</td>
+<td style="text-align: right;">144106.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__caudalmiddlefrontal</td>
+<td style="text-align: right;">0.313</td>
+<td style="text-align: right;">137658.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___inferiortemporal</td>
+<td style="text-align: right;">-0.305</td>
+<td style="text-align: right;">122975.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___insula</td>
+<td style="text-align: right;">0.302</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___precuneus</td>
+<td style="text-align: right;">-0.302</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__inferiortemporal</td>
+<td style="text-align: right;">0.286</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__inferiortemporal</td>
+<td style="text-align: right;">0.286</td>
+<td style="text-align: right;">245206.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__rostralmiddlefrontal</td>
+<td style="text-align: right;">-0.286</td>
+<td style="text-align: right;">115219.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__rostralmiddlefrontal</td>
+<td style="text-align: right;">-0.286</td>
+<td style="text-align: right;">188723.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__parahippocampal</td>
+<td style="text-align: right;">0.275</td>
+<td style="text-align: right;">3113.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__parahippocampal</td>
+<td style="text-align: right;">0.275</td>
+<td style="text-align: right;">140248.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__bankssts</td>
+<td style="text-align: right;">0.266</td>
+<td style="text-align: right;">152069.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__postcentral</td>
+<td style="text-align: right;">0.265</td>
+<td style="text-align: right;">140871.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___superiorfrontal</td>
+<td style="text-align: right;">-0.248</td>
+<td style="text-align: right;">2378.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___posteriorcingulate</td>
+<td style="text-align: right;">0.242</td>
+<td style="text-align: right;">9243.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___paracentral</td>
+<td style="text-align: right;">-0.221</td>
+<td style="text-align: right;">2957.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___postcentral</td>
+<td style="text-align: right;">-0.218</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__cuneus</td>
+<td style="text-align: right;">-0.217</td>
+<td style="text-align: right;">208953.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__fusiform</td>
+<td style="text-align: right;">0.216</td>
+<td style="text-align: right;">212240.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__lateralorbitofrontal</td>
+<td style="text-align: right;">0.211</td>
+<td style="text-align: right;">110.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__lateralorbitofrontal</td>
+<td style="text-align: right;">0.211</td>
+<td style="text-align: right;">194772.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__fusiform</td>
+<td style="text-align: right;">0.206</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__fusiform</td>
+<td style="text-align: right;">0.206</td>
+<td style="text-align: right;">208310.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__superiorfrontal</td>
+<td style="text-align: right;">-0.195</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__superiortemporal</td>
+<td style="text-align: right;">0.190</td>
+<td style="text-align: right;">106677.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__posteriorcingulate</td>
+<td style="text-align: right;">-0.187</td>
+<td style="text-align: right;">6120.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__posteriorcingulate</td>
+<td style="text-align: right;">-0.187</td>
+<td style="text-align: right;">275233.000</td>
+<td style="text-align: right;">0.010</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___isthmuscingulate</td>
+<td style="text-align: right;">-0.183</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__cuneus</td>
+<td style="text-align: right;">-0.179</td>
+<td style="text-align: right;">1519.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__cuneus</td>
+<td style="text-align: right;">-0.179</td>
+<td style="text-align: right;">191317.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__superiorfrontal</td>
+<td style="text-align: right;">0.175</td>
+<td style="text-align: right;">250741.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__superiorfrontal</td>
+<td style="text-align: right;">0.175</td>
+<td style="text-align: right;">254495.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__superiorparietal</td>
+<td style="text-align: right;">-0.174</td>
+<td style="text-align: right;">307024.500</td>
+<td style="text-align: right;">0.784</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__lateraloccipital</td>
+<td style="text-align: right;">0.164</td>
+<td style="text-align: right;">66088.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__lateraloccipital</td>
+<td style="text-align: right;">0.164</td>
+<td style="text-align: right;">297578.500</td>
+<td style="text-align: right;">0.744</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___fusiform</td>
+<td style="text-align: right;">-0.158</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__lateralorbitofrontal</td>
+<td style="text-align: right;">0.157</td>
+<td style="text-align: right;">170688.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___caudalmiddlefrontal</td>
+<td style="text-align: right;">-0.153</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___lateralorbitofrontal</td>
+<td style="text-align: right;">-0.149</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__precentral</td>
+<td style="text-align: right;">-0.140</td>
+<td style="text-align: right;">10.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__precentral</td>
+<td style="text-align: right;">-0.140</td>
+<td style="text-align: right;">262601.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___lingual</td>
+<td style="text-align: right;">-0.136</td>
+<td style="text-align: right;">22381.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__inferiortemporal</td>
+<td style="text-align: right;">0.135</td>
+<td style="text-align: right;">177113.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___rostralmiddlefrontal</td>
+<td style="text-align: right;">-0.129</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__bankssts</td>
+<td style="text-align: right;">0.127</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___frontalpole</td>
+<td style="text-align: right;">-0.119</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__posteriorcingulate</td>
+<td style="text-align: right;">-0.099</td>
+<td style="text-align: right;">246876.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__superiorfrontal</td>
+<td style="text-align: right;">0.094</td>
+<td style="text-align: right;">195883.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__precentral</td>
+<td style="text-align: right;">-0.088</td>
+<td style="text-align: right;">232292.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___parahippocampal</td>
+<td style="text-align: right;">0.087</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__lingual</td>
+<td style="text-align: right;">-0.063</td>
+<td style="text-align: right;">290324.500</td>
+<td style="text-align: right;">0.268</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___rostralanteriorcingulate</td>
+<td style="text-align: right;">0.063</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___cuneus</td>
+<td style="text-align: right;">-0.063</td>
+<td style="text-align: right;">132102.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__lingual</td>
+<td style="text-align: right;">-0.044</td>
+<td style="text-align: right;">3167.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__lingual</td>
+<td style="text-align: right;">-0.044</td>
+<td style="text-align: right;">284216.000</td>
+<td style="text-align: right;">0.112</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__medialorbitofrontal</td>
+<td style="text-align: right;">-0.044</td>
+<td style="text-align: right;">128854.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">ThickAvg__parsopercularis</td>
+<td style="text-align: right;">0.040</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___pericalcarine</td>
+<td style="text-align: right;">-0.031</td>
+<td style="text-align: right;">4999.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Thick___precentral</td>
+<td style="text-align: right;">0.029</td>
+<td style="text-align: right;">4019.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">GrayVol__lateraloccipital</td>
+<td style="text-align: right;">0.024</td>
+<td style="text-align: right;">232025.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">SurfArea__superiorparietal</td>
+<td style="text-align: right;">-0.009</td>
+<td style="text-align: right;">592.500</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Area__superiorparietal</td>
+<td style="text-align: right;">-0.009</td>
+<td style="text-align: right;">215625.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="references">References</h1>
+</body>
+</html>
