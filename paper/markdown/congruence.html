@@ -312,7 +312,7 @@
           /* margin-top: 20px !important;
       margin-bottom: 20px !important; */
           margin-top: 20px;
-          margin-bottom: 20px;
+          margin-bottom: 40px;
       }
 
       figure,
@@ -1081,7 +1081,6 @@
           overflow: auto;
           text-align: center;
           margin: 0 auto;
-          margin-bottom: 20px;
       }
 
       table th {
@@ -1438,6 +1437,50 @@
           content: "      (" counter(EQU_COUNT) ")";
           counter-increment: EQU_COUNT;
       }
+
+      a {
+          text-decoration: underline;
+      }
+
+      .comment,
+      .comment p,
+      .comment blockquote,
+      .comment blockquote p {
+          color: #9a9fa4;
+          font-size: 15px;
+      }
+
+      span.comment::before,
+      .comment p::before {
+          content: "[COMMENT]: ";
+          border-left: none !important;
+          margin-left: 0 !important;
+      }
+
+      tbody {
+          font-size: 12px;
+      }
+
+      table caption {
+          width: 100%;
+          text-align: left;
+      }
+
+      table {
+          margin-bottom: 40px;
+      }
+
+      /* div[id^="tbl"] {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
+      div[id^="tbl"] thead,
+      div[id^="tbl"] tbody {
+          max-width: fit-content;
+          margin: 0 auto;
+      } */
   </style>
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script
@@ -1475,13 +1518,13 @@ cortex, implying differential development regionally in the healthy
 brain characterizable by CMC. Results demonstrate relatively small
 standard deviations of CMC values across a large population, implying
 potential for these biomarkers as a reliable and easily reproducible
-method to characterize brain development. &lt;perhaps a sentence here on
-similarities and differences between males and females as part of this
-baseline analysis. Perhaps Sentence on some other stuff, like our
-ability to predict IQ or something from CMC measurement&gt;. Future work
-will investigate CMC’s potential to further characterize healthy brain
-development, as well as to characterize a variety of different
-pathological conditions.</p>
+method to characterize brain development. <span class="comment"> Perhaps
+a sentence here on similarities and differences between males and
+females as part of this baseline analysis. Perhaps Sentence on some
+other stuff, like our ability to predict IQ or something from CMC
+measurement</span>. Future work will investigate CMC’s potential to
+further characterize healthy brain development, as well as to
+characterize a variety of different pathological conditions.</p>
 <p><strong>Keywords</strong>: morphological, congruence, cortex,
 neurodevelopment, magnetic resonance imaging, healthy</p>
 <h1 id="introduction">Introduction</h1>
@@ -1550,11 +1593,11 @@ website
 class="math inline">\(r\)</span> (e.g. <span
 class="math inline">\(r\)</span> = “precuneus”) supported by the
 publicly available FreeSurfer results (see Appendix Table <a
-href="#tbl:lateral_fs">3</a> for the base FreeSurfer features), Cortical
+href="#tbl:lateral_fs">9</a> for the base FreeSurfer features), Cortical
 Morphological Congruence (CMC) measurements were computed in each
 patient.</p>
 <p>Define <span class="math inline">\(V(r)\)</span> to be the volume of
-region (ROI) <span class="math inline">\(r\)</span>, and <span
+region <span class="math inline">\(r\)</span>, and <span
 class="math inline">\(A(r)\)</span> and <span
 class="math inline">\(d(r)\)</span> to be the surface area and average
 thickness, respectively, of the ROI. Denote the left and right ROIs for
@@ -1572,7 +1615,7 @@ Then define the <em>lateral</em> CMC metrics to be:</p>
 <p>Note that <span class="math inline">\(A(r) \cdot d(r)\)</span> is the
 product of an area and thickness: we thus denote the
 <em>pseudo-volume</em>:</p>
-<p><span class="math display">\[ \hat{V}(r) = \text{CMC}_{pV} = V(r)
+<p><span class="math display">\[ \hat{V}(r) = \text{CMC}_{pV}(r) = V(r)
 \cdot d(r) \]</span></p>
 <p>Then:</p>
 <p><span id="eq:cmc_laterals"><span class="math display">\[
@@ -1595,11 +1638,11 @@ product of an area and thickness: we thus denote the
 <p><span id="eq:asym_unsigned_diff"><span class="math display">\[
 \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
 \qquad{(4)}\]</span></span></p>
-<p>which are the <em>signed</em> and <em>unsigned</em> CMC differences,
+<p>which are the <em>signed</em> and <em>unsigned CMC differences</em>,
 respectively. Also define</p>
 <p><span id="eq:asym_ratio"><span class="math display">\[ \text{CMC}_{l
 / r} = \text{CMC}_{l} / \text{CMC}_{r} \qquad{(5)}\]</span></span></p>
-<p>to be the asymmetric <em>ratio</em> CMC measure.</p>
+<p>to be the asymmetric CMC <em>ratio</em> measure.</p>
 <p>Then, for each ROI <span class="math inline">\(r\)</span>, this
 defines seven <span class="math inline">\(\text{CMC}\)</span> measures:
 <span class="math inline">\(\text{CMC}_{pV}\)</span>, <span
@@ -1626,26 +1669,374 @@ Likewise, Equation <a href="#eq:asym_ratio">5</a> defines a quantity
 which is greater/less than <span class="math inline">\(1\)</span> when
 left/right lateral <span class="math inline">\(\text{CMC}\)</span> is
 larger.</p>
-<h2 id="statistical-analyses-and-machine-learning">Statistical Analyses
-and Machine Learning</h2>
+<h2 id="statistical-and-predictive-analyses">Statistical and Predictive
+Analyses</h2>
 <p>For each of the 34 cortical regions <span
 class="math inline">\(r\)</span> available from the FreeSurfer analysis
-(see Table <a href="#tbl:lateral_cmc">2</a> below), each of the seven
-CMC features was computed for each subject.</p>
+(see Table <a href="#tbl:lateral_cmc">4</a> below), each of the seven
+CMC features was computed for each subject. Then, we run run various
+statistical and predictive analyses based on these extracted
+features.</p>
 <h3 id="descriptive-statistics">Descriptive Statistics</h3>
-<h4 id="cmc-features-by-sex">CMC Features by Sex</h4>
-<p>For each CMC feature, we compute a measure of group separation by sex
-using Cohen’s d and the Mann-Whitney U test. While all pseudo-volume
-features are significant (Figure <a href="#fig:cmc_sex_diffs">1</a>),
-otherwise, only some lateral and bilateral CMC metrics differ
-significantly based on sex (Table <a href="#tbl:sig_cmc_sex">1</a>).</p>
+<p><span class="comment">For all the stats below, we could also
+alternately estimate CIs on the Cohen’s d values via a percentile
+bootstrap, if you don’t like using Mann-Whitney and Wilcoxon signed-rank
+tests.</span></p>
+<p><strong>Sex</strong>: For each CMC feature, we compute descriptive
+measures of group separation by sex using Cohen’s d and the Mann-Whitney
+U test. We also consider each of the seven classes of CMC feature, and
+compare whether these feature classes differ in variability. This is
+done by computing the average CMC metric in each CMC class for each
+group (e.g. sex, laterality, age), and then comparing these two group
+averages with a measure of scale (standard deviation; SD, or
+interquartile range; IQR).</p>
+<p><strong>Laterality</strong>: For each ROI, it is reasonable to ask
+whether <span class="math inline">\(\text{CMC}_l\)</span> and <span
+class="math inline">\(\text{CMC}_r\)</span> differ. We also compare
+relevant CMC features in this manner.</p>
+<p><strong>Age and Sex</strong>: For each CMC feature in each CMC
+feature class, we compute the Spearman correlations with subject age
+class (HCP phenotypic data includes only broad age bins, and thus
+requires a correlation appropriate for ordinal variables).</p>
+<h3 id="predictive-analyses">Predictive Analyses</h3>
+<p>The HCP data provides a wealth of <a
+href="https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms">openly-accessible
+behavioural data</a> on participating subjects. Full details of the
+hundreds of features are <a
+href="https://wiki.humanconnectome.org/docs/HCP-YA%20Data%20Dictionary-%20Updated%20for%20the%201200%20Subject%20Release.html">available
+online</a>.</p>
+<h4 id="sec:cleaning">Synthetic Behavioural Targets</h4>
+<p>To investigate the predictive potential of CMC features, a number of
+<em>ad hoc</em> regression targets were constructed from the HCP
+behavioural data. First, behavioural data were cleaned of irrelevant,
+missing, constant, or redundant features (see sec. <a
+href="#sec:cleaning">4.3.2.1</a>).
+(<code>src/munging/hcp.py::load_hcp_phenotypic</code>):</p>
+<div class="sourceCode" id="lst:cleaning"><pre
+class="sourceCode txt"><code class="sourceCode default"><span id="lst:cleaning-1"><a href="#lst:cleaning-1" aria-hidden="true" tabindex="-1"></a>Behavioural Data initial shape</span>
+<span id="lst:cleaning-2"><a href="#lst:cleaning-2" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-3"><a href="#lst:cleaning-3" aria-hidden="true" tabindex="-1"></a>                  (1206, 582)</span>
+<span id="lst:cleaning-4"><a href="#lst:cleaning-4" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-5"><a href="#lst:cleaning-5" aria-hidden="true" tabindex="-1"></a>Remove obvious junk, book-keeping (IDs, scan counts) and</span>
+<span id="lst:cleaning-6"><a href="#lst:cleaning-6" aria-hidden="true" tabindex="-1"></a>subscale items, or features with 200 or more NaN values</span>
+<span id="lst:cleaning-7"><a href="#lst:cleaning-7" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-8"><a href="#lst:cleaning-8" aria-hidden="true" tabindex="-1"></a>                  (1206, 400)</span>
+<span id="lst:cleaning-9"><a href="#lst:cleaning-9" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-10"><a href="#lst:cleaning-10" aria-hidden="true" tabindex="-1"></a>Remove highly-correlated features (e.g. various dexterity_unadj</span>
+<span id="lst:cleaning-11"><a href="#lst:cleaning-11" aria-hidden="true" tabindex="-1"></a>and dexterity_ageadj pairs), with correlations above 0.95, and</span>
+<span id="lst:cleaning-12"><a href="#lst:cleaning-12" aria-hidden="true" tabindex="-1"></a>other features with correlations of 1.0.</span>
+<span id="lst:cleaning-13"><a href="#lst:cleaning-13" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-14"><a href="#lst:cleaning-14" aria-hidden="true" tabindex="-1"></a>                  (1206, 375)</span>
+<span id="lst:cleaning-15"><a href="#lst:cleaning-15" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-16"><a href="#lst:cleaning-16" aria-hidden="true" tabindex="-1"></a>Remove constant and string columns</span>
+<span id="lst:cleaning-17"><a href="#lst:cleaning-17" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-18"><a href="#lst:cleaning-18" aria-hidden="true" tabindex="-1"></a>                  (1206, 369)</span>
+<span id="lst:cleaning-19"><a href="#lst:cleaning-19" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-20"><a href="#lst:cleaning-20" aria-hidden="true" tabindex="-1"></a>Remove subjects with all missing values for all remaining features</span>
+<span id="lst:cleaning-21"><a href="#lst:cleaning-21" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-22"><a href="#lst:cleaning-22" aria-hidden="true" tabindex="-1"></a>                  (1113, 369)</span>
+<span id="lst:cleaning-23"><a href="#lst:cleaning-23" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-24"><a href="#lst:cleaning-24" aria-hidden="true" tabindex="-1"></a>Remove sex and age class as potential target features</span>
+<span id="lst:cleaning-25"><a href="#lst:cleaning-25" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
+<span id="lst:cleaning-26"><a href="#lst:cleaning-26" aria-hidden="true" tabindex="-1"></a>                  (1113, 367)</span></code></pre></div>
+<p>Then, the remaining behavioural features were reduced in an
+exploratory fashion.</p>
+<p>First, clustering was performed on the features using HDBSCAN [cite
+paper, cite sklearn algorithm] with the absolute value of the Pearson
+correlation as the feature distance metric. HDBSCAN does not require
+specifying the number of clusters, and allows for assignment to “noise”
+or “background” clusters, and thus acts as a natural method to notice
+patterns of correlation in the data. That is, by pooling together all
+features and ignoring the feature measurement procedures, we can find
+natural clusters of measurements without assuming that items are
+correlated simply by virtue of being members of the same behavioural
+test or measurement instrument.</p>
+<p>Second, after interpolating missing values with the feature means,
+HDBSCAN feature clusters were reduced to a single dimension via factor
+analysis [cite]. Factor analysis is a linear dimensionality reduction
+method wherein the reduced factor can be interpreted as a latent
+variable that well-describes the unreduced data, accounting for noise.
+FA was chosen here over PCA as the reduced unidimensional feature is
+more readily interpreted as a latent variable free from error variance
+(lots of good <a
+href="https://en.wikipedia.org/w/index.php?title=Factor_analysis&amp;oldid=1223130166#Exploratory_factor_analysis_(EFA)_versus_principal_components_analysis_(PCA)">proper
+links</a> re: FA and thus more suitable as a synthetic regression
+target.</p>
+<p>The resulting synthetic feature names, clusters and loadings are
+shown in <a href="#appendix-b">Appendix B</a>, as are descriptive
+statistics in Table <a href="#tbl:target_stats">1</a>. Most of the
+clusters appear to have face value. For example, the factor we have
+labeled “int_g_like” involves a number of features measuring fluid and
+crystalized intelligence, processing speed, and performance at various
+sorting and reading tasks (Appendix B Table <a
+href="#tbl:int_g_like">21</a>), and so might be interpreted broadly as a
+general intelligence factor [cite].</p>
+<div id="tbl:target_stats">
+<table>
+<caption>Table 1: Percentiles and extrema for synthetic targets. Columns
+with percentages indicate percentiles. All factors have a mean of
+approximately 0.0, and standard deviation of approximately 1.0, by
+construction.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">2.5%</th>
+<th style="text-align: right;">50%</th>
+<th style="text-align: right;">97.5%</th>
+<th style="text-align: right;">max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: right;">-4.081</td>
+<td style="text-align: right;">-1.892</td>
+<td style="text-align: right;">-0.000</td>
+<td style="text-align: right;">2.298</td>
+<td style="text-align: right;">4.118</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: right;">-0.722</td>
+<td style="text-align: right;">-0.722</td>
+<td style="text-align: right;">-0.237</td>
+<td style="text-align: right;">1.538</td>
+<td style="text-align: right;">15.583</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: right;">-3.813</td>
+<td style="text-align: right;">-1.684</td>
+<td style="text-align: right;">-0.012</td>
+<td style="text-align: right;">2.220</td>
+<td style="text-align: right;">4.465</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: right;">-3.059</td>
+<td style="text-align: right;">-1.963</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">2.108</td>
+<td style="text-align: right;">3.664</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: right;">-2.398</td>
+<td style="text-align: right;">-1.660</td>
+<td style="text-align: right;">-0.046</td>
+<td style="text-align: right;">2.232</td>
+<td style="text-align: right;">5.756</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: right;">-1.680</td>
+<td style="text-align: right;">-1.680</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">2.025</td>
+<td style="text-align: right;">4.199</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: right;">-1.491</td>
+<td style="text-align: right;">-1.364</td>
+<td style="text-align: right;">-0.097</td>
+<td style="text-align: right;">2.067</td>
+<td style="text-align: right;">4.982</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: right;">-1.861</td>
+<td style="text-align: right;">-1.455</td>
+<td style="text-align: right;">-0.113</td>
+<td style="text-align: right;">2.407</td>
+<td style="text-align: right;">4.406</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: right;">-1.734</td>
+<td style="text-align: right;">-1.377</td>
+<td style="text-align: right;">-0.288</td>
+<td style="text-align: right;">2.251</td>
+<td style="text-align: right;">5.138</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: right;">-1.888</td>
+<td style="text-align: right;">-1.431</td>
+<td style="text-align: right;">-0.165</td>
+<td style="text-align: right;">2.228</td>
+<td style="text-align: right;">6.054</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: right;">-0.861</td>
+<td style="text-align: right;">-0.787</td>
+<td style="text-align: right;">-0.759</td>
+<td style="text-align: right;">2.367</td>
+<td style="text-align: right;">4.485</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: right;">-2.190</td>
+<td style="text-align: right;">-2.180</td>
+<td style="text-align: right;">0.074</td>
+<td style="text-align: right;">1.861</td>
+<td style="text-align: right;">2.589</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: right;">-2.694</td>
+<td style="text-align: right;">-1.719</td>
+<td style="text-align: right;">-0.032</td>
+<td style="text-align: right;">2.004</td>
+<td style="text-align: right;">4.182</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: right;">-2.504</td>
+<td style="text-align: right;">-1.674</td>
+<td style="text-align: right;">-0.015</td>
+<td style="text-align: right;">2.286</td>
+<td style="text-align: right;">5.335</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: right;">-1.418</td>
+<td style="text-align: right;">-1.221</td>
+<td style="text-align: right;">-0.237</td>
+<td style="text-align: right;">2.434</td>
+<td style="text-align: right;">4.697</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="freesurfer-comparisons">FreeSurfer Comparisons</h4>
+<p>As CMC features are derived from features extracted from FreeSurfer
+(FS) cortical analyses, we compare model predictions on feature sets
+that: include only FS features, include only CMC features, and include
+both FS and CMC features.</p>
+<h4 id="automl-via-df-analyze">AutoML via <code>df-analyze</code></h4>
+<div class="comment">
+<p>A <span class="comment">get Derek to provide a little description of
+the psychological explained variance test with citation(s)</span> was
+performed. Anything interesting from the machine learning analysis? Can
+you run this again with current df-analyze? If so is there anything
+interesting in there worth including in this manuscript? If so describe
+the methods here and adapt the text immediately below. If not, cut the
+text below.</p>
+</div>
+<p>Predictive analyses were completed with <a
+href="github.com/stfxecutables/df-analyze"><code>df-analyze</code></a>.
+<code>df-analyze</code> is publicly available AutoML [cite] software,
+developed in house to automate data cleaning and preprocessing, and the
+subsequent feature selection, fitting, tuning, and validation of various
+classic machine-learning (ML) models from scikit-learn [cite], LightGBM
+[cite], and PyTorch [cite]. The software was previously applied to brain
+MRI predictive application focused on schizophrenia diagnostics (Levman
+et al., 2022).</p>
+<p>In the current work, <code>df-analyze</code> is used to compare all
+combinations of the following:</p>
+<ul>
+<li>feature sets (FS only, CMC only, and FS and CMC features)</li>
+<li>regression models (ElasticNet [cite], LightGBM [cite], and a dummy
+regressor)</li>
+<li>feature selection methods
+<ul>
+<li>no selection (all features are used for predictions)</li>
+<li>stepwise (forward stepwise selection with a linear model)</li>
+<li>embedded methods (feature importances from ElasticNet and
+LightGBM)</li>
+<li>two filter methods:
+<ol type="1">
+<li>mutual information of each univariate feature with respect to the
+synthetic target</li>
+<li>predictive accuracy of each univariate feature with respect to the
+synthetic target</li>
+</ol></li>
+</ul></li>
+<li>synthetic targets (see <a href="#appendix-b">Appendix B</a>)</li>
+</ul>
+<p>As all synthetic targets are continuous variables, we use <span
+class="math inline">\(R^2\)</span>, the coefficient of determination,
+and the mean absolute error (MAE) to assess model fit. For any
+combination of feature set, feature selection method, and target, a
+dummy regression model (which predicts either the target mean or median,
+whichever results in better cross-validated performance) is fit, with
+the intention that prediction performance of other models is considered
+meaningful only if both <span class="math inline">\(R^2 &gt; 0\)</span>
+and the the non-dummy model has a lower MAE than the dummy model.</p>
+<p>All models are hyperparameter-tuned with Optuna [cite] using a tuning
+budget of 100 trials and 5-fold cross-validation for evaluation. All
+tuning, and feature selection is done on a separate training data split
+using 50% of the available samples, with final results reported on the
+remaining 50%, to ensure there is no double-dipping or data leakage
+during these steps.</p>
+<div class="comment">
+<p>phenotypic features from the patients in our dataset from the
+proposed CMC biomarkers. The targeted phenotypic features include <span
+class="comment">insert list and basic descriptions and justification for
+their selection – input from Derek). The software selects the best
+combination of CMC biomarkers, the best combination of traditional
+FreeSurfer biomarkers, and the best combination of both, while being
+restricted by the user to limit the analysis to a fixed number of
+biomarkers double check this with Derek </span>. The number of fixed
+biomarkers to provide to machine learning is varied, and the resultant
+predictive capacity of the models, alongside which biomarkers were
+selected for, is reported. This was just a blurb of what we could/maybe
+do, any df-analyze methods providing something interesting to say is
+fine, please adapt the text. Making df-analyze publicly available
+(github.com/stfxecutables/df-analyze) facilitates reproducibility of our
+study findings, alongside our use of large public datasets of MRI
+examinations. In addition, we make available source code used for the
+analyses in this study <a
+href="https://github.com/stfxecutables/cortical_congruence">online</a>
+[TODO: get a DOI for this and make public] analytic software that helps
+demonstrate to the user how to use df-analyze and how to perform the
+statistical analyses employed in this study.</p>
+</div>
+<h1 id="results">Results</h1>
+<div class="comment">
+<p>update this section with that explained variance test that Derek did
+instead</p>
+</div>
+<div class="comment">
+<p>update this section with the results of any df-analyze experiments
+Derek completed</p>
+</div>
+<h2 id="derek-note">[DEREK] Note</h2>
+<p>There are generally no differences for group comparisons (male
+vs. female, left vs. right), and also each CMC feature “class” has 34
+ROIs, which is too much to summarize in almost any kind of plot. Tables
+are probably best?</p>
+<p>Violion / box / <a
+href="https://seaborn.pydata.org/generated/seaborn.boxenplot.html">boxen
+plots</a> will all end up looking like Figure <a
+href="#fig:cmc_sex_diffs">1</a> below. These plots are actually sorted
+so that the most significant differences are at the left, and still,
+nothing is really visually discernably as different between cases, and
+this is so with swarm, strip, scatter, violin, box, or boxen plots.</p>
+<h2 id="descriptive-statistics-1">Descriptive Statistics</h2>
+<h3 id="cmc-features-by-sex">CMC Features by Sex</h3>
+<p>While all pseudo-volume features differ significantly by sex
+(Figure <a href="#fig:cmc_sex_diffs">1</a>), otherwise, only some
+lateral and bilateral CMC metrics differ significantly based on sex,
+with the majority of these differences being such that females having
+slightly higher congruence (Table <a href="#tbl:sig_cmc_sex">2</a>).</p>
+<figure id="fig:cmc_sex_diffs">
+<img src="../../figures/HCP_d_p_plots.png"
+alt="Figure 1: CMC Feature differences by sex" />
+<figcaption aria-hidden="true">Figure 1: CMC Feature differences by
+sex</figcaption>
+</figure>
 <div id="tbl:sig_cmc_sex">
 <table>
-<caption>Table 1: CMC features with significant separation by sex. d =
-Cohen’s d, U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U. bh =
-both hemisphere, lh/rh = left/right hemisphere. Note: p-values are
-adjusted for multiple comparisons using the Holm-Bonferroni stepdown
-method</caption>
+<caption>Table 2: CMC features with significant separation by sex. d =
+Cohen’s d, with positive sign indicating larger metric values for males;
+U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U. bh = bilateral
+(both hemispheres) CMC metric; lh/rh = left/right hemisphere lateral CMC
+metric Note: p-values are adjusted for multiple comparisons using the
+Holm-Bonferroni stepdown method</caption>
 <thead>
 <tr>
 <th style="text-align: left;">ROI</th>
@@ -1694,24 +2085,137 @@ method</caption>
 </tbody>
 </table>
 </div>
-<figure id="fig:cmc_sex_diffs">
-<img src="../../figures/HCP_d_p_plots.png"
-alt="Figure 1: CMC Feature differences by sex" />
-<figcaption aria-hidden="true">Figure 1: CMC Feature differences by
-sex</figcaption>
-</figure>
-<h4 id="lateral-cmc-features">Lateral CMC Features</h4>
-<p>For each ROI, it is reasonable to ask whether <span
-class="math inline">\(\text{CMC}_l\)</span> and <span
-class="math inline">\(\text{CMC}_r\)</span> differ. We find this to be
-the case for all but the superior frontal and parsopercularis regions
-(Table <a href="#tbl:lateral_cmc">2</a>).</p>
+<p>For CMC feature classes, both pseudo-volume and left lateral CMC
+features differ significantly in the overall spread of their mean values
+(Table <a href="#tbl:sig_cmc_scale_sex">3</a>). That is, male CMC
+pseudo-volume and left lateral CMC features have more variable average
+values for males, relative to females, though this difference is quite
+small, practically, and remains significant only for pseudo-volume
+features when considering a robust measure of scale (IQR).</p>
+<div id="tbl:sig_cmc_scale_sex">
+<table style="width:100%;">
+<caption>Table 3: CMC feature classes with significant differences in
+scale, by sex. 𝜎 = standard deviation; IQR = interquartile range; d =
+Cohen’s d, with positive sign indicating larger metric values for males;
+W_x = Wilcoxon signed rank test W for measure of scale x; p_x = p-value
+for W_x; Note: p-values are adjusted for multiple comparisons using the
+Holm-Bonferroni stepdown method</caption>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 10%" />
+<col style="width: 12%" />
+<col style="width: 8%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 7%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">metric</th>
+<th style="text-align: right;">diff_𝜎</th>
+<th style="text-align: right;">diff_IQR</th>
+<th style="text-align: right;">d_𝜎</th>
+<th style="text-align: right;">d_IQR</th>
+<th style="text-align: right;">W_𝜎</th>
+<th style="text-align: right;">w_IQR</th>
+<th style="text-align: right;">p_𝜎</th>
+<th style="text-align: right;">p_IQR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">105.341</td>
+<td style="text-align: right;">123.380</td>
+<td style="text-align: right;">0.145</td>
+<td style="text-align: right;">0.130</td>
+<td style="text-align: right;">25.000</td>
+<td style="text-align: right;">42.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">Left Lateral</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.029</td>
+<td style="text-align: right;">146.000</td>
+<td style="text-align: right;">184.000</td>
+<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">0.053</td>
+</tr>
+<tr>
+<td style="text-align: left;">Asym (signed ratio)</td>
+<td style="text-align: right;">-0.003</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">-0.041</td>
+<td style="text-align: right;">0.019</td>
+<td style="text-align: right;">204.000</td>
+<td style="text-align: right;">232.000</td>
+<td style="text-align: right;">0.113</td>
+<td style="text-align: right;">0.270</td>
+</tr>
+<tr>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">-0.000</td>
+<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">204.000</td>
+<td style="text-align: right;">290.000</td>
+<td style="text-align: right;">0.113</td>
+<td style="text-align: right;">0.906</td>
+</tr>
+<tr>
+<td style="text-align: left;">Asym (signed diff)</td>
+<td style="text-align: right;">-0.005</td>
+<td style="text-align: right;">0.005</td>
+<td style="text-align: right;">-0.010</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">252.000</td>
+<td style="text-align: right;">289.000</td>
+<td style="text-align: right;">0.447</td>
+<td style="text-align: right;">0.893</td>
+</tr>
+<tr>
+<td style="text-align: left;">Asym (unsigned diff)</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">-0.002</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">287.000</td>
+<td style="text-align: right;">289.000</td>
+<td style="text-align: right;">0.866</td>
+<td style="text-align: right;">0.893</td>
+</tr>
+<tr>
+<td style="text-align: left;">Right Lateral</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">-0.004</td>
+<td style="text-align: right;">-0.002</td>
+<td style="text-align: right;">-0.007</td>
+<td style="text-align: right;">293.000</td>
+<td style="text-align: right;">267.000</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.612</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="cmc-features-by-laterality">CMC Features by Laterality</h3>
+<p>We find the lateral CMC measures differ significantly for all but the
+superior frontal and parsopercularis regions (Table <a
+href="#tbl:lateral_cmc">4</a>).</p>
 <div id="tbl:lateral_cmc">
 <table>
-<caption>Table 2: Measures of separation of lateral CMC features (left
-vs. right hemisphere). d = Cohen’s d, U = Mann-Whitney U, U (p) =
-p-value for Mann-Whitney U, W = Wilcoxon signed rank test, W (p) =
-p-value for W. Note: p-values are adjusted for multiple comparisons
+<caption>Table 4: Measures of separation of lateral CMC features (left
+vs. right hemisphere). d = Cohen’s d, with a positive sign indicating
+greater congruence in left hemishpere ROIs; U = Mann-Whitney U, U (p) =
+p-value for Mann-Whitney U; W = Wilcoxon signed rank test; W (p) =
+p-value for W; Note: p-values are adjusted for multiple comparisons
 using the Holm-Bonferroni stepdown method</caption>
 <colgroup>
 <col style="width: 33%" />
@@ -2007,107 +2511,2113 @@ using the Holm-Bonferroni stepdown method</caption>
 </tbody>
 </table>
 </div>
-<h3 id="predictive-analyses">Predictive Analyses</h3>
-<p>The HCP data provides a wealth of <a
-href="https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms">openly-accessible
-behavioural data</a> on participating subjects. Full details of the
-hundreds of features are <a
-href="https://wiki.humanconnectome.org/docs/HCP-YA%20Data%20Dictionary-%20Updated%20for%20the%201200%20Subject%20Release.html">available
-online</a>.</p>
-<h4 id="sec:cleaning">Behavioural Data Cleaning</h4>
-<p>To investigate the predictive potential of CMC features, a number of
-<em>ad hoc</em> regression targets were constructed from the HCP
-behavioural data. First, behavioural data were cleaned of irrelevant,
-missing, constant, or redundant features (see sec. <a
-href="#sec:cleaning">4.3.2.1</a>).
-(<code>src/munging/hcp.py::load_hcp_phenotypic</code>):</p>
-<div class="sourceCode" id="lst:cleaning"><pre
-class="sourceCode txt"><code class="sourceCode default"><span id="lst:cleaning-1"><a href="#lst:cleaning-1" aria-hidden="true" tabindex="-1"></a>Behavioural Data initial shape</span>
-<span id="lst:cleaning-2"><a href="#lst:cleaning-2" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-3"><a href="#lst:cleaning-3" aria-hidden="true" tabindex="-1"></a>                  (1206, 582)</span>
-<span id="lst:cleaning-4"><a href="#lst:cleaning-4" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-5"><a href="#lst:cleaning-5" aria-hidden="true" tabindex="-1"></a>Remove obvious junk, book-keeping (IDs, scan counts) and</span>
-<span id="lst:cleaning-6"><a href="#lst:cleaning-6" aria-hidden="true" tabindex="-1"></a>subscale items, or features with 200 or more NaN values</span>
-<span id="lst:cleaning-7"><a href="#lst:cleaning-7" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-8"><a href="#lst:cleaning-8" aria-hidden="true" tabindex="-1"></a>                  (1206, 400)</span>
-<span id="lst:cleaning-9"><a href="#lst:cleaning-9" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-10"><a href="#lst:cleaning-10" aria-hidden="true" tabindex="-1"></a>Remove highly-correlated features (e.g. various dexterity_unadj</span>
-<span id="lst:cleaning-11"><a href="#lst:cleaning-11" aria-hidden="true" tabindex="-1"></a>and dexterity_ageadj pairs), with correlations above 0.95, and</span>
-<span id="lst:cleaning-12"><a href="#lst:cleaning-12" aria-hidden="true" tabindex="-1"></a>other features with correlations of 1.0.</span>
-<span id="lst:cleaning-13"><a href="#lst:cleaning-13" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-14"><a href="#lst:cleaning-14" aria-hidden="true" tabindex="-1"></a>                  (1206, 375)</span>
-<span id="lst:cleaning-15"><a href="#lst:cleaning-15" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-16"><a href="#lst:cleaning-16" aria-hidden="true" tabindex="-1"></a>Remove constant and string columns</span>
-<span id="lst:cleaning-17"><a href="#lst:cleaning-17" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-18"><a href="#lst:cleaning-18" aria-hidden="true" tabindex="-1"></a>                  (1206, 369)</span>
-<span id="lst:cleaning-19"><a href="#lst:cleaning-19" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-20"><a href="#lst:cleaning-20" aria-hidden="true" tabindex="-1"></a>Remove subjects with all missing values for all remaining features</span>
-<span id="lst:cleaning-21"><a href="#lst:cleaning-21" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-22"><a href="#lst:cleaning-22" aria-hidden="true" tabindex="-1"></a>                  (1113, 369)</span>
-<span id="lst:cleaning-23"><a href="#lst:cleaning-23" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-24"><a href="#lst:cleaning-24" aria-hidden="true" tabindex="-1"></a>Remove sex and age class as potential target features</span>
-<span id="lst:cleaning-25"><a href="#lst:cleaning-25" aria-hidden="true" tabindex="-1"></a>                        ⬇︎</span>
-<span id="lst:cleaning-26"><a href="#lst:cleaning-26" aria-hidden="true" tabindex="-1"></a>                  (1113, 367)</span></code></pre></div>
-<p>Then, the remaining behavioural features were reduced in an
-exploratory fashion.</p>
-<p>First, clustering was performed on the features using HDBSCAN [cite
-paper, cite sklearn algorithm] with the absolute value of the Pearson
-correlation as the feature distance metric. HDBSCAN does not require
-specifying the number of clusters, and allows for assignment to “noise”
-or “background” clusters, and thus acts as a natural method to notice
-patterns of correlation in the data.</p>
-<p>Second, feature clusters were reduced to a single dimension via
-factor analysis.</p>
-<p>The resulting feature clusters are shown in <a
-href="#appendix-b">Appendix B</a>.</p>
-<p>A &lt;get Derek to provide a little description of the psychological
-explained variance test with citation(s)&gt; was performed. Anything
-interesting from the machine learning analysis? Can you run this again
-with current df-analyze? If so is there anything interesting in there
-worth including in this manuscript? If so describe the methods here and
-adapt the text immediately below. If not, cut the text below. Machine
-learning was completed with df-analyze, publicly available machine
-learning software (github.com/stfxecutables/df-analyze), which was
-developed in house, and has previously been applied to a brain MRI
-predictive application focused on schizophrenia diagnostics (Levman et
-al., 2022). In this application, df-analyze is tasked with predicting a
-set of phenotypic features from the patients in our dataset from the
-proposed CMC biomarkers. The targeted phenotypic features include
-&lt;insert list and basic descriptions and justification for their
-selection – input from Derek). The software selects the best combination
-of CMC biomarkers, the best combination of traditional FreeSurfer
-biomarkers, and the best combination of both, while being restricted by
-the user to limit the analysis to a fixed number of biomarkers
-<double check this with Derek>. The number of fixed biomarkers to
-provide to machine learning is varied, and the resultant predictive
-capacity of the models, alongside which biomarkers were selected for, is
-reported. This was just a blurb of what we could/maybe do, any
-df-analyze methods providing something interesting to say is fine,
-please adapt the text. Making df-analyze publicly available
-(github.com/stfxecutables/df-analyze) facilitates reproducibility of our
-study findings, alongside our use of large public datasets of MRI
-examinations. In addition, we have provided our analytic software that
-helps demonstrate to the user how to use df-analyze and how to perform
-the statistical analyses employed in this study (cite another git hub
-thing – get link from Derek).</p>
-<h1 id="results">Results</h1>
-<p>Results from the Human Connectome Project, involving computing
-CMCLateral (equation 1) for each cortical region in each patient, and
-presenting the results as box plots (or violin plots might be slightly
-better) dividing between the left and right hemispheres, as well as
-between males and females, is provided in Figure 1. Note the relatively
-small standard deviations relative to the varying average CMC values
-across cortical regions.</p>
-<p><strong><em>Please create this big ass montage for
-me</em></strong>*</p>
-<p>Figure 1. Boxplots of each brain region (with left and right
-hemispheres paired together) across all patients (n=1113) in the
-neurotypical Human Connectome Project cohort, divided by gender.</p>
-<p><update this section with that explained variance test that Derek did instead></p>
-<p><update this section with the results of any df-analyze experiments Derek completed></p>
-<p>A machine learning predictive analysis was performed and the leading
-models, their predictive accuracy, and the biomarkers on which they
-based their predictions are provided in Table 2.</p>
+<h3 id="cmc-features-by-age-and-sex">CMC Features by Age and Sex</h3>
+<p>Feature correlations are shown below in Table <a
+href="#tbl:cmc_age_spearman">5</a>.</p>
+<div id="tbl:cmc_age_spearman">
+<table>
+<caption>Table 5: Significant Spearman correlations between CMC feature
+classes, age, and sex. r = Spearman’s correlation with age, all
+subjects; r_X = male/female correlation for X=M/F, respectively; []_p =
+two-sided p-value for metric []; p_min = smallest p-value of each row;
+Note: All p-values are adjusted for multiple comparisons using the
+Holm-Bonferroni stepdown method</caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 19%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">ROI</th>
+<th style="text-align: left;">CMC class</th>
+<th style="text-align: right;">r</th>
+<th style="text-align: right;">r_p</th>
+<th style="text-align: right;">r_M</th>
+<th style="text-align: right;">r_M_p</th>
+<th style="text-align: right;">r_F</th>
+<th style="text-align: right;">r_F_p</th>
+<th style="text-align: right;">p_min</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">bh-superiorfrontal</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1795</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.1870</td>
+<td style="text-align: right;">0.0198</td>
+<td style="text-align: right;">-0.1909</td>
+<td style="text-align: right;">0.0020</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-caudalmiddlefrontal</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1778</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.1848</td>
+<td style="text-align: right;">0.0249</td>
+<td style="text-align: right;">-0.1649</td>
+<td style="text-align: right;">0.0389</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-middletemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1709</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.0418</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1476</td>
+<td style="text-align: right;">0.2224</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-isthmuscingulate</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1675</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.0902</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0870</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-middletemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1667</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.0429</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1312</td>
+<td style="text-align: right;">0.9631</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-isthmuscingulate</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1656</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.0960</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0799</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-lateralorbitofrontal</td>
+<td style="text-align: left;">Left Lateral</td>
+<td style="text-align: right;">-0.1652</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.1757</td>
+<td style="text-align: right;">0.0602</td>
+<td style="text-align: right;">-0.1382</td>
+<td style="text-align: right;">0.5262</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-lateralorbitofrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1651</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0139</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1747</td>
+<td style="text-align: right;">0.0134</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-lateralorbitofrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1635</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0313</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1924</td>
+<td style="text-align: right;">0.0016</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-superiorfrontal</td>
+<td style="text-align: left;">Right Lateral</td>
+<td style="text-align: right;">-0.1626</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">-0.1755</td>
+<td style="text-align: right;">0.0609</td>
+<td style="text-align: right;">-0.1649</td>
+<td style="text-align: right;">0.0391</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-postcentral</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1611</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: right;">-0.0072</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1353</td>
+<td style="text-align: right;">0.6805</td>
+<td style="text-align: right;">0.0001</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-inferiorparietal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1574</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: right;">-0.0610</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1198</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0001</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-postcentral</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1548</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">-0.0199</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1181</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0002</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-lateralorbitofrontal</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1542</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">-0.1637</td>
+<td style="text-align: right;">0.1791</td>
+<td style="text-align: right;">-0.1306</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0002</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-rostralmiddlefrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1534</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">0.0151</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1530</td>
+<td style="text-align: right;">0.1321</td>
+<td style="text-align: right;">0.0002</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-inferiorparietal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1531</td>
+<td style="text-align: right;">0.0003</td>
+<td style="text-align: right;">-0.0526</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1024</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0003</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-superiorfrontal</td>
+<td style="text-align: left;">Left Lateral</td>
+<td style="text-align: right;">-0.1476</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">-0.1489</td>
+<td style="text-align: right;">0.6230</td>
+<td style="text-align: right;">-0.1585</td>
+<td style="text-align: right;">0.0761</td>
+<td style="text-align: right;">0.0007</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-postcentral</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1475</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">0.0114</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1421</td>
+<td style="text-align: right;">0.3679</td>
+<td style="text-align: right;">0.0007</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-caudalmiddlefrontal</td>
+<td style="text-align: left;">Right Lateral</td>
+<td style="text-align: right;">-0.1467</td>
+<td style="text-align: right;">0.0008</td>
+<td style="text-align: right;">-0.1574</td>
+<td style="text-align: right;">0.3076</td>
+<td style="text-align: right;">-0.1451</td>
+<td style="text-align: right;">0.2807</td>
+<td style="text-align: right;">0.0008</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-lateralorbitofrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1460</td>
+<td style="text-align: right;">0.0009</td>
+<td style="text-align: right;">-0.0012</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1333</td>
+<td style="text-align: right;">0.8081</td>
+<td style="text-align: right;">0.0009</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-middletemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1455</td>
+<td style="text-align: right;">0.0010</td>
+<td style="text-align: right;">-0.0368</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1070</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0010</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-rostralmiddlefrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1438</td>
+<td style="text-align: right;">0.0013</td>
+<td style="text-align: right;">0.0228</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1489</td>
+<td style="text-align: right;">0.1977</td>
+<td style="text-align: right;">0.0013</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-inferiortemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1433</td>
+<td style="text-align: right;">0.0014</td>
+<td style="text-align: right;">-0.0436</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0866</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0014</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-caudalmiddlefrontal</td>
+<td style="text-align: left;">Left Lateral</td>
+<td style="text-align: right;">-0.1406</td>
+<td style="text-align: right;">0.0022</td>
+<td style="text-align: right;">-0.1354</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1313</td>
+<td style="text-align: right;">0.9563</td>
+<td style="text-align: right;">0.0022</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-inferiortemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1398</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: right;">-0.0372</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0951</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0025</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-fusiform</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1391</td>
+<td style="text-align: right;">0.0028</td>
+<td style="text-align: right;">-0.0177</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0807</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0028</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-fusiform</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1386</td>
+<td style="text-align: right;">0.0031</td>
+<td style="text-align: right;">-0.0473</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0780</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0031</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-superiorparietal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1354</td>
+<td style="text-align: right;">0.0051</td>
+<td style="text-align: right;">-0.0110</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1461</td>
+<td style="text-align: right;">0.2545</td>
+<td style="text-align: right;">0.0051</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-isthmuscingulate</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1347</td>
+<td style="text-align: right;">0.0058</td>
+<td style="text-align: right;">-0.0322</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0956</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0058</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-superiorfrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1343</td>
+<td style="text-align: right;">0.0061</td>
+<td style="text-align: right;">-0.0112</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0915</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0061</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-rostralmiddlefrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1334</td>
+<td style="text-align: right;">0.0070</td>
+<td style="text-align: right;">0.0071</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1302</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0070</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-superiortemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1334</td>
+<td style="text-align: right;">0.0071</td>
+<td style="text-align: right;">-0.0164</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0794</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0071</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-superiorfrontal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1317</td>
+<td style="text-align: right;">0.0092</td>
+<td style="text-align: right;">0.0030</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0904</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0092</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-superiorparietal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1304</td>
+<td style="text-align: right;">0.0113</td>
+<td style="text-align: right;">-0.0136</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1196</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0113</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-frontalpole</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1296</td>
+<td style="text-align: right;">0.0127</td>
+<td style="text-align: right;">-0.0467</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1093</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0127</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-precentral</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1292</td>
+<td style="text-align: right;">0.0135</td>
+<td style="text-align: right;">-0.1227</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1452</td>
+<td style="text-align: right;">0.2787</td>
+<td style="text-align: right;">0.0135</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-superiortemporal</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1289</td>
+<td style="text-align: right;">0.0141</td>
+<td style="text-align: right;">-0.0312</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0820</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0141</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-parstriangularis</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1287</td>
+<td style="text-align: right;">0.0146</td>
+<td style="text-align: right;">-0.0280</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0761</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0146</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-rostralmiddlefrontal</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1253</td>
+<td style="text-align: right;">0.0242</td>
+<td style="text-align: right;">-0.1491</td>
+<td style="text-align: right;">0.6121</td>
+<td style="text-align: right;">-0.0928</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0242</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-posteriorcingulate</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1248</td>
+<td style="text-align: right;">0.0259</td>
+<td style="text-align: right;">-0.0042</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1350</td>
+<td style="text-align: right;">0.6939</td>
+<td style="text-align: right;">0.0259</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-parstriangularis</td>
+<td style="text-align: left;">Right Lateral</td>
+<td style="text-align: right;">-0.1068</td>
+<td style="text-align: right;">0.2954</td>
+<td style="text-align: right;">-0.1839</td>
+<td style="text-align: right;">0.0271</td>
+<td style="text-align: right;">-0.0426</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0271</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-precentral</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1242</td>
+<td style="text-align: right;">0.0282</td>
+<td style="text-align: right;">0.0236</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0647</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0282</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-posteriorcingulate</td>
+<td style="text-align: left;">Left Lateral</td>
+<td style="text-align: right;">-0.1241</td>
+<td style="text-align: right;">0.0286</td>
+<td style="text-align: right;">-0.1145</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1163</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0286</td>
+</tr>
+<tr>
+<td style="text-align: left;">lh-parsopercularis</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1238</td>
+<td style="text-align: right;">0.0300</td>
+<td style="text-align: right;">-0.0737</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0705</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0300</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-precuneus</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1237</td>
+<td style="text-align: right;">0.0304</td>
+<td style="text-align: right;">-0.0031</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1123</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0304</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-parstriangularis</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1226</td>
+<td style="text-align: right;">0.0357</td>
+<td style="text-align: right;">-0.0316</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0848</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0357</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-frontalpole</td>
+<td style="text-align: left;">Bilateral</td>
+<td style="text-align: right;">-0.1223</td>
+<td style="text-align: right;">0.0370</td>
+<td style="text-align: right;">-0.0943</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.1600</td>
+<td style="text-align: right;">0.0655</td>
+<td style="text-align: right;">0.0370</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-frontalpole</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1223</td>
+<td style="text-align: right;">0.0373</td>
+<td style="text-align: right;">-0.0728</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0873</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0373</td>
+</tr>
+<tr>
+<td style="text-align: left;">bh-parsopercularis</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1223</td>
+<td style="text-align: right;">0.0373</td>
+<td style="text-align: right;">-0.0648</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0699</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0373</td>
+</tr>
+<tr>
+<td style="text-align: left;">rh-precuneus</td>
+<td style="text-align: left;">Pseudo-volume</td>
+<td style="text-align: right;">-0.1214</td>
+<td style="text-align: right;">0.0423</td>
+<td style="text-align: right;">-0.0022</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">-0.0939</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0423</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="predictive-analyses-1">Predictive Analyses</h2>
+<p>A breakdown of the proportion of models exceeding dummy regressor
+performance, for each group of target and feature sets, is presented
+below in Table <a href="#tbl:cmc_p_target_predictive">6</a> and Table <a
+href="#tbl:cmc_p_predictive">7</a>. More detailed breakdowns by model
+are included in <a href="#appendix-c">Appendix C</a>, in Table <a
+href="#tbl:cmc_model_p_predictive">25</a>. Overall, the “int_g_like”,
+“language_perf”, “emotion_rt”, and “gambling_rt” synthetic targets were
+most consistently predictable across the majority of runs.</p>
+<div id="tbl:cmc_p_target_predictive">
+<table>
+<caption>Table 6: Proportion of model runs where predictions exceed
+dummy performance. exceeds_dummy = proportion of runs with performance
+exceeding dummy models;</caption>
+<thead>
+<tr>
+<th style="text-align: left;">target</th>
+<th style="text-align: right;">exceeds_dummy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: right;">0.983</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: right;">0.650</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: right;">0.517</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: right;">0.417</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: right;">0.367</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: right;">0.125</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: right;">0.083</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: right;">0.033</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tbl:cmc_p_predictive">
+<table>
+<caption>Table 7: Performance of models on runs exceeding dummy model
+performance. feats = feature set; exceeds_dummy = proportion of runs
+with performance exceeding dummy models; For target definitions, see <a
+href="#appendix-b">Appendix B</a>.</caption>
+<thead>
+<tr>
+<th style="text-align: left;">target</th>
+<th style="text-align: left;">feats</th>
+<th style="text-align: right;">exceeds_dummy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.417</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.583</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.583</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.083</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.417</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.917</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.583</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.083</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.583</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.250</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: right;">0.250</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: right;">0.083</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The observed predictive performances on the final holdout set are
+presented in Table <a href="#tbl:cmc_p_model_predictive">8</a>. For the
+“int_g_like” and “language_perf” synthetic target features, the holdout
+coefficient of determination consistently exceeded 0.1, and, in many
+cases, for completely linear models (ElasticNet). If we interpret the
+<span class="math inline">\(R^2\)</span> value then as the proportion of
+explained variance [cite], then this suggests either FS or CMC features
+(or both) explain over 10% of the variance in these two synthetic
+targets.</p>
+<p>[<strong>FOR DISCUSSION</strong>] All synthetic targets that are
+best-predicted are “int_g_like”, “language_perf” (performance on
+language tasks, e.g. verbal intelligence), “wm_perf” (performance on
+working memory tasks, often considered part of intelligence), and, maybe
+weakly, p_matrics, which is performance on Raven’s progressive matrices,
+often considered one of the simplest, cleanest correlates of the general
+intelligence factor <em>g</em>. Granted, in almost all cases, just using
+FS features will better predict these synthetic targets than CMC along,
+or FS+CMC both, which strongly suggests CMC features are poor
+transformations of FS features. Nevertheless, this does suggest that
+these intelligence-related aspects are most predictable from static
+morphology, as measured by FreeSurfer.</p>
+<div id="tbl:cmc_p_model_predictive">
+<table>
+<caption>Table 8: Performance of models exceeding dummy model
+performance. FS = FreeSurfer features; CMC = CMC features; FS+CMC = both
+FS and CMC features used; wrap = forward stepwise feature selection with
+a linear model; assoc = feature selection by univariate association
+(mutual information); pred = feature selection by (linear) univariate
+prediction performance (accuracy); none = no feature selection (all
+features used in model) lgbm = LightGBM regressor; elastic = ElasticNet;
+r2 = coefficient of determination; mae = mean absolute error; mae+ =
+improvement in MAE relative to dummy model MAE;</caption>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 13%" />
+<col style="width: 20%" />
+<col style="width: 13%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">target</th>
+<th style="text-align: left;">feats</th>
+<th style="text-align: left;">selection</th>
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">r2</th>
+<th style="text-align: right;">mae</th>
+<th style="text-align: right;">mae+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.144</td>
+<td style="text-align: right;">0.184</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.143</td>
+<td style="text-align: right;">0.184</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.143</td>
+<td style="text-align: right;">0.184</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.141</td>
+<td style="text-align: right;">0.184</td>
+<td style="text-align: right;">0.018</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.141</td>
+<td style="text-align: right;">0.189</td>
+<td style="text-align: right;">0.013</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.132</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.127</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.116</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.009</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.106</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.104</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.104</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.101</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.009</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.098</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.097</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.095</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.094</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.093</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.093</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.087</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.085</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.005</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.079</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.077</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.076</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.076</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.007</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.008</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.072</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.071</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.071</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.068</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.065</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.057</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.056</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.049</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.048</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.048</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.047</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.046</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.044</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.044</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.043</td>
+<td style="text-align: right;">0.199</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.042</td>
+<td style="text-align: right;">0.199</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.042</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.041</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.037</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.036</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.005</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.036</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.035</td>
+<td style="text-align: right;">0.235</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.035</td>
+<td style="text-align: right;">0.235</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.234</td>
+<td style="text-align: right;">0.004</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.031</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">0.235</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.027</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.027</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.025</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.025</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.024</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.024</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.023</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.023</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">0.006</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.019</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.199</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.238</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.014</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.003</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.014</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: right;">0.236</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: right;">0.238</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.011</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.011</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.205</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">0.002</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.205</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.166</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.005</td>
+<td style="text-align: right;">0.205</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.165</td>
+<td style="text-align: right;">0.001</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">wrap</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.166</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h1 id="discussion">Discussion</h1>
 <p>The human brain’s regional cortical development proceeds with a
 variety of underlying factors maturing in tandem with one another.
@@ -2294,7 +4804,7 @@ co-author.</p>
 <h1 id="sec:appendix_a">Appendix A</h1>
 <div id="tbl:lateral_fs">
 <table>
-<caption>Table 3: Measures of Separation of base FreeSurfer Features
+<caption>Table 9: Measures of Separation of base FreeSurfer Features
 (left vs. right hemisphere). d = Cohen’s d, W = Wilcoxon signed rank
 test, W (p) = p-value for W. Note: p-values were adjusted for multiple
 comparisons using the Holm-Bonferroni stepdown method</caption>
@@ -3333,12 +5843,16 @@ comparisons using the Holm-Bonferroni stepdown method</caption>
 <h1 id="appendix-b">Appendix B</h1>
 <p>In the tables below, names follow HCP data naming conventions, unless
 otherwise indicated. The right column label indicates the name given to
-the single-factor synthetic target.</p>
+the single-factor synthetic target, and the right column values are the
+factor loadings. Factor loadings are the Pearson correlation between the
+original, unreduced variable (e.g. “gambling_task_perc_larger”, below)
+and the final linear factor reduction (e.g. “gambling_perf”, directly
+below).</p>
 <p>_perf = test performance, i.e. test score _rt = reaction time,
 i.e. reaction times on a test wm = working memory</p>
 <div id="tbl:gambling_perf">
 <table>
-<caption>Table 4: Synthetic target <code>gambling_perf</code> factor
+<caption>Table 10: Synthetic target <code>gambling_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3364,7 +5878,7 @@ loadings.</caption>
 </div>
 <div id="tbl:emotion_perf">
 <table>
-<caption>Table 5: Synthetic target <code>emotion_perf</code> factor
+<caption>Table 11: Synthetic target <code>emotion_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3390,7 +5904,7 @@ loadings.</caption>
 </div>
 <div id="tbl:language_rt">
 <table>
-<caption>Table 6: Synthetic target <code>language_rt</code> factor
+<caption>Table 12: Synthetic target <code>language_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3416,7 +5930,7 @@ loadings.</caption>
 </div>
 <div id="tbl:relational_rt">
 <table>
-<caption>Table 7: Synthetic target <code>relational_rt</code> factor
+<caption>Table 13: Synthetic target <code>relational_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3442,7 +5956,7 @@ loadings.</caption>
 </div>
 <div id="tbl:emotion_rt">
 <table>
-<caption>Table 8: Synthetic target <code>emotion_rt</code> factor
+<caption>Table 14: Synthetic target <code>emotion_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3468,7 +5982,7 @@ loadings.</caption>
 </div>
 <div id="tbl:language_perf">
 <table>
-<caption>Table 9: Synthetic target <code>language_perf</code> factor
+<caption>Table 15: Synthetic target <code>language_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3495,7 +6009,7 @@ style="text-align: left;">language_task_story_avg_difficulty_level</td>
 </div>
 <div id="tbl:p_matrices">
 <table>
-<caption>Table 10: Synthetic target <code>p_matrices</code> factor
+<caption>Table 16: Synthetic target <code>p_matrices</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3521,7 +6035,7 @@ loadings.</caption>
 </div>
 <div id="tbl:social_rt">
 <table>
-<caption>Table 11: Synthetic target <code>social_rt</code> factor
+<caption>Table 17: Synthetic target <code>social_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3551,7 +6065,7 @@ loadings.</caption>
 </div>
 <div id="tbl:psqi_latent">
 <table>
-<caption>Table 12: Synthetic target <code>psqi_latent</code> factor
+<caption>Table 18: Synthetic target <code>psqi_latent</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3585,7 +6099,7 @@ loadings.</caption>
 </div>
 <div id="tbl:gambling_rt">
 <table>
-<caption>Table 13: Synthetic target <code>gambling_rt</code> factor
+<caption>Table 19: Synthetic target <code>gambling_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3625,7 +6139,7 @@ style="text-align: left;">gambling_task_punish_median_rt_smaller</td>
 </div>
 <div id="tbl:social_random_perf">
 <table>
-<caption>Table 14: Synthetic target <code>social_random_perf</code>
+<caption>Table 20: Synthetic target <code>social_random_perf</code>
 factor loadings.</caption>
 <thead>
 <tr>
@@ -3675,7 +6189,7 @@ factor loadings.</caption>
 </div>
 <div id="tbl:int_g_like">
 <table>
-<caption>Table 15: Synthetic target <code>int_g_like</code> factor
+<caption>Table 21: Synthetic target <code>int_g_like</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3733,7 +6247,7 @@ loadings.</caption>
 </div>
 <div id="tbl:neg_emotionality">
 <table>
-<caption>Table 16: Synthetic target <code>neg_emotionality</code> factor
+<caption>Table 22: Synthetic target <code>neg_emotionality</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3823,7 +6337,7 @@ loadings.</caption>
 </div>
 <div id="tbl:wm_rt">
 <table>
-<caption>Table 17: Synthetic target <code>wm_rt</code> factor
+<caption>Table 23: Synthetic target <code>wm_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -3929,7 +6443,7 @@ loadings.</caption>
 </div>
 <div id="tbl:wm_perf">
 <table>
-<caption>Table 18: Synthetic target <code>wm_perf</code> factor
+<caption>Table 24: Synthetic target <code>wm_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -4037,6 +6551,507 @@ loadings.</caption>
 <tr>
 <td style="text-align: left;">wm_task_2bk_place_acc_target</td>
 <td style="text-align: right;">-0.4516</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="appendix-c">Appendix C</h1>
+<p>Proportion of HCP runs exceeding dummy performance, by target,
+feature set, and model.</p>
+<div id="tbl:cmc_model_p_predictive">
+<table>
+<caption>Table 25: Proportion of model runs that exceed dummy
+performance. feats = feature set; model = predictive model;
+exceeds_dummy = proportion of runs with performance exceeding dummy
+models;</caption>
+<thead>
+<tr>
+<th style="text-align: left;">target</th>
+<th style="text-align: left;">feats</th>
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">exceeds_dummy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.833</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.833</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.833</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.833</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.833</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.167</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_random_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">social_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">relational_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_perf</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_rt</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_perf</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">FS+CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">psqi_latent</td>
+<td style="text-align: left;">FS</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td style="text-align: left;">neg_emotionality</td>
+<td style="text-align: left;">CMC</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 </tbody>
 </table>

@@ -487,7 +487,7 @@ def load_HCP_CMC_table() -> DataFrame:
     return df
 
 
-# @MEMORY.cache
+@MEMORY.cache
 def load_HCP_complete(
     *,
     focus: PhenotypicFocus = PhenotypicFocus.Reduced,

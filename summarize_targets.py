@@ -40,10 +40,12 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame, Index, Series
-from scipy.stats import mannwhitneyu, wilcoxon
+from scipy.stats import mannwhitneyu, spearmanr, wilcoxon
 from statsmodels.stats.multitest import multipletests
 from tqdm import tqdm
 from typing_extensions import Literal
+
+from src.munging.hcp import PhenotypicFocus, load_HCP_complete
 
 DATA = ROOT / "data/complete_tables"
 
@@ -119,15 +121,12 @@ def target_hists() -> None:
     plt.show()
 
 
-def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame]:
+def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame, DataFrame]:
     sex = df.filter(regex="DEMO(:?__FEAT)?__sex").map(
         lambda x: "M" if x in [1, "M"] else "F" if x in [0, "F"] else "NA"
     )
+    age = df.filter(regex="DEMO(:?__FEAT)?__age").rename(columns=lambda s: "age")
     sex.columns = ["sex"]
-    ix_male = (sex == "M").values.ravel()
-    ix_female = (sex == "F").values.ravel()
-    n_male = ix_male.sum()
-    n_female = ix_female.sum()
     pvs = df.filter(regex="pseudoVolume").columns.tolist()
     asym = df.filter(regex="CMC__FEAT__asym__").columns.tolist()
     asym_div = df.filter(regex="CMC__FEAT__asym_div").columns.tolist()
@@ -157,13 +156,13 @@ def get_hemi_data(df: DataFrame) -> tuple[dict[str, DataFrame], DataFrame]:
         "Asym (signed ratio) CMC Feature": asym_div,
         "Pseudo-volume CMC Feature": pvs,
     }
-    return datas, sex
+    return datas, sex, age
 
 
 def hcp_boxplots() -> None:
     matplotlib.use("QtAgg")
     df = pd.read_parquet(SINGLE_TABLES["HCP"])
-    datas, sex = get_hemi_data(df)
+    datas, sex, age = get_hemi_data(df)
 
     ax: Axes
     fig, axes = plt.subplots(ncols=1, nrows=len(datas), sharex=False, sharey=False)
@@ -223,11 +222,7 @@ def hcp_boxplots() -> None:
 def hcp_d_p_plots() -> None:
     matplotlib.use("QtAgg")
     df = pd.read_parquet(SINGLE_TABLES["HCP"])
-    datas, sex = get_hemi_data(df)
-    ix_male = (sex == "M").values.ravel()
-    ix_female = (sex == "F").values.ravel()
-    n_male = ix_male.sum()
-    n_female = ix_female.sum()
+    datas, sex, age = get_hemi_data(df)
 
     ax: Axes
     fig, axes = plt.subplots(ncols=1, nrows=len(datas), sharex=False, sharey=False)
@@ -300,7 +295,7 @@ def figure1() -> None:
         if dsname != "HCP":
             continue
         df = pd.read_parquet(path)
-        datas, sex = get_hemi_data(df)
+        datas, sex, age = get_hemi_data(df)
         ix_male = (sex == "M").values.ravel()
         ix_female = (sex == "F").values.ravel()
         n_male, n_female = ix_male.sum(), ix_female.sum()
@@ -380,10 +375,7 @@ def lateral_tables() -> None:
         if dsname != "HCP":
             continue
         df = pd.read_parquet(path)
-        datas, sex = get_hemi_data(df)
-        ix_male = (sex == "M").values.ravel()
-        ix_female = (sex == "F").values.ravel()
-        n_male, n_female = ix_male.sum(), ix_female.sum()
+        datas = get_hemi_data(df)[0]
 
         lh = datas["Left Lateral CMC Feature"]
         rh = datas["Right Lateral CMC Feature"]
@@ -391,23 +383,52 @@ def lateral_tables() -> None:
         sd_pooled = pd.concat([lh, rh], axis=0).std(ddof=1)
         cohen_ds = (lh.mean() - rh.mean()) / sd_pooled
 
-        us, ps = mannwhitneyu(x=lh, y=rh, axis=0, nan_policy="omit")
-        ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+        lh_sd, rh_sd = lh.std(ddof=1), rh.std(ddof=1)
+        lh_iqr = lh.quantile([0.25, 0.75]).T.diff(axis=1).iloc[:, 1].abs()
+        rh_iqr = rh.quantile([0.25, 0.75]).T.diff(axis=1).iloc[:, 1].abs()
+
+        sd_diff = lh_sd.mean() - rh_sd.mean()
+        iqr_diff = lh_iqr.mean() - rh_iqr.mean()
+
+        sd_sd_pooled = pd.concat([lh_sd, rh_sd], axis=0, ignore_index=True).std(ddof=1)
+        iqr_sd_pooled = pd.concat([lh_iqr, rh_iqr], axis=0, ignore_index=True).std(ddof=1)
+
+        d_sd = sd_diff / sd_sd_pooled
+        d_iqr = iqr_diff / iqr_sd_pooled
+
+        # us, ps = mannwhitneyu(x=lh, y=rh, axis=0, nan_policy="omit")
+        # ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+
+        # us_iqr, ps_iqr = mannwhitneyu(x=lh_iqr, y=rh_iqr, axis=0, nan_policy="omit")
+        # ps_iqr = multipletests(ps_iqr, alpha=0.05, method="holm")[1]
+        # us_sd, ps_sd = mannwhitneyu(x=lh_sd, y=rh_sd, axis=0, nan_policy="omit")
+        # ps_sd = multipletests(ps_sd, alpha=0.05, method="holm")[1]
 
         ws, wps = wilcoxon(x=lh, y=rh, axis=0)
         wps_corrected = multipletests(wps, alpha=0.05, method="holm")[1]
+        ws_sd, wps_sd = wilcoxon(x=lh_sd, y=rh_sd, axis=0)
+        wps_sd = multipletests(wps_sd, alpha=0.05, method="holm")[1]
+        ws_iqr, wps_iqr = wilcoxon(x=lh_iqr, y=rh_iqr, axis=0)
+        wps_iqr = multipletests(wps_iqr, alpha=0.05, method="holm")[1]
+
         df_lat = (
             DataFrame(
                 {
                     "d": cohen_ds,
-                    "U": us,
-                    "U (p)": ps_corrected,
+                    "d_𝜎": d_sd,
+                    "d_IQR": d_iqr,
+                    # "U": us,
                     "W": ws,
-                    "W (p)": wps_corrected,
+                    "W_𝜎": ws_sd,
+                    "W_IQR": ws_iqr,
+                    # "U (p)": ps_corrected,
+                    "p": wps_corrected,
+                    "p_𝜎": wps_sd,
+                    "p_IQR": wps_iqr,
                 },
                 index=cohen_ds.index,
             )
-            .sort_values(by=["U (p)", "W (p)"], ascending=True)
+            .sort_values(by=["p", "p_𝜎", "p_IQR"], ascending=True)
             .rename(index=lambda s: s.replace("CMC__FEAT__cmc__rh-", ""))
         )
         df_lat.index = Index(name="ROI", data=df_lat.index)
@@ -483,16 +504,99 @@ def tables() -> None:
         if dsname != "HCP":
             continue
         df = pd.read_parquet(path)
-        datas, sex = get_hemi_data(df)
+        datas, sex, age = get_hemi_data(df)
+        df_sds = []
+        df_ages_all = []
 
         for k, (label, data) in enumerate(datas.items()):
             dfs = pd.concat([data, sex], axis=1)
-            dfm = dfs[dfs["sex"] == "M"].drop(columns="sex")
-            dff = dfs[dfs["sex"] == "F"].drop(columns="sex")
+            ix_m, ix_f = dfs["sex"] == "M", dfs["sex"] == "F"
+            dfm = dfs[ix_m].drop(columns="sex")
+            dff = dfs[ix_f].drop(columns="sex")
+            age_m, age_f = age[ix_m], age[ix_f]
             sd_pooled = data.std(ddof=1)
             cohen_ds = (dfm.mean() - dff.mean()) / sd_pooled
             us, ps = mannwhitneyu(x=dfm, y=dff, axis=0, nan_policy="omit")
             ps_corrected = multipletests(ps, alpha=0.05, method="holm")[1]
+
+            dfm_sd, dff_sd = dfm.std(ddof=1), dff.std(ddof=1)
+            dfm_iqr = dfm.quantile([0.25, 0.75]).T.diff(axis=1).iloc[:, 1].abs()
+            dff_iqr = dff.quantile([0.25, 0.75]).T.diff(axis=1).iloc[:, 1].abs()
+
+            w, wp = wilcoxon(x=dfm_sd, y=dff_sd)  # are sds different?
+            w_iqr, wp_iqr = wilcoxon(x=dfm_iqr, y=dff_iqr)  # are IQRs different?
+            wp = multipletests(wp, alpha=0.05, method="holm")[1]
+            wp_iqr = multipletests(wp_iqr, alpha=0.05, method="holm")[1]
+
+            sd_diff = dfm_sd.mean() - dff_sd.mean()
+            iqr_diff = dfm_iqr.mean() - dff_iqr.mean()
+
+            sd_sd_pooled = pd.concat([dfm_sd, dff_sd], axis=0, ignore_index=True).std(
+                ddof=1
+            )
+            iqr_sd_pooled = pd.concat([dfm_iqr, dff_iqr], axis=0, ignore_index=True).std(
+                ddof=1
+            )
+            df_ages = []
+            for col in dfm.columns:
+                r, p = spearmanr(dfs[col], age, nan_policy="omit")
+                r_m, p_m = spearmanr(dfm[col], age_m, nan_policy="omit")
+                r_f, p_f = spearmanr(dff[col], age_f, nan_policy="omit")
+                shortcol = re.sub(r".*__", "", col)
+                df_ages.append(
+                    DataFrame(
+                        {
+                            "ROI": shortcol,
+                            "CMC class": label.replace(" CMC Feature", ""),
+                            "r": r,
+                            "r_p": p,
+                            "r_M": r_m,
+                            "r_M_p": p_m,
+                            "r_F": r_f,
+                            "r_F_p": p_f,
+                        },
+                        index=Series(name="ROI", data=[shortcol]),
+                    )
+                )
+            df_age = pd.concat(df_ages, axis=0)
+            p_cols = df_age.filter(regex=".*_p").columns.tolist()
+            # for col in p_cols:
+            #     df_age[col] = multipletests(df_age[col], alpha=0.05, method="holm")[1]
+
+            df_age["p_min"] = df_age[p_cols].min(axis=1)
+            df_ages_all.append(df_age)
+            has_sigs = (df_age["p_min"] < 0.05).any()
+            if has_sigs:
+                print(
+                    df_age.sort_values(by=["p_min"], ascending=True)
+                    .round(4)
+                    .to_markdown(floatfmt="0.4f", index=False)
+                )
+            else:
+                print(f"No significant age correlations for {label}")
+
+            d_sd = sd_diff / sd_sd_pooled
+            d_iqr = iqr_diff / iqr_sd_pooled
+
+            df_sd = DataFrame(
+                {
+                    "CMC class": label.replace(" CMC Feature", ""),
+                    "d_𝜎": d_sd,
+                    "d_IQR": d_iqr,
+                    "w_𝜎": w,
+                    "w_IQR": w_iqr,
+                    "p_𝜎": wp,
+                    "p_IQR": wp_iqr,
+                },
+                index=[label],
+            )
+            df_sds.append(df_sd)
+            if wp < 0.05:
+                print(f"No significant separation by SD for {label}s by Sex.")
+            else:
+                print(f"Significant separation by SD for {label}s by Sex:")
+                print(df_sd)
+            continue
 
             df_lr = (
                 DataFrame(
@@ -525,11 +629,51 @@ def tables() -> None:
             print(f"Saved {label}s separation table to {csv}")
             print(f"Saved {label}s separation table to {pqt}")
 
+        df_sd = pd.concat(df_sds, axis=0)
+        print(
+            df_sd.sort_values(by=["p_𝜎", "p_IQR"], ascending=True).to_markdown(
+                index=False, floatfmt="0.3f"
+            )
+        )
+
+        df_age = pd.concat(df_ages_all, axis=0, ignore_index=True)
+        p_cols = df_age.filter(regex=".*_p").columns.tolist()
+        n, p = df_age[p_cols].shape
+        pvals = df_age[p_cols].copy().values.ravel()
+        pvals = multipletests(pvals, alpha=0.05, method="holm")[1].reshape(n, p)
+        df_age.loc[:, p_cols] = pvals
+        df_age["p_min"] = df_age[p_cols].min(axis=1)
+        print(
+            df_age.sort_values(by=["p_min"], ascending=True).to_markdown(
+                index=False, floatfmt="0.4f"
+            )
+        )
+        w, p = wilcoxon(x=df_age["r_M"], y=df_age["r_F"])
+        print("Do CMC-age corelations differ significantly by sex?")
+        print(f"W={w}, p={p}")
+
+
+def hcp_target_stats() -> None:
+    matplotlib.use("QtAgg")
+    df = load_HCP_complete(
+        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+    )
+    df = df.filter(regex="TARGET").rename(
+        columns=lambda s: s.replace("TARGET__REG__", "")
+    )
+    df.hist()
+    plt.show()
+    stats = df.describe(percentiles=[0.025, 0.25, 0.75, 0.975]).T.drop(columns=["count"])
+
+    print(stats.round(3).to_markdown(floatfmt="0.3f"))
+
 
 if __name__ == "__main__":
     # target_hists()
-    figure1()
-    hcp_boxplots()
-    hcp_d_p_plots()
+    # figure1()
+    # hcp_boxplots()
+    # hcp_d_p_plots()
+    # lateral_tables()
     tables()
-    fs_tables()
+    # fs_tables()
+    # hcp_target_stats()
