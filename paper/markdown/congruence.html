@@ -1593,9 +1593,9 @@ website
 class="math inline">\(r\)</span> (e.g. <span
 class="math inline">\(r\)</span> = “precuneus”) supported by the
 publicly available FreeSurfer results (see Appendix Table <a
-href="#tbl:lateral_fs">9</a> for the base FreeSurfer features), Cortical
-Morphological Congruence (CMC) measurements were computed in each
-patient.</p>
+href="#tbl:lateral_fs">10</a> for the base FreeSurfer features),
+Cortical Morphological Congruence (CMC) measurements were computed in
+each patient.</p>
 <p>Define <span class="math inline">\(V(r)\)</span> to be the volume of
 region <span class="math inline">\(r\)</span>, and <span
 class="math inline">\(A(r)\)</span> and <span
@@ -1758,10 +1758,9 @@ method wherein the reduced factor can be interpreted as a latent
 variable that well-describes the unreduced data, accounting for noise.
 FA was chosen here over PCA as the reduced unidimensional feature is
 more readily interpreted as a latent variable free from error variance
-(lots of good <a
-href="https://en.wikipedia.org/w/index.php?title=Factor_analysis&amp;oldid=1223130166#Exploratory_factor_analysis_(EFA)_versus_principal_components_analysis_(PCA)">proper
-links</a> re: FA and thus more suitable as a synthetic regression
-target.</p>
+[cite some good links <a
+href="https://en.wikipedia.org/w/index.php?title=Factor_analysis&amp;oldid=1223130166#Exploratory_factor_analysis_(EFA)_versus_principal_components_analysis_(PCA)">here</a>
+re: FA] and thus more suitable as a synthetic regression target.</p>
 <p>The resulting synthetic feature names, clusters and loadings are
 shown in <a href="#appendix-b">Appendix B</a>, as are descriptive
 statistics in Table <a href="#tbl:target_stats">1</a>. Most of the
@@ -1769,7 +1768,7 @@ clusters appear to have face value. For example, the factor we have
 labeled “int_g_like” involves a number of features measuring fluid and
 crystalized intelligence, processing speed, and performance at various
 sorting and reading tasks (Appendix B Table <a
-href="#tbl:int_g_like">21</a>), and so might be interpreted broadly as a
+href="#tbl:int_g_like">22</a>), and so might be interpreted broadly as a
 general intelligence factor [cite].</p>
 <div id="tbl:target_stats">
 <table>
@@ -3101,12 +3100,13 @@ Holm-Bonferroni stepdown method</caption>
 </table>
 </div>
 <h2 id="predictive-analyses-1">Predictive Analyses</h2>
+<h3 id="predictive-performance">Predictive Performance</h3>
 <p>A breakdown of the proportion of models exceeding dummy regressor
 performance, for each group of target and feature sets, is presented
 below in Table <a href="#tbl:cmc_p_target_predictive">6</a> and Table <a
 href="#tbl:cmc_p_predictive">7</a>. More detailed breakdowns by model
 are included in <a href="#appendix-c">Appendix C</a>, in Table <a
-href="#tbl:cmc_model_p_predictive">25</a>. Overall, the “int_g_like”,
+href="#tbl:cmc_model_p_predictive">26</a>. Overall, the “int_g_like”,
 “language_perf”, “emotion_rt”, and “gambling_rt” synthetic targets were
 most consistently predictable across the majority of runs.</p>
 <div id="tbl:cmc_p_target_predictive">
@@ -3414,14 +3414,14 @@ targets.</p>
 best-predicted are “int_g_like”, “language_perf” (performance on
 language tasks, e.g. verbal intelligence), “wm_perf” (performance on
 working memory tasks, often considered part of intelligence), and, maybe
-weakly, p_matrics, which is performance on Raven’s progressive matrices,
-often considered one of the simplest, cleanest correlates of the general
-intelligence factor <em>g</em>. Granted, in almost all cases, just using
-FS features will better predict these synthetic targets than CMC along,
-or FS+CMC both, which strongly suggests CMC features are poor
-transformations of FS features. Nevertheless, this does suggest that
-these intelligence-related aspects are most predictable from static
-morphology, as measured by FreeSurfer.</p>
+weakly, “p_matrices”, which is performance on Raven’s progressive
+matrices, often considered one of the simplest, cleanest correlates of
+the general intelligence factor <em>g</em>. Granted, in almost all
+cases, just using FS features will better predict these synthetic
+targets than CMC alone, or FS+CMC both, which strongly suggests CMC
+features are poor transformations of FS features. Nevertheless, this
+does suggest that these intelligence-related aspects are most
+predictable from static morphology, as measured by FreeSurfer.</p>
 <div id="tbl:cmc_p_model_predictive">
 <table>
 <caption>Table 8: Performance of models exceeding dummy model
@@ -4618,6 +4618,314 @@ improvement in MAE relative to dummy model MAE;</caption>
 </tbody>
 </table>
 </div>
+<h3 id="selected-features">Selected Features</h3>
+<p>A number of model runs involve both FS and CMC feature sets. As
+<code>df-analyze</code> automates simple feature selection via filter,
+wrapper, and embedded methoods, it is possible to roughly examine the
+proportion of CMC features selected by some of the most predictive
+models. These are show below in Table <a
+href="#tbl:cmc_feature_select">9</a>.</p>
+<p>Note that performances are lower than in previous tables and figures,
+as the best performing models often did not use a mixed feature set, or
+were those where no feature selection was employed.</p>
+<div id="tbl:cmc_feature_select">
+<table>
+<caption>Table 9: Proportion of CMC features selected for best
+performing models; p_sel_cmc = proportion of <em>all available</em> CMC
+features selected for final model; p_sel_feat_cmc = proportion of all
+<em>selected</em> features that are CMC features;</caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 13%" />
+<col style="width: 8%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 7%" />
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">target</th>
+<th style="text-align: left;">selection</th>
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">r2</th>
+<th style="text-align: right;">mae</th>
+<th style="text-align: right;">mae+</th>
+<th style="text-align: right;">p_sel_cmc</th>
+<th style="text-align: right;">p_sel_feat_cmc</th>
+<th style="text-align: left;">cmc_win</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.009</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.072</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">wm_rt</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.019</td>
+<td style="text-align: right;">0.203</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">p_matrices</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.237</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">assoc</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.504</td>
+<td style="text-align: left;">True</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.021</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.467</td>
+<td style="text-align: right;">0.469</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.088</td>
+<td style="text-align: right;">0.455</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.056</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">0.088</td>
+<td style="text-align: right;">0.455</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.104</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.414</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.386</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">0.382</td>
+<td style="text-align: right;">0.385</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">gambling_rt</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.202</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.386</td>
+<td style="text-align: right;">0.375</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.073</td>
+<td style="text-align: right;">0.195</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">0.443</td>
+<td style="text-align: right;">0.369</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">0.192</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.443</td>
+<td style="text-align: right;">0.369</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.071</td>
+<td style="text-align: right;">0.196</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.443</td>
+<td style="text-align: right;">0.369</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">embed_lgbm</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0.193</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.022</td>
+<td style="text-align: right;">0.367</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">emotion_rt</td>
+<td style="text-align: left;">embed_linear</td>
+<td style="text-align: left;">knn</td>
+<td style="text-align: right;">0.012</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">elastic</td>
+<td style="text-align: right;">0.076</td>
+<td style="text-align: right;">0.191</td>
+<td style="text-align: right;">0.011</td>
+<td style="text-align: right;">0.331</td>
+<td style="text-align: right;">0.333</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">int_g_like</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.042</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">0.004</td>
+<td style="text-align: right;">0.331</td>
+<td style="text-align: right;">0.333</td>
+<td style="text-align: left;">False</td>
+</tr>
+<tr>
+<td style="text-align: left;">language_perf</td>
+<td style="text-align: left;">pred</td>
+<td style="text-align: left;">lgbm</td>
+<td style="text-align: right;">0.087</td>
+<td style="text-align: right;">0.197</td>
+<td style="text-align: right;">0.007</td>
+<td style="text-align: right;">0.324</td>
+<td style="text-align: right;">0.325</td>
+<td style="text-align: left;">False</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h1 id="discussion">Discussion</h1>
 <p>The human brain’s regional cortical development proceeds with a
 variety of underlying factors maturing in tandem with one another.
@@ -4804,7 +5112,7 @@ co-author.</p>
 <h1 id="sec:appendix_a">Appendix A</h1>
 <div id="tbl:lateral_fs">
 <table>
-<caption>Table 9: Measures of Separation of base FreeSurfer Features
+<caption>Table 10: Measures of Separation of base FreeSurfer Features
 (left vs. right hemisphere). d = Cohen’s d, W = Wilcoxon signed rank
 test, W (p) = p-value for W. Note: p-values were adjusted for multiple
 comparisons using the Holm-Bonferroni stepdown method</caption>
@@ -5852,7 +6160,7 @@ below).</p>
 i.e. reaction times on a test wm = working memory</p>
 <div id="tbl:gambling_perf">
 <table>
-<caption>Table 10: Synthetic target <code>gambling_perf</code> factor
+<caption>Table 11: Synthetic target <code>gambling_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -5878,7 +6186,7 @@ loadings.</caption>
 </div>
 <div id="tbl:emotion_perf">
 <table>
-<caption>Table 11: Synthetic target <code>emotion_perf</code> factor
+<caption>Table 12: Synthetic target <code>emotion_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -5904,7 +6212,7 @@ loadings.</caption>
 </div>
 <div id="tbl:language_rt">
 <table>
-<caption>Table 12: Synthetic target <code>language_rt</code> factor
+<caption>Table 13: Synthetic target <code>language_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -5930,7 +6238,7 @@ loadings.</caption>
 </div>
 <div id="tbl:relational_rt">
 <table>
-<caption>Table 13: Synthetic target <code>relational_rt</code> factor
+<caption>Table 14: Synthetic target <code>relational_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -5956,7 +6264,7 @@ loadings.</caption>
 </div>
 <div id="tbl:emotion_rt">
 <table>
-<caption>Table 14: Synthetic target <code>emotion_rt</code> factor
+<caption>Table 15: Synthetic target <code>emotion_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -5982,7 +6290,7 @@ loadings.</caption>
 </div>
 <div id="tbl:language_perf">
 <table>
-<caption>Table 15: Synthetic target <code>language_perf</code> factor
+<caption>Table 16: Synthetic target <code>language_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6009,7 +6317,7 @@ style="text-align: left;">language_task_story_avg_difficulty_level</td>
 </div>
 <div id="tbl:p_matrices">
 <table>
-<caption>Table 16: Synthetic target <code>p_matrices</code> factor
+<caption>Table 17: Synthetic target <code>p_matrices</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6035,7 +6343,7 @@ loadings.</caption>
 </div>
 <div id="tbl:social_rt">
 <table>
-<caption>Table 17: Synthetic target <code>social_rt</code> factor
+<caption>Table 18: Synthetic target <code>social_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6065,7 +6373,7 @@ loadings.</caption>
 </div>
 <div id="tbl:psqi_latent">
 <table>
-<caption>Table 18: Synthetic target <code>psqi_latent</code> factor
+<caption>Table 19: Synthetic target <code>psqi_latent</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6099,7 +6407,7 @@ loadings.</caption>
 </div>
 <div id="tbl:gambling_rt">
 <table>
-<caption>Table 19: Synthetic target <code>gambling_rt</code> factor
+<caption>Table 20: Synthetic target <code>gambling_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6139,7 +6447,7 @@ style="text-align: left;">gambling_task_punish_median_rt_smaller</td>
 </div>
 <div id="tbl:social_random_perf">
 <table>
-<caption>Table 20: Synthetic target <code>social_random_perf</code>
+<caption>Table 21: Synthetic target <code>social_random_perf</code>
 factor loadings.</caption>
 <thead>
 <tr>
@@ -6189,7 +6497,7 @@ factor loadings.</caption>
 </div>
 <div id="tbl:int_g_like">
 <table>
-<caption>Table 21: Synthetic target <code>int_g_like</code> factor
+<caption>Table 22: Synthetic target <code>int_g_like</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6247,7 +6555,7 @@ loadings.</caption>
 </div>
 <div id="tbl:neg_emotionality">
 <table>
-<caption>Table 22: Synthetic target <code>neg_emotionality</code> factor
+<caption>Table 23: Synthetic target <code>neg_emotionality</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6337,7 +6645,7 @@ loadings.</caption>
 </div>
 <div id="tbl:wm_rt">
 <table>
-<caption>Table 23: Synthetic target <code>wm_rt</code> factor
+<caption>Table 24: Synthetic target <code>wm_rt</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6443,7 +6751,7 @@ loadings.</caption>
 </div>
 <div id="tbl:wm_perf">
 <table>
-<caption>Table 24: Synthetic target <code>wm_perf</code> factor
+<caption>Table 25: Synthetic target <code>wm_perf</code> factor
 loadings.</caption>
 <thead>
 <tr>
@@ -6560,7 +6868,7 @@ loadings.</caption>
 feature set, and model.</p>
 <div id="tbl:cmc_model_p_predictive">
 <table>
-<caption>Table 25: Proportion of model runs that exceed dummy
+<caption>Table 26: Proportion of model runs that exceed dummy
 performance. feats = feature set; model = predictive model;
 exceeds_dummy = proportion of runs with performance exceeding dummy
 models;</caption>

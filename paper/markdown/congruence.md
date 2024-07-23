@@ -266,9 +266,9 @@ feature clusters were reduced to a single dimension via factor analysis
 the reduced factor can be interpreted as a latent variable that
 well-describes the unreduced data, accounting for noise. FA was chosen here
 over PCA as the reduced unidimensional feature is more readily interpreted as
-a latent variable free from error variance (lots of good [proper
-links](https://en.wikipedia.org/w/index.php?title=Factor_analysis&oldid=1223130166#Exploratory_factor_analysis_(EFA)_versus_principal_components_analysis_(PCA))
-re: FA and thus more suitable as a synthetic regression target.
+a latent variable free from error variance [cite some good links [here
+](https://en.wikipedia.org/w/index.php?title=Factor_analysis&oldid=1223130166#Exploratory_factor_analysis_(EFA)_versus_principal_components_analysis_(PCA))
+re: FA] and thus more suitable as a synthetic regression target.
 
 The resulting synthetic feature names, clusters and loadings are shown in
 [Appendix B](#appendix-b), as are descriptive statistics in
@@ -584,6 +584,8 @@ Note: All p-values are adjusted for multiple comparisons using the Holm-Bonferro
 
 ## Predictive Analyses
 
+### Predictive Performance
+
 A breakdown of the proportion of models exceeding dummy regressor
 performance, for each group of target and feature sets, is presented below in
 @Tbl:cmc_p_target_predictive and @Tbl:cmc_p_predictive. More detailed
@@ -676,11 +678,11 @@ both) explain over 10% of the variance in these two synthetic targets.
 [**FOR DISCUSSION**] All synthetic targets that are best-predicted are
 "int_g_like", "language_perf" (performance on language tasks, e.g. verbal
 intelligence), "wm_perf" (performance on working memory tasks, often
-considered part of intelligence), and, maybe weakly, p_matrics, which is
+considered part of intelligence), and, maybe weakly, "p_matrices", which is
 performance on Raven's progressive matrices, often considered one of the
 simplest, cleanest correlates of the general intelligence factor *g*.
 Granted, in almost all cases, just using FS features will better predict
-these synthetic targets than CMC along, or FS+CMC both, which strongly
+these synthetic targets than CMC alone, or FS+CMC both, which strongly
 suggests CMC features are poor transformations of FS features. Nevertheless,
 this does suggest that these intelligence-related aspects are most predictable
 from static morphology, as measured by FreeSurfer.
@@ -830,6 +832,49 @@ r2 = coefficient of determination; mae = mean absolute error;
 mae+ = improvement in MAE relative to dummy model MAE;
 {#tbl:cmc_p_model_predictive}
 
+### Selected Features
+
+A number of model runs involve both FS and CMC feature sets. As `df-analyze`
+automates simple feature selection via filter, wrapper, and embedded
+methoods, it is possible to roughly examine the proportion of CMC features
+selected by some of the most predictive models. These are show below in
+@Tbl:cmc_feature_select.
+
+Note that performances are lower than in previous tables and figures, as the best
+performing models often did not use a mixed feature set, or were those where no
+feature selection was employed.
+
+| target        | selection    | model   |    r2 |   mae |   mae+ |   p_sel_cmc |   p_sel_feat_cmc | cmc_win   |
+|:--------------|:-------------|:--------|------:|------:|-------:|------------:|-----------------:|:----------|
+| int_g_like    | assoc        | lgbm    | 0.11  | 0.193 |  0.009 |       1     |            0.504 | True      |
+| int_g_like    | assoc        | elastic | 0.072 | 0.192 |  0.01  |       1     |            0.504 | True      |
+| p_matrices    | assoc        | lgbm    | 0.015 | 0.237 |  0.002 |       1     |            0.504 | True      |
+| wm_rt         | assoc        | lgbm    | 0.016 | 0.197 |  0     |       1     |            0.504 | True      |
+| gambling_rt   | assoc        | lgbm    | 0.019 | 0.203 |  0.003 |       1     |            0.504 | True      |
+| p_matrices    | assoc        | knn     | 0.021 | 0.237 |  0.001 |       1     |            0.504 | True      |
+| emotion_rt    | assoc        | lgbm    | 0.004 | 0.193 |  0.001 |       1     |            0.504 | True      |
+| language_perf | assoc        | lgbm    | 0.089 | 0.197 |  0.007 |       1     |            0.504 | True      |
+| gambling_rt   | pred         | lgbm    | 0.021 | 0.2   |  0.006 |       0.467 |            0.469 | False     |
+| language_perf | embed_lgbm   | elastic | 0.073 | 0.201 |  0.003 |       0.088 |            0.455 | False     |
+| language_perf | embed_lgbm   | lgbm    | 0.056 | 0.201 |  0.002 |       0.088 |            0.455 | False     |
+| int_g_like    | embed_lgbm   | elastic | 0.104 | 0.192 |  0.01  |       0.08  |            0.414 | False     |
+| language_perf | embed_linear | lgbm    | 0.09  | 0.197 |  0.007 |       0.41  |            0.386 | False     |
+| emotion_rt    | pred         | lgbm    | 0.026 | 0.192 |  0.002 |       0.382 |            0.385 | False     |
+| gambling_rt   | embed_linear | lgbm    | 0.018 | 0.202 |  0.003 |       0.386 |            0.375 | False     |
+| int_g_like    | embed_linear | knn     | 0.073 | 0.195 |  0.007 |       0.443 |            0.369 | False     |
+| int_g_like    | embed_linear | elastic | 0.067 | 0.192 |  0.01  |       0.443 |            0.369 | False     |
+| int_g_like    | embed_linear | lgbm    | 0.071 | 0.196 |  0.006 |       0.443 |            0.369 | False     |
+| emotion_rt    | embed_lgbm   | elastic | 0.026 | 0.193 |  0.001 |       0.022 |            0.367 | False     |
+| emotion_rt    | embed_linear | lgbm    | 0.032 | 0.191 |  0.003 |       0.357 |            0.357 | False     |
+| emotion_rt    | embed_linear | knn     | 0.012 | 0.194 |  0     |       0.357 |            0.357 | False     |
+| int_g_like    | pred         | elastic | 0.076 | 0.191 |  0.011 |       0.331 |            0.333 | False     |
+| int_g_like    | pred         | lgbm    | 0.042 | 0.198 |  0.004 |       0.331 |            0.333 | False     |
+| language_perf | pred         | lgbm    | 0.087 | 0.197 |  0.007 |       0.324 |            0.325 | False     |
+
+: Proportion of CMC features selected for best performing models;
+p_sel_cmc = proportion of *all available* CMC features selected for final model;
+p_sel_feat_cmc = proportion of all *selected* features that are CMC features;
+{#tbl:cmc_feature_select}
 
 # Discussion
 

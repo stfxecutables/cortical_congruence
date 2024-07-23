@@ -27,6 +27,8 @@ data/QTAB/phenotypic_data/restricted/*.tsv
 drafts/methods/methods*.html
 drafts/methods/methods*.zip
 
+paper/latex/arxiv-style
+
 results
 *results
 

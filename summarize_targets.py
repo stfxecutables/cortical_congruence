@@ -433,6 +433,7 @@ def lateral_tables() -> None:
         )
         df_lat.index = Index(name="ROI", data=df_lat.index)
         print(df_lat.round(3).to_markdown(floatfmt="0.3f"))
+        print(df_lat.round(3).to_latex(float_format="%0.3f"))
         print("Table XX: Measures of Separation of Lateral CMC Features.")
         csv = TABLES / f"{dsname}_lateral_separations.csv"
         pqt = TABLES / f"{dsname}_lateral_separations.parquet"
@@ -486,6 +487,7 @@ def fs_tables() -> None:
             inplace=True,
         )
         print(df_lat.round(3).to_markdown(floatfmt="0.3f"))
+        print(df_lat.round(3).to_latex(float_format="%0.3f"))
         print("Table XX: Measures of Separation of Lateral FS Features.")
         csv = TABLES / f"{dsname}_FS_lateral_separations.csv"
         pqt = TABLES / f"{dsname}_FS_lateral_separations.parquet"
@@ -596,7 +598,6 @@ def tables() -> None:
             else:
                 print(f"Significant separation by SD for {label}s by Sex:")
                 print(df_sd)
-            continue
 
             df_lr = (
                 DataFrame(
@@ -617,6 +618,7 @@ def tables() -> None:
                 print(f"No significant separation for {label}s by Sex.")
             else:
                 print(df_lr.round(3).to_markdown(floatfmt="0.3f"))
+                print(df_lr.round(3).to_latex(float_format="%0.3f"))
                 print(f"Table XX: Measures of Separation of {label}s by Sex.")
 
             shortlabel = re.sub(
@@ -635,6 +637,11 @@ def tables() -> None:
                 index=False, floatfmt="0.3f"
             )
         )
+        print(
+            df_sd.sort_values(by=["p_𝜎", "p_IQR"], ascending=True).to_latex(
+                index=False, float_format="%0.3f"
+            )
+        )
 
         df_age = pd.concat(df_ages_all, axis=0, ignore_index=True)
         p_cols = df_age.filter(regex=".*_p").columns.tolist()
@@ -646,6 +653,11 @@ def tables() -> None:
         print(
             df_age.sort_values(by=["p_min"], ascending=True).to_markdown(
                 index=False, floatfmt="0.4f"
+            )
+        )
+        print(
+            df_age.sort_values(by=["p_min"], ascending=True).to_latex(
+                index=False, float_format="%0.4f"
             )
         )
         w, p = wilcoxon(x=df_age["r_M"], y=df_age["r_F"])
@@ -666,6 +678,7 @@ def hcp_target_stats() -> None:
     stats = df.describe(percentiles=[0.025, 0.25, 0.75, 0.975]).T.drop(columns=["count"])
 
     print(stats.round(3).to_markdown(floatfmt="0.3f"))
+    print(stats.round(3).to_latex(float_format="%0.3f"))
 
 
 if __name__ == "__main__":

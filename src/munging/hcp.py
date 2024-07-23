@@ -518,13 +518,20 @@ def load_HCP_complete(
             clusters, all_loadings, targs_reduced.columns.to_list()
         ):
             # table = cluster.data.to_markdown(index=False, floatfmt="0.4f")
-            label = str(target).replace("TARGET__REG__", "")
-            lines.append(loadings.iloc[1:].to_markdown(index=True, floatfmt="0.4f"))
-            lines.append("\n")
-            lines.append(f": Synthetic target `{label}` factor loadings.")
-            lines.append(f"{{#tbl:{label}}}")
-            lines.append("\n")
-        out.write_text("\n".join(lines))
+            label = str(target).replace("TARGET__REG__", "").replace("_", "-")
+            lines.append("\n\n\\begin{table}")
+            lines.append("\\centering")
+            lines.append(loadings.iloc[1:].to_latex(index=True, float_format="%0.4f"))
+            lines.append("\\footnotesize")
+            lines.append(
+                f"\\caption{{Synthetic target \\texttt{{{label}}} factor loadings.}}"
+            )
+            lines.append("\\normalsize")
+            lines.append(f"\\label{{tab:{label}}}")
+            lines.append("\\end{table}")
+        tables = "\n".join(lines).replace("_", "\\_")
+        out.write_text(tables)
+        print(f"Wrote Appendix B tables to {out}")
 
         others = df.drop(columns=cols, errors="ignore")
         df = pd.concat([others, targs_reduced], axis=1)
