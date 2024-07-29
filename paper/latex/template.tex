@@ -10,13 +10,17 @@
 \usepackage{amsmath}        % why is this not included by default?
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
-\usepackage{xcolor}      % colored text
-\usepackage{tikz}
+\usepackage{xcolor}         % colored text
+\usepackage{tikz}           % graphs and flowcharts
 \usepackage{cleveref}       % smart cross-referencing
 \usepackage{lipsum}         % Can be removed after putting your text content
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
+\usepackage[normalem]{ulem}  % strikethrough
+
+% below means 2 arguments, default of "cyan" for first
+\newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
 
 \usetikzlibrary{shapes.geometric, arrows}
 \tikzstyle{startstop} = [rectangle, rounded corners=2mm, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=white!30]
@@ -93,53 +97,206 @@ pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic reson
 }
 
 \begin{document}
+
+
+
+
+
 \maketitle
 
+
+\color{gray}
+
+\section{Overall Concerns}
+
+\note{}
+
+No matter how I slice up this data, I cannot find anything really good to say
+about CMC\@. The best I would be able to do is is basically a
+\href{https://xkcd.com/882/}{green jelly beans paper} (ignore tens of thousands
+of insignificant results and pick out a tiny handful of significances).
+
+Ultimately, I do not believe this is an HCP problem, but a CMC problem. CMC
+is a ratio or index variable, i.e.\ a derived variable / engineered feature
+extracted from other features, rather than a novel feature extracted from
+the FreeSurfer meshes. Ratio or index variables have a lot of problems, but
+in this case, it is worse than that, as CMC essentially takes three variables
+(surface area, volume, and average thickness) and reduces them \emph{in a
+completely unsupervised way} with a formula based on, essentially, a geometric
+intuition.
+
+Derived indices like this (e.g.\ BMI) of course contain less information than
+the base features (some subjects that were distinguishable in the
+full-dimensional space of the original features will almost always be
+expected to become indistinguishable in the reduction). They are essentially
+lossy reductions which we make only if the loss is not too large, and if that
+reduction simplifies interpretations and/or decisions in most cases. E.g.\
+provided a person is not a body-builder, or extremely short or tall, then we
+know using the BMI is strongly predictive of various health-related measures,
+and since BMI is quick to compute, non-experts can use BMI most of the time
+as a useful, rough indicator of physical health. Actually, BMI is a shape
+index just like CMC, and is arguably extremely similar, in that BMI is a
+ratio of a mass (extremely proportional to volume) to a height (squared), and
+CMC involves a ratio of a width to a volume (but then also a product of a
+surface area, making correlates more complicated, and CMC more lossy).
+
+
+
+
+This discussion of variability I think has no relevance to CMC\@. Unless a
+feature is constant, variability---or really any dsitributional information
+in isolation from information of some target---has essentially nothing to do
+with reproducibility or predictive utility. The only thing one usually
+doesn't want in a feature is extreme skew or kurtosis (i.e.\ asymmetry and/or
+thick tails), but this is only because it is common for a lot of models
+(e.g.\ linear models) to assume otherwise. But basically, for any feature
+\(x\), there is no function \(f\) (e.g.\ mean, skew, entropy) whatsoever such
+that \(f(x)\) can tell you about the value of \(x\), nor even can one define
+a function such that the relationship between \(f(x_1)\) and \(f(x_2)\) tells
+you anything about the relative quality of \(x_1\) to \(x_2\).
+
+This means that any investigation into e.g.\ the sds/means/any univariate
+metric of CMC features, but also any comparison to FreeSurfer features, is
+basically a completely meaningless activity (beyond the case where, if you
+are going to use a linear model, then you need to check if you need to apply
+e.g.\ a log, power, or other normalizing transform first). I.e.\ our signed,
+difference-based CMC asymmetry measures seem to have a highly exponential
+distribution, and seems to require a log or even power transform to even make
+their distributions visualizable relative to the rest of the CMC measures,
+and while this is important to note for anyone hoping to use such a feature
+in a linear model, this really doesn't speak to CMC metrics having any value,
+or having value relative to the FreeSurfer measurements they are based on.
+
+The only things that IMO do speak to CMC value / quality are:
+
+\begin{enumerate}
+	\item measures of association (e.g.\ correlation, mutual information)
+	\item the predictive analyses (e.g.\ utility)
+	\item explainability (e.g.\ if some CMC has some special meaning)
+\end{enumerate}
+
+However, as CMC metrics just muddle
+
+
+
+But even if we do pretend that such summaries have any relevance, the appropriate
+summaries are those that are scale-invariant, i.e.\ that characterize distribution
+shape. This would be e.g.\ skew, kurtosis, or things like the sd/mean ratio, and
+robust variants (e.g.\ IQR/median, or ).
+
+However, I looked at all of these (see table below) and really either
+
+Especially in this case
+
+less variable (unless it is constant) is irrelevant to reproducibility or the
+information value in that measurement, and in general for predictive modeling
+(e.g.\ biomarkers) variability is usually seen as good, since it tends to mean
+``information''. I.e.\ if CMC variable
+
+\color{black}
+
+
+
+
+
+
 \begin{abstract}
-A set of novel biomarkers are proposed for the extraction of regional
-cortical morphological congruence (CMC) measurements from neurological
-magnetic resonance imaging examinations. These proposed novel biomarkers
-assess a cortical region's deviation from expectation for a perfectly regular
-structure. The proposed CMC biomarkers have been applied to a large sample
-(n=1113) of neurological MRI examinations of neurotypical subjects from the
-Human Connectome Project. Results demonstrate consistent patterns of regional
-brain differences in CMC across the cortex, implying differential development
-regionally in the healthy brain characterizable by CMC\@. Results demonstrate
-relatively small standard deviations of CMC values across a large population,
-implying potential for these biomarkers as a reliable and easily reproducible
-method to characterize brain development. \textcolor{orange}{Perhaps a
-sentence here on similarities and differences between males and females as
-part of this baseline analysis. Perhaps Sentence on some other stuff, like
-our ability to predict IQ or something from CMC measurement}. Future
-work will investigate CMC's potential to further characterize healthy brain
-development, as well as to characterize a variety of different pathological
-conditions.
+We extract a number of novel cortical morphological congruence (CMC) metrics
+from various anatomical cortical regions of interest (ROIs) in neurological
+magnetic resonance imaging (MRI) examinations. These metrics quantify the
+deviation of a cortical region's volume from the volume of an idealized
+region with the same, constant average cortical thickness and constant
+cross-sectional area equal to the region's cortical surface area.
+
+We examine descriptive and predictive properties of these metrics on a large
+sample (n=1113) of healthy subjects from the Human Connectome Project (HCP).
+We find a surprising degree of consistency in CMC metrics across ROIs and
+subjects, suggesting a consistent proportionality relation between cortical
+ROI surface area, volume, and thickness. Developmental and predictive
+implications are discussed.
 \end{abstract}
+
+\note{I have altered or eliminated many uses of the term `biomarker' here, as
+the CMC features / metrics do very poorly in predictive analyses on our data.
+My feeling is that technical usage of this term is such that new features,
+measures, or metrics can, with significant work, be \emph{revealed} to be
+biomarkers, but one cannot e.g.\ `propose' a biomarke. Rather, research
+eventually confer biomarker status on some feature once a large body of work
+has established some clear, broad utility or stable nomological net. But
+unfortunately I am unable to see any clear nomological net or predictive
+utility for CMC metrics.}
+
+\note{I have replaced all instances of `patient' with `subject', as these are
+healthy individuals undergoing no treatments. `Individuals' would be fine too.}
 
 
 % keywords can be removed
 \keywords{morphological \and congruence \and cortex \and neurodevelopment \and magnetic resonance imaging \and healthy}
 
 
-\section{Introduction}
+\section{Introduction} \label{intro}
+
 Characterization of human cortical development in vivo requires medical
 imaging technology that provides tissue contrast between gray and white
 matter. Magnetic resonance imaging (MRI) is sensitive to hydrogen proton
 concentration, which is variable across tissues, thus MRI provides excellent
 soft tissue contrast, including between the gray and white matter in the
 brain \citep{duboisMRINeonatalBrain2021}. Automated methods for extracting
-biomarkers of potential interest, such as a regional cortical tissue's volume
-(mm3), surface area (mm2) or thickness (mm), have long been relied upon for
+potential biomarkers of interest, such as a regional cortical tissue's
+volume, surface area, or average thickness, have long been relied upon for
 the study of the human brain
 \citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a,mccannStructuralMagneticResonance2021}.
-However, the variability of these volume, surface area, and thickness
-measurements across a given population is known to be quite large
-\citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a},
+
+However, these volume, surface area, and thickness
+measurements are known to vary siginificantly aross individuals and populations
+\citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a}, with much of this
+variability still to be explained. The lack of deeper understanding of the sources of variability
+and relationships between these measurements may ,
 potentially contributing to known reproducibility challenges in modern
 neuroscience studies
 \citep{martinezReproducibilityBraincognitionRelationships2015,marekReproducibleBrainwideAssociation2022},
 and may be part of the reason that these techniques are generally not yet
 relied upon for clinical characterization.
+
+
+\color{orange}
+The `congruence' stuff below is IMO really weak because:
+
+	\begin{enumerate}
+		\item `congruence' really means geometric \emph{equality} rather than
+		similiarity
+
+		\item CMC values close to 1 or 0 do NOT mathematically imply any kind of
+		clear similarity or congruence to anything, unless some very large
+		assumptions are made
+
+		\begin{itemize}
+			\item these assumptions seem to hold for most, but not all cortical
+			regions, but certainly would not hold for other anatomical or
+			functional ROIs
+		\end{itemize}
+
+		\item what all CMC metrics \emph{actually} index for cortical regions is
+		essentially flattness / curvature, albeit in a very different way from
+		how \href{https://surfer.nmr.mgh.harvard.edu/fswiki/MeanCurvature}{FreeSurfer
+		does it}.
+	\end{enumerate}
+
+Thus whenever I read `congruence' I find myself first asking `congruent' to
+\emph{what}, and then I answer, `to an idealized slab- or sheet-like volume
+of uniform thickness, except actually by congruent we don't even mean
+`similar', just that the pseudoVolume approximates the actual volume closely, even though
+also actually the pseudoVolumne and actual volume can be quite close in a
+large number of cases where the region is not slab- or sheet-like at all, so
+this intepretation is only a generalization which is approximately useful for
+most typical anatomical cortical regions', i.e.\ the name induces mental anguish
+as it simply points the mind in the wrong direction for interpreting CMC values.
+
+I think something like "volumetric regularity"
+
+\color{black}
+
+
 
 Very broadly, congruence is analogous to agreement between two or more
 objects, studies, shapes, individual measurements, etc. For instance, the
@@ -169,6 +326,146 @@ congruence (CMC), which can be referred to more simply as cortical congruence
 cortical measurements, thus providing novel biomarkers which we hypothesize
 may help characterize neurodevelopment.
 
+\subsection{Cortical Morphology Metrics}
+
+\citep{winklerCorticalThicknessGrey2010}
+
+\begin{quotation}
+Although the human brain is gyrencephalic, with no absolute
+linear relationship between brain volume and surface area (Hofman,
+1985; Armstrong et al., 1995), simple geometric laws still hold within
+the cortical mantle, where the grey matter volume is defined as the
+amount of grey matter that lies between the grey-white interface and
+the pia mater (Fig. 1, left). Previous findings suggest that cortical
+surface area and cortical thickness are independent, both globally and
+regionally, that grey matter volume is a function of these two indices
+and each of these three measurements are heritable (Winkler et al.,
+2009; Panizzon et al., 2009). Furthermore, Panizzon et al. (2009)
+reported that surface area and cortical thickness are genetically
+uncorrelated.
+\end{quotation}
+
+``Freesurfer generates white and pial surface meshes with identical numbers
+of vertices, and calculates the cortical thickness as the average of the
+distances from the point on the white surface to its nearest neighbor on the
+pial surface, and from the point on the pial surface to its nearest neighbor
+on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
+
+\note{The very existence of the notion of cortical ROI (average) thickness relies
+upon an assumption that cortical regions \emph{do} have a broadly slab- or sheet-like
+shape, as in Figure~\ref{fig:slab}. Absent such an assumption, it is unclear how
+to even define thickness for arbtirary non-convex volumes. I.e. \(\hat{V}(r)\) is
+valid/interpretable insofar as \texttt{ThickAvg} is valid, and .}
+
+Define \(V(r)\) to be the volume of region \(r\), and \(A(r)\) and \(d(r)\)
+to be the surface area and average thickness, respectively, of the ROI\@.
+Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
+(e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
+right precuneus). Then define the *lateral* CMC metrics to be:
+
+\begin{equation}
+\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{A(r) \cdot d(r)}
+\end{equation}
+
+
+Note that \(A(r) \cdot d(r)\) is the expected volume of \(r\) if \(r\) is any
+three-dimensional slab-like shape with constant cross-sectional area
+\(A(r)\), and uniform height \(d(r)\), as in Figure~\ref{fig:slab}. We denote
+the \emph{expected volume}, \(\hat{V}(r)\), as
+
+\begin{equation}
+\hat{V}(r) = \text{CMC}_{V}(r) = V(r) \cdot d(r).
+\end{equation}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=5cm]{figures/ROI_slab_bw.pdf}
+	\caption{Example idealized ROI \(r\) with constant cross-sectional \(A(r)\)
+	area and thickness \(d(r)\), and thus actual volume \(V(r)\) equal to
+	\(\hat{V}(r) = A(r) \cdot d(r)\).}
+	\label{fig:slab}
+\end{figure}
+
+The more an ROI \(r\) resembles or is congruent to a shape like in
+Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
+small average thickness relative to the surface area---then the closer
+\(\hat{V}(r)\) will be to \(V(r)\). By contrast, the dissimilarity between
+\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which are more blob-like
+(i.e.\ have large thickness relative to the surface area), or which have more
+variable thickness and/or curvature (e.g.\ any ROI with with convoluted
+and/or tube-like structures, have higher overall curvature, or are more
+gyrated or sulcated). For more exotic volumes (e.g.\ horn-shaped, extremely
+non-convex, or volumes with blobs joined by thin strands), the relationship
+between \(\hat{V}(r)\) and \(V(r)\) lacks interepretability. However, as most
+anatomical ROIs are not such exotic shapes, and generally have a large
+surface area to average thickness ratio (see Table~A\ref{tab:sa-ratios}),
+comparing \(\hat{V}(r)\) to \(V(r)\) can be informative of the ROI shape.
+
+In this sense, for \emph{any} metric \(\mu_r = \mu(\hat{V}(r), V(r))\) that
+compares these two quantities, and where \(|\mu_r|\) is positively correlated
+with the similarity of \(\hat{V}(r)\) and \(V(r)\), it is not particularly
+meaningful to compare the metrics of different ROIs, i.e.\ \(\mu_{r_1}\) and
+\(\mu_{r_2}\), as there is little reason to expect any broad similiary in the
+shapes. However, for comparing indiduals at the \emph{same} ROI, then
+increased curvature (e.g.\ gyration, sulcation), will tend to increase
+\(A(r)\), and thus the value of \(\hat{V}(r)\) relative to \(V(r)\).
+
+\note{What is actual observed ThickStd and ThickAvg relative to SurfArea? The
+largest observed average thickness across all ROIs and subjects is
+approximately 0.30mm, while the smallest observed surface area is 35.61 mm\(^2\),
+i.e. almost 120 times smaller, but the ratio between the median observed surface area and average thickness is approximately 2400.}
+
+
+
+
+
+\begin{align*}
+\label{eq:cmc-laterals}
+\text{CMC}_l &= \text{CMC}_{\text{Lateral}}(r_l) \\
+\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r) \\
+\end{align*}
+
+Also define "bilateral" CMC as:
+
+\begin{equation}
+\label{eq:cmc-bilateral}
+\text{CMC}_{lr}
+=\frac{V(r_l) + V(r_r)}{\hat{V}(r_l) + \hat{V}(r_r)}
+=\frac{\text{ROI total volume}}{\text{ROI total expected volume}}
+\end{equation}
+
+Define the *asymmetric* CMC measures:
+
+\[ \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r} \] \label{eq:asym-signed-diff}
+
+and
+
+\[ \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert \] \label{eq:asym-unsigned-diff}
+
+which are the *signed* and *unsigned CMC differences*, respectively. Also define
+
+\[ \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r} \] \label{eq:asym-ratio}
+
+to be the asymmetric CMC *ratio* measure.
+
+Then, for each ROI \(r\), this defines seven \(\text{CMC}\) measures:
+\(\text{CMC}_{V}\), \(\text{CMC}_l\), \(\text{CMC}_r\), \(\text{CMC}_{lr}\),
+\(\text{CMC}_{l-r}\), \(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
+
+The CMC features defined in Equation~\ref{eq:cmc-laterals} and
+Equation~\ref{eq:cmc-bilateral} are unitless ratios assessing a cortical
+region's deviation from uniform thickness, where the region expected
+would be expected to be equal to the surface area times the average cortical
+thickness. In the case of equality, this produces a lateral CMC biomarker
+value of 1. Deviations from 1 in either direction have major implications for
+structural cortical presentation, imply differential neurological development
+has occurred, and is addressed in detail in the Discussion.
+
+Equation~\ref{eq:asym-signed-diff} defines a metric that preserves
+directionality of asymmetry, with left/right dominant regions taking on
+positive/negative values of \(\text{CMC}_{l - r}\), respectively. Likewise,
+equation~\ref{eq:asym-ratio} defines a quantity which is greater/less than
+\(1\) when left/right lateral \(\text{CMC}\) is larger.
 
 \section{Methods}
 \label{sec:methods}
@@ -200,80 +497,11 @@ https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-dat
 
 For each cortical region of interest (ROI) \(r\) (e.g.
 \(r=\text{precuneus}\)) supported by the publicly available FreeSurfer
-results (see Appendix Tbl lateral\_fs for the base FreeSurfer features),
+results (see Table A\ref{tab:lateral-fs} for the base FreeSurfer features),
 Cortical Morphological Congruence (CMC) measurements were computed in each
-patient.
-
-Define \(V(r)\) to be the volume of region \(r\), and \(A(r)\) and \(d(r)\)
-to be the surface area and average thickness, respectively, of the ROI\@.
-Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
-(e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
-right precuneus). Then define the *lateral* CMC metrics to be:
-
-\begin{equation}
-\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{A(r) \cdot d(r)}
-\end{equation}
+subject.
 
 
-Note that \(A(r) \cdot d(r)\) is the product of an area and thickness: we thus
-denote the *pseudo-volume*:
-
-\begin{equation}
-\hat{V}(r) = \text{CMC}_{pV}(r) = V(r) \cdot d(r)
-\end{equation}
-
-Then:
-
-\begin{align*}
-\text{CMC}_l &= \text{CMC}_{\text{Lateral}}(r_l) \\
-\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r) \\
-\end{align*}
-% {#eq:cmc_laterals}
-
-Also define "bilateral" CMC as:
-
-\begin{equation}
-\text{CMC}_{lr}
-=\frac{V(r_l) + V(r_r)}{\hat{V}(r_l) + \hat{V}(r_r)}
-=\frac{\text{ROI total volume}}{\text{ROI total pseudo-volume}}
-% $$ {#eq:cmc_bilateral}
-\end{equation}
-
-Define the *asymmetric* CMC measures:
-
-\[ \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r} \]
-% {#eq:asym_signed_diff}
-
-and
-
-\[ \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert \]
-% {#eq:asym_unsigned_diff}
-
-which are the *signed* and *unsigned CMC differences*, respectively. Also define
-
-\[ \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r} \]
-% {#eq:asym_ratio}
-
-to be the asymmetric CMC *ratio* measure.
-
-Then, for each ROI \(r\), this defines seven \(\text{CMC}\) measures:
-\(\text{CMC}_{pV}\), \(\text{CMC}_l\), \(\text{CMC}_r\), \(\text{CMC}_{lr}\),
-\(\text{CMC}_{l-r}\), \(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
-
-The CMC features defined in eq cmc\_laterals and eq cmc\_bilateral are unitless
-ratios assessing a cortical region's deviation from uniform thickness, where
-the region pseudo-volume would be expected to be equal to the surface area
-times the average cortical thickness. In the case of equality, this produces
-a lateral CMC biomarker value of 1. Deviations from 1 in either direction
-have major implications for structural cortical presentation, imply
-differential neurological development has occurred, and is addressed in
-detail in the Discussion.
-
-Eq asym\_signed\_diff defines a biomarker that preserves directionality of
-asymmetry, with left/right dominant regions taking on positive/negative
-values of \(\text{CMC}_{l - r}\), respectively. Likewise, eq:asym\_ratio
-defines a quantity which is greater/less than \(1\) when left/right lateral
-\(\text{CMC}\) is larger.
 
 \subsection{Statistical and Predictive Analyses}
 
@@ -288,6 +516,13 @@ predictive analyses based on these extracted features.
 estimate CIs on the Cohen's d values via a percentile bootstrap, if you don't
 like using Mann-Whitney and Wilcoxon signed-rank tests.}
 
+\paragraph{FreeSurfer Feature Correlations}: To assess whether CMC features
+extract  information, for each CMC feature in each CMC
+feature class, and each ROI, we compute the Spearman correlations with a
+number of potentially related original FreeSurfer cortical metrics.
+Specifically, we assess CMC feature correlations with the original FreeSurfer
+components (volume, surface area, and average thickness), and those relating
+to ROI shape (e.g. thickness variation and curvature or folding).
 
 \paragraph{Sex}: For each CMC feature, we compute descriptive measures of
 group separation by sex using Cohen's d and the Mann-Whitney U test. We also
@@ -295,7 +530,7 @@ consider each of the seven classes of CMC feature, and compare whether these
 feature classes differ in variability. This is done by computing the average
 CMC metric in each CMC class for each group (e.g.\ sex, laterality, age), and
 then comparing these two group averages with a measure of scale (standard
-deviation; SD, or interquartile range; IQR).
+deviation; \(\sigma\), or interquartile range; IQR).
 
 \paragraph{Laterality}: For each ROI, it is reasonable to ask whether
 \(\text{CMC}_l\) and \(\text{CMC}_r\) differ. We also compare relevant CMC
@@ -305,6 +540,8 @@ features in this manner.
 compute the Spearman correlations with subject age class (HCP phenotypic data
 includes only broad age bins, and thus requires a correlation appropriate for
 ordinal variables).
+
+
 
 \subsubsection{Predictive Analyses}
 
@@ -317,10 +554,11 @@ online}.
 
 \paragraph{Synthetic Behavioural Targets} \label{sec:cleaning}
 
-To investigate the predictive potential of CMC features, a number of \emph{ad hoc}
-regression targets were constructed from the HCP behavioural data. First,
-behavioural data were cleaned of irrelevant, missing, constant, or redundant
-features (see sec:cleaning). (\texttt{src/munging/hcp.py::load\_hcp\_phenotypic}).
+To investigate the predictive potential of CMC features, a number of \emph{ad
+hoc} regression targets were constructed from the HCP behavioural data.
+First, behavioural data were cleaned of irrelevant, missing, constant, or
+redundant features (see section \ref{sec:cleaning}).
+(\texttt{src/munging/hcp.py::load\_hcp\_phenotypic}).
 
 \begin{figure}
 \centering
@@ -406,23 +644,24 @@ without assuming that items are correlated simply by virtue of being members
 of the same behavioural test or measurement instrument.
 
 Second, after interpolating missing values with the feature means, HDBSCAN
-feature clusters were reduced to a single dimension via factor analysis
-[cite]. Factor analysis is a linear dimensionality reduction method wherein
-the reduced factor can be interpreted as a latent variable that
-well-describes the unreduced data, accounting for noise. FA was chosen here
-over PCA as the reduced unidimensional feature is more readily interpreted as
-a latent variable free from error variance [cite some good links
+feature clusters were reduced to a single dimension via exploratory factor
+analysis (FA; [cite]). Factor analysis is a linear dimensionality reduction
+method wherein the reduced factor can be interpreted as a latent variable
+that well-describes the unreduced data, accounting for noise. FA was chosen
+here over PCA as the reduced unidimensional feature is more readily
+interpreted as a latent variable free from error variance [cite some good
+links
 \href{https://en.wikipedia.org/w/index.php?title=Factor\_analysis&oldid=1223130166#Exploratory\_factor\_analysis\_(EFA)\_versus\_principal\_components\_analysis\_(PCA)}{here
-} re: FA] and thus more suitable as a synthetic regression target.
+} re: FA] and thus more suitable as a synthetic regression target. In
+addition, fact \cite{attiasIndependentFactorAnalysis1999}
 
 The resulting synthetic feature names, clusters and loadings are shown in
-Appendix B, as are descriptive statistics in
-@Tbl:target\_stats. Most of the clusters appear to have face value. For
-example, the factor we have labeled "int\_g\_like" involves a number of
-features measuring fluid and crystalized intelligence, processing speed, and
-performance at various sorting and reading tasks (Appendix B
-@tbl:int\_g\_like), and so might be interpreted broadly as a general
-intelligence factor [cite].
+\hyperref[sec:appendix-b]{Appendix B}, as are descriptive statistics in Table~\ref{tab:target-stats}.
+Most of the clusters appear to have face value. For example, the factor we
+have labeled "int\_g\_like" involves a number of features measuring fluid and
+crystalized intelligence, processing speed, and performance at various
+sorting and reading tasks (Appendix B Table~\ref{tab:int-g-like}), and so
+might be interpreted broadly as a general intelligence factor [cite].
 
 \begin{table}
 \centering
@@ -518,7 +757,7 @@ no double-dipping or data leakage during these steps.
 
 
 
-\textcolor{orange}{phenotypic features from the patients in our dataset from
+\textcolor{orange}{phenotypic features from the subjects in our dataset from
 the proposed CMC biomarkers. The targeted phenotypic features include insert
 list and basic descriptions and justification for their selection - input
 from Derek. The software selects the best combination of CMC biomarkers, the
@@ -530,10 +769,10 @@ predictive capacity of the models, alongside which biomarkers were selected
 for, is reported. This was just a blurb of what we could/maybe do, any
 \texttt{df-analyze} methods providing something interesting to say is fine,
 please adapt the text. Making \texttt{df-analyze}
-\href{github.com/stfxecutables/df-analyze}{publicly available} facilitates
-reproducibility of our study findings, alongside our use of large public
-datasets of MRI examinations. In addition, we make available source code used
-for the analyses in this study
+\href{https://github.com/stfxecutables/df-analyze}{publicly available}
+facilitates reproducibility of our study findings, alongside our use of large
+public datasets of MRI examinations. In addition, we make available source
+code used for the analyses in this study
 \href{https://github.com/stfxecutables/cortical_congruence}{online} [TODO:
 get a DOI for this and make public] analytic software that helps demonstrate
 to the user how to use df-analyze and how to perform the statistical analyses
@@ -557,6 +796,11 @@ plots} will all end up looking like @Fig:cmc\_sex\_diffs below. These plots
 are actually sorted so that the most significant differences are at the left,
 and still, nothing is really visually discernably as different between cases,
 and this is so with swarm, strip, scatter, violin, box, or boxen plots.}
+
+\subsection{Interpretation}
+
+Note: curvature indices are defined in \citep{vanessenStructuralFunctionalAnalyses1997}.
+
 
 \subsection{Descriptive Statistic}
 
@@ -595,12 +839,12 @@ Holm-Bonferroni stepdown method.}
 \end{table}
 
 For CMC feature classes, both pseudo-volume and left lateral CMC features
-differ significantly in the overall spread standard deviation of their mean values
-(\ref{tab:sig-cmc-scale-sex}). That is, male CMC pseudo-volume and left lateral
-CMC features have more variable average values for males, relative to
-females, though this difference is quite small, practically, and remains
-significant only for pseudo-volume features when considering a robust measure
-of scale (IQR).
+differ significantly in the overall spread standard deviation of their mean
+values (Table~\ref{tab:sig-cmc-scale-sex}). That is, male CMC pseudo-volume
+and left lateral CMC features have more variable average values for males,
+relative to females, though this difference is quite small, practically, and
+remains significant only for pseudo-volume features when considering a robust
+measure of scale (IQR).
 
 \begin{table}
 \centering
@@ -632,7 +876,7 @@ Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni s
 \subsubsection{CMC Features by Laterality}
 
 We find the lateral CMC measures differ significantly for all but the
-superior frontal and parsopercularis regions (\ref{tab:lateral-cmc}).
+superior frontal and parsopercularis regions (Table~\ref{tab:lateral-cmc}).
 
 \begin{table}
 \centering
@@ -1127,12 +1371,13 @@ For target definitions, see [Appendix B](appendix-b).
 
 
 The observed predictive performances on the final holdout set are presented
-in Table~\ref{tab:cmc-p-model-predictive}. For the \texttt{int\_g\_like} and \texttt{language\_perf}
-synthetic target features, the holdout coefficient of determination
-consistently exceeded 0.1, and, in many cases, for completely linear models
-(ElasticNet). If we interpret the \(R^2\) value then as the proportion of
-explained variance [cite], then this suggests either FS or CMC features (or
-both) explain over 10\% of the variance in these two synthetic targets.
+in Table~\ref{tab:cmc-p-model-predictive}. For the \texttt{int\_g\_like} and
+\texttt{language\_perf} synthetic target features, the holdout coefficient of
+determination consistently exceeded 0.1, and, in many cases, for completely
+linear models (ElasticNet). If we interpret the \(R^2\) value then as the
+proportion of explained variance [cite], then this suggests either FS or CMC
+features (or both) explain over 10\% of the variance in these two synthetic
+targets.
 
 [**FOR DISCUSSION**] All synthetic targets that are best-predicted are
 \texttt{int\_g\_like}, \texttt{language\_perf} (performance on language
@@ -1210,7 +1455,7 @@ underlying factors maturing in tandem with one another. Cortical volume,
 surface area and thickness are excellent examples of measurable biomarkers
 that clearly exhibit interdependencies with one another. However, it should
 be noted that the relative maturation of each of these biomarkers may proceed
-at varying rates in any particular combination of brain region, patient or
+at varying rates in any particular combination of brain region, subject or
 pathology. Gray matter (GM) volume is known to increase with age, as does the
 surface area, while cortical thickness thins with long-term development.
 These three biomarkers are inter-related, and existing studies focused on
@@ -1235,7 +1480,7 @@ region exhibits a CMC (see equations 1 \& 2) measurement equal to 1, which is
 expected for very regularly shaped structures, that region exhibits a
 relatively simple cortical morphological presentation, and can be said to
 have high underlying cortical morphological congruence. Examples of this can
-be found consistently across patients in brain structures such as the banks
+be found consistently across subjects in brain structures such as the banks
 of the superior temporal sulcus (n=1,113, mean CMCLateral=1.0*, std dev
 CMCLateral=0.025*), and the insula (mean CMCLateral=1.0?, std dev
 CMCLateral=???). When CMC values deviate from 1, this implies varying degrees
@@ -1286,7 +1531,7 @@ regions.
 \subsection{Potential for CMC to characterize important aspects of brain development}
 
 The combination of regional cortical volume, surface area and mean thickness,
-biomarkers with relatively high variability across patients, into a single
+biomarkers with relatively high variability across subjects, into a single
 CMC biomarker with relatively small variability in regional cortical
 measurements is noteworthy. Reliability and reproducibility are a major
 ongoing challenge in neuroscience research
@@ -1394,7 +1639,7 @@ and abnormal brain, reliably and reproducibly.
 Talk to Bruce Fischl with Emi about possibility of it being included in future versions of FreeSurfer and whether he has any feedback that might be relevant and may want to join on this project as a co-author.
 
 
-\section{Appendix A} \label{sec:appendix-a}
+\section{Appendix A - FreeSurfer / CMC Compoment Feature} \label{sec:appendix-a}
 
 
 \begin{table}
@@ -1585,7 +1830,57 @@ Holm-Bonferroni stepdown method
 \label{tab:lateral-fs}
 \end{table}
 
-\section{Appendix B} \label{sec:appendix-b}
+
+\begin{table}
+\centering
+\begin{tabular}{lrr}
+\toprule
+hemi & left & right \\
+feature &  &  \\
+\midrule
+frontalpole & 43.3 & 76.4 \\
+entorhinal & 115.6 & 65.8 \\
+temporalpole & 129.4 & 114.6 \\
+transversetemporal & 177.8 & 89.8 \\
+caudalanteriorcingulate & 185.9 & 311.1 \\
+rostralanteriorcingulate & 201.6 & 135.6 \\
+parsorbitalis & 209.6 & 283.8 \\
+parahippocampal & 244.1 & 206.1 \\
+bankssts & 365.8 & 271.6 \\
+parstriangularis & 485.1 & 402.0 \\
+paracentral & 515.7 & 470.4 \\
+pericalcarine & 533.5 & 458.9 \\
+posteriorcingulate & 556.8 & 451.8 \\
+parsopercularis & 594.0 & 360.8 \\
+cuneus & 605.1 & 321.5 \\
+isthmuscingulate & 672.6 & 457.8 \\
+medialorbitofrontal & 688.7 & 507.9 \\
+insula & 743.7 & 625.9 \\
+caudalmiddlefrontal & 767.8 & 498.1 \\
+lateralorbitofrontal & 902.2 & 718.0 \\
+middletemporal & 966.3 & 873.2 \\
+inferiortemporal & 1073.4 & 768.8 \\
+supramarginal & 1236.4 & 960.8 \\
+superiortemporal & 1258.2 & 1054.7 \\
+fusiform & 1260.8 & 864.5 \\
+lingual & 1383.5 & 1103.9 \\
+precuneus & 1464.4 & 1196.5 \\
+inferiorparietal & 1597.5 & 1611.7 \\
+postcentral & 1836.3 & 1487.3 \\
+precentral & 1997.2 & 1536.6 \\
+lateraloccipital & 2085.5 & 1523.3 \\
+rostralmiddlefrontal & 2136.7 & 2038.3 \\
+superiorparietal & 2220.3 & 1947.2 \\
+superiorfrontal & 2485.1 & 2077.1 \\
+\bottomrule
+\end{tabular}
+\footnotesize
+\caption{Ratios of ROI surface area divided by ROI average thickness.}
+\normalsize
+\label{tab:sa-ratios}
+\end{table}
+
+\section{Appendix B - Synthetic Targets} \label{sec:appendix-b}
 
 % generated by src/munging/hcp.py::load_HCP_complete
 

@@ -413,7 +413,7 @@ def load_hcp_phenotypic(focus: PhenotypicFocus = PhenotypicFocus.Reduced) -> Dat
     return cleanup_HCP_phenotypic(df, extra=feats)
 
 
-def reformat_HPC(df: DataFrame) -> DataFrame:
+def reformat_HPC(df: DataFrame, keep_corr_relevant: bool = False) -> DataFrame:
     path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
     df = pd.read_csv(path)
     df.rename(
@@ -423,7 +423,10 @@ def reformat_HPC(df: DataFrame) -> DataFrame:
     df.rename(columns=lambda s: s.replace("fs_r_", "rh-"), inplace=True)
     df.rename(columns=lambda s: s.replace("fs_l_", "lh-"), inplace=True)
     drop_reg = "curv|foldind|thckstd|numvert|_range|_min|_max|_std|intens_mean|_vox"
-    keep_reg = "sid|gender|_grayvol|_area|_thck"
+    if keep_corr_relevant:
+        keep_reg = "sid|gender|_grayvol|_area|_thck|curv|foldind|thckstd"
+    else:
+        keep_reg = "sid|gender|_grayvol|_area|_thck"
     df = df.filter(regex=keep_reg).copy()
     df["sid"] = df["sid"].astype(str)
     df["sname"] = df["sid"].astype(str)
@@ -434,53 +437,112 @@ def reformat_HPC(df: DataFrame) -> DataFrame:
     df = df.loc[:, meta_cols + cols].copy()
     df = df.melt(id_vars=meta_cols, var_name="metric").sort_values(by=["sid", "metric"])
 
-    vols = (
-        df[df["metric"].str.contains("grayvol")]
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    areas = (
-        df[df["metric"].str.contains("area")]
-        .copy()
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    thick = (
-        df[df["metric"].str.contains("thck")]
-        .copy()
-        .sort_values(by=["sid", "metric"])
-        .reset_index(drop=True)
-    )
-    vols.loc[:, "StructName"] = vols["metric"].str.replace("_grayvol", "")
-    areas.loc[:, "StructName"] = areas["metric"].str.replace("_area", "")
-    thick.loc[:, "StructName"] = thick["metric"].str.replace("_thck", "")
+    feature_classes = {
+        "grayvol": "GrayVol",
+        "area": "SurfArea",
+        "thck": "ThickAvg",
+        "thckstd": "ThickStd",
+        "curvind": "CurvInd",
+        "gauscurv": "GaussCurv",
+        "meancurv": "MeanCurv",
+        "foldind": "FoldIndex",
+    }
+    feat_tables = {}
+    for feat in feature_classes.keys():
+        idx = df["metric"].str.contains(f"{feat}$")
+        feat_tables[feat] = (
+            df[idx].sort_values(by=["sid", "metric"]).reset_index(drop=True)
+        )
 
-    vols.drop(columns="metric", inplace=True)
-    areas.drop(columns="metric", inplace=True)
-    thick.drop(columns="metric", inplace=True)
+    # vols = (
+    #     df[df["metric"].str.contains("grayvol")]
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # areas = (
+    #     df[df["metric"].str.contains("area")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # thick = (
+    #     df[df["metric"].str.contains("thck") & (~df["metric"].str.contains("thckstd"))]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # thick_sd = (
+    #     df[df["metric"].str.contains("thckstd")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # curv_ind = (
+    #     df[df["metric"].str.contains("curvind")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # gauss_curv = (
+    #     df[df["metric"].str.contains("gauscurv")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # mean_curv = (
+    #     df[df["metric"].str.contains("meancurv")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    # fold = (
+    #     df[df["metric"].str.contains("foldind")]
+    #     .copy()
+    #     .sort_values(by=["sid", "metric"])
+    #     .reset_index(drop=True)
+    # )
+    table: DataFrame
+    for feat, table in feat_tables.items():
+        table.loc[:, "StructName"] = table["metric"].str.replace(f"_{feat}", "")
+        table.drop(columns="metric", inplace=True)
+        table.rename(columns={"value": feature_classes[feat]}, inplace=True)
 
-    vols.rename(columns={"value": "GrayVol"}, inplace=True)
-    areas.rename(columns={"value": "SurfArea"}, inplace=True)
-    thick.rename(columns={"value": "ThickAvg"}, inplace=True)
-    vols["SurfArea"] = areas["SurfArea"]
-    vols["ThickAvg"] = thick["ThickAvg"]
+    # vols.loc[:, "StructName"] = vols["metric"].str.replace("_grayvol", "")
+    # areas.loc[:, "StructName"] = areas["metric"].str.replace("_area", "")
+    # thick.loc[:, "StructName"] = thick["metric"].str.replace("_thck", "")
 
-    df = vols.copy()
+    # vols.drop(columns="metric", inplace=True)
+    # areas.drop(columns="metric", inplace=True)
+    # thick.drop(columns="metric", inplace=True)
+
+    # vols.rename(columns={"value": "GrayVol"}, inplace=True)
+    # areas.rename(columns={"value": "SurfArea"}, inplace=True)
+    # thick.rename(columns={"value": "ThickAvg"}, inplace=True)
+
+    # add key columns to first table, which is the "grayvol" table in this case
+    for feat, featcap in feature_classes.items():
+        if feat == "grayvol":
+            continue
+        feat_tables["grayvol"][featcap] = feat_tables[feat][featcap]
+    # feat_tables["grayvol"]["SurfArea"] = feat_tables["area"]["SurfArea"]
+    # feat_tables["grayvol"]["ThickAvg"] = feat_tables["thick"]["ThickAvg"]
+
+    df = feat_tables["grayvol"].copy()
     df["Struct"] = df["StructName"].str.replace("lh-", "")
     df["Struct"] = df["Struct"].str.replace("rh-", "")
     df["hemi"] = df["StructName"].apply(
         lambda s: "left" if s.startswith("lh") else "right"
     )
-    df = df.loc[
-        :, meta_cols + ["StructName", "Struct", "hemi", "GrayVol", "SurfArea", "ThickAvg"]
+    df.loc[
+        :, meta_cols + ["StructName", "Struct", "hemi", *feature_classes.values()]
     ].copy()
     return df
 
 
-def load_HCP_CMC_table() -> DataFrame:
+def load_HCP_CMC_table(keep_corr_relevant: bool = False) -> DataFrame:
     path: Path = cast(Path, FreesurferStatsDataset.HCP.freesurfer_files())
     df = pd.read_csv(path)
-    df = reformat_HPC(df)
+    df = reformat_HPC(df, keep_corr_relevant=keep_corr_relevant)
     df["pseudoVolume"] = df["ThickAvg"] * df["SurfArea"]
     df = add_bilateral_stats(df)
     df = compute_cmcs(df)
@@ -491,10 +553,11 @@ def load_HCP_CMC_table() -> DataFrame:
 def load_HCP_complete(
     *,
     focus: PhenotypicFocus = PhenotypicFocus.Reduced,
+    keep_corr_relevant: bool = False,
     reduce_targets: bool,
     reduce_cmc: bool,
 ) -> DataFrame:
-    df = load_HCP_CMC_table()
+    df = load_HCP_CMC_table(keep_corr_relevant=keep_corr_relevant)
     df = to_wide_subject_table(df)
     pheno = load_hcp_phenotypic(focus)
     shared = list(
@@ -551,7 +614,10 @@ def load_HCP_complete(
 
 if __name__ == "__main__":
     df_red = load_HCP_complete(
-        focus=PhenotypicFocus.All, reduce_targets=True, reduce_cmc=False
+        focus=PhenotypicFocus.All,
+        reduce_targets=True,
+        reduce_cmc=False,
+        keep_corr_relevant=True,
     )
     # df_full = load_HCP_complete(
     #     focus=PhenotypicFocus.All, reduce_targets=False, reduce_cmc=False

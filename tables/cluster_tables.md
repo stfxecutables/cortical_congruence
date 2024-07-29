@@ -137,6 +137,26 @@ pmat24\_a\_si & -0.7005 \\
 \centering
 \begin{tabular}{lr}
 \toprule
+ & psqi\_latent \\
+\midrule
+psqi\_score & 0.9999 \\
+psqi\_comp1 & 0.6883 \\
+psqi\_comp4 & 0.6413 \\
+psqi\_comp3 & 0.6305 \\
+\bottomrule
+\end{tabular}
+
+\footnotesize
+\caption{Synthetic target \texttt{psqi-latent} factor loadings.}
+\normalsize
+\label{tab:psqi-latent}
+\end{table}
+
+
+\begin{table}
+\centering
+\begin{tabular}{lr}
+\toprule
  & social\_rt \\
 \midrule
 social\_task\_median\_rt\_random & 0.9838 \\
@@ -150,27 +170,6 @@ social\_task\_median\_rt\_tom & 0.4017 \\
 \caption{Synthetic target \texttt{social-rt} factor loadings.}
 \normalsize
 \label{tab:social-rt}
-\end{table}
-
-
-\begin{table}
-\centering
-\begin{tabular}{lr}
-\toprule
- & psqi\_latent \\
-\midrule
-psqi\_score & 1.0000 \\
-psqi\_comp1 & 0.6853 \\
-psqi\_comp4 & 0.6379 \\
-psqi\_comp3 & 0.6266 \\
-psqi\_comp7 & 0.4649 \\
-\bottomrule
-\end{tabular}
-
-\footnotesize
-\caption{Synthetic target \texttt{psqi-latent} factor loadings.}
-\normalsize
-\label{tab:psqi-latent}
 \end{table}
 
 
@@ -254,25 +253,26 @@ picseq\_unadj & -0.4938 \\
 \toprule
  & neg\_emotionality \\
 \midrule
-percstress\_unadj & 0.8250 \\
-sadness\_unadj & 0.8165 \\
-loneliness\_unadj & 0.7812 \\
-neofac\_n & 0.7596 \\
-angaffect\_unadj & 0.7127 \\
-fearaffect\_unadj & 0.7000 \\
-percreject\_unadj & 0.6994 \\
-lifesatisf\_unadj & -0.6571 \\
-posaffect\_unadj & -0.6541 \\
-anghostil\_unadj & 0.6524 \\
-emotsupp\_unadj & -0.6347 \\
-meanpurp\_unadj & -0.6078 \\
-friendship\_unadj & -0.5947 \\
-selfeff\_unadj & -0.5589 \\
-perchostil\_unadj & 0.5512 \\
-neofac\_e & -0.4649 \\
-instrusupp\_unadj & -0.4578 \\
-neofac\_a & -0.3779 \\
-fearsomat\_unadj & 0.3752 \\
+percstress\_unadj & 0.8269 \\
+sadness\_unadj & 0.8178 \\
+loneliness\_unadj & 0.7787 \\
+neofac\_n & 0.7607 \\
+angaffect\_unadj & 0.7164 \\
+fearaffect\_unadj & 0.7046 \\
+percreject\_unadj & 0.6965 \\
+lifesatisf\_unadj & -0.6554 \\
+posaffect\_unadj & -0.6528 \\
+anghostil\_unadj & 0.6507 \\
+emotsupp\_unadj & -0.6303 \\
+meanpurp\_unadj & -0.6053 \\
+friendship\_unadj & -0.5919 \\
+selfeff\_unadj & -0.5565 \\
+perchostil\_unadj & 0.5496 \\
+neofac\_e & -0.4628 \\
+instrusupp\_unadj & -0.4542 \\
+psqi\_comp7 & 0.4177 \\
+fearsomat\_unadj & 0.3806 \\
+neofac\_a & -0.3764 \\
 \bottomrule
 \end{tabular}
 

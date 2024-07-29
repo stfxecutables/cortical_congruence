@@ -335,17 +335,17 @@ def compute_CMC_table(
 
 def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
     df = df_cmc.copy()
-    meta_cols = [
-        "sid",
-        "sname",
-        "hemi",
-        "SegId",
-        "Volume_mm3",
-        "GrayVol",
-        "SurfArea",
-        "ThickAvg",
-        "pseudoVolume",
-    ]
+    # meta_cols = [
+    #     "sid",
+    #     "sname",
+    #     "hemi",
+    #     "SegId",
+    #     "Volume_mm3",
+    #     "GrayVol",
+    #     "SurfArea",
+    #     "ThickAvg",
+    #     "pseudoVolume",
+    # ]
     column_tags = {
         "sid": [],
         "sname": [Tag.Id],
@@ -369,7 +369,9 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
         "ThickStd": [Tag.Feature, Tag.FreeSurfer],
         "MeanCurv": [Tag.Feature, Tag.FreeSurfer],
         "GausCurv": [Tag.Feature, Tag.FreeSurfer],
+        "GaussCurv": [Tag.Feature, Tag.FreeSurfer],
         "FoldInd": [Tag.Feature, Tag.FreeSurfer],
+        "FoldIndex": [Tag.Feature, Tag.FreeSurfer],
         "CurvInd": [Tag.Feature, Tag.FreeSurfer],
         "pseudoVolume": [Tag.Feature, Tag.CMC],
     }
@@ -385,7 +387,7 @@ def to_wide_subject_table(df_cmc: DataFrame) -> DataFrame:
     renames = {**column_renames, **cmc_renames}
     drop_cols = ["Struct", "parent", "fname", "SegId", "hemi", "sname"]
 
-    meta_cols = [c for c in meta_cols if c in df.columns]
+    # meta_cols = [c for c in meta_cols if c in df.columns]
     drop_cols = [c for c in drop_cols if c in df.columns]
 
     df_long = df.drop(columns=drop_cols).rename(columns=renames)

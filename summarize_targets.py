@@ -8,7 +8,13 @@ sys.path.append(str(ROOT))  # isort: skip
 # fmt: on
 
 
+from warnings import filterwarnings
+import seaborn as sbn
+from sklearn.preprocessing import MinMaxScaler
+from scipy.stats import spearmanr
+from matplotlib.patches import Patch
 import os
+import seaborn as sbn
 import re
 import sys
 from argparse import ArgumentParser, Namespace
@@ -45,7 +51,12 @@ from statsmodels.stats.multitest import multipletests
 from tqdm import tqdm
 from typing_extensions import Literal
 
-from src.munging.hcp import PhenotypicFocus, load_HCP_complete
+from src.munging.hcp import (
+    PhenotypicFocus,
+    load_HCP_complete,
+    load_HCP_CMC_table,
+    to_wide_subject_table,
+)
 
 DATA = ROOT / "data/complete_tables"
 
@@ -86,6 +97,68 @@ def best_rect(m: int) -> tuple[int, int]:
         if prod[0] * prod[1] >= m:
             return prod
     raise ValueError("Unreachable!")
+
+
+def to_hemi(s: str) -> str:
+    return (
+        "left" if "lh-" in s else "right" if "rh-" in s else "both" if "bh-" in s else s
+    )
+
+
+def to_roi(s: str) -> str:
+    return s.split("-")[-1]
+
+
+CMC_FEATS = {
+    "__asym__": "asym_diff",
+    "__asym_abs__": "asym_diff_abs",
+    "__asym_div__": "asym_div",
+    "__cmc__": "cmc",
+    "__SA/V__": "SA/V",
+    "pseudoVolume": "pV",
+}
+FS_FEATS = {
+    "GrayVol": "V",
+    "SurfArea": "SA",
+    "ThickAvg": "d",
+    "FS_THCK": "THCK",
+    "FS_AREA": "AREA",
+    "ThickStd": "d_sd",
+    "CurvInd": "CurvInd",
+    "GaussCurv": "GaussCurv",
+    "MeanCurv": "MeanCurv",
+    "FoldIndex": "FoldIndex",
+}
+
+
+def to_feature_class(s: str) -> str:
+    names = {**CMC_FEATS, **FS_FEATS}
+    for name, fclass in names.items():
+        if name in s:
+            return fclass
+    return "unk"
+
+
+def add_feat_info(df: DataFrame) -> DataFrame:
+    df = df.copy()
+    if df.index.name == "feature":
+        source = df.index.to_series().apply(lambda s: "FS" if "FS" in s else "CMC")
+        hemi = df.index.to_series().apply(to_hemi)
+        roi = df.index.to_series().apply(to_roi)
+        fclass = df.index.to_series().apply(to_feature_class)
+    else:
+        source = df.feature.apply(lambda s: "FS" if "FS" in s else "CMC")
+        hemi = df.feature.apply(to_hemi)
+        roi = df.feature.apply(to_roi)
+        fclass = df.feature.apply(to_feature_class)
+
+    df.insert(1, "source", source)
+    df.insert(1, "hemi", hemi)
+    df.insert(1, "roi", roi)
+    df.insert(1, "fclass", fclass)
+    # only one is significant after multiple comparisons
+    df = df[df.hemi != "none"]
+    return df
 
 
 def load_df(path: Path) -> DataFrame:
@@ -681,12 +754,668 @@ def hcp_target_stats() -> None:
     print(stats.round(3).to_latex(float_format="%0.3f"))
 
 
+def hcp_cmc_corrs() -> None:
+    # fmt: off
+    import matplotlib
+    matplotlib.use("QtAgg")
+    CMC_FEATS = {
+        "__cmc__": "CMC",
+        "__asym__": "asym_diff",
+        "__asym_abs__": "asym_diff_abs",
+        "__asym_div__": "asym_div",
+        "pseudoVolume": "pV",
+    }
+    # fmt: on
+    def to_cmc_class(s: str) -> str:
+        for cls, name in CMC_FEATS.items():
+            if cls in s:
+                return name
+        return np.nan
+
+    def to_fs_class(s: str) -> str:
+        for cls, name in FS_FEATS.items():
+            if cls in s:
+                return name
+        return s
+
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+    # df = load_HCP_complete(
+    #     focus=PhenotypicFocus.All,  # type: ignore
+    #     reduce_targets=True,  # type: ignore
+    #     reduce_cmc=False,  # type: ignore
+    #     keep_corr_relevant=True,  # type: ignore
+    # )
+
+    df_sav = DataFrame(
+        df.filter(regex="SurfArea").values / df.filter(regex="GrayVol").values,
+        index=df.index,
+        columns=df.filter(regex="SurfArea")
+        .columns.to_series()
+        .apply(lambda s: str(s).replace("SurfArea", "SA/V")),
+    )
+    df = pd.concat([df, df_sav], axis=1)
+    dff = add_feat_info(
+        df.stack().reset_index().rename(columns={"level_1": "feature", 0: "value"})
+    ).drop(columns="feature")
+
+    print("Computing correlations")
+    corrs = df.corr(method="spearman")
+    corrs.index.name = "x"
+    corrs.columns.name = "y"
+    corrs = (
+        corrs.where(np.triu(np.ones(corrs.shape), 1).astype(np.bool))
+        .stack()
+        .reset_index()
+        .rename(columns={"level_0": "x", "level_1": "y", 0: "r"})
+        .sort_values(by="r", key=abs, ascending=False)  # top vals are largest
+    )
+
+    # who_cares = (corrs.x.str.contains("CMC") & corrs.y.str.contains("CMC")) | (
+    #     corrs.x.str.contains("FS") & corrs.y.str.contains("FS")
+    # )
+    # corrs = corrs[~who_cares]
+    # corrs = add_feat_info(corrs)
+    corrs["feat_x"] = corrs["x"].apply(to_feature_class)
+    corrs["feat_y"] = corrs["y"].apply(to_feature_class)
+    corrs["hemi_x"] = corrs["x"].apply(to_hemi)
+    corrs["hemi_y"] = corrs["y"].apply(to_hemi)
+    corrs["roi_x"] = corrs["x"].apply(to_roi)
+    corrs["roi_y"] = corrs["y"].apply(to_roi)
+    corrs.drop(columns=["x", "y"], inplace=True)  # no more info in them now
+    pd.options.display.max_rows = 500
+    print(corrs.groupby(["feat_x", "feat_y"]).describe().round(3))
+    print("Correlations (across subjects) Between FS and CMC Features, by Feature Types")
+
+    print(
+        corrs[
+            (corrs["roi_x"] == corrs["roi_y"])
+            & ((corrs.hemi_x != "both") & (corrs.hemi_y != "both"))
+        ]
+        .groupby(["feat_x", "feat_y"])
+        .describe()
+        .round(3)
+    )
+    print("Correlations, restricting to same ROI (ignoring hemisphere)")
+
+    # At this point it is clear none of the asymmetric metrics are related to much, so
+    # lets just focus on CMC and pV. Also, pV and GrayVol or SurfArea correlations are
+    # obvious / trivial, so lets toss those.
+
+    corrs = corrs[corrs["CMC"].isin(["CMC", "pV"])]
+    corrs = corrs[~(corrs["FS"].isin(["SurfArea", "GrayVol"]))]
+    corrs = corrs[~(corrs["FS"].isin(["SurfArea", "GrayVol"]) & (corrs["CMC"] == "pV"))]
+
+    corrs.groupby(["CMC", "FS"]).describe(percentiles=[0.025, 0.1, 0.9, 0.975])
+    print("Plotting...")
+    sbn.displot(corrs, kind="hist", x="r", row="CMC", col="FS")
+    print(
+        corrs.groupby(["CMC", "FS"]).apply(
+            lambda grp: (grp["r"] > 0).mean(), include_groups=False
+        )
+    )
+    print("Percent of feature correlations above 0.0:")
+    plt.show()
+
+    roi_corrs = (
+        corrs.groupby(["CMC", "FS", "roi"])
+        .describe(percentiles=[0.05, 0.1, 0.9, 0.95])
+        .round(2)
+        .droplevel(0, axis="columns")
+        .drop(columns=["count", "std", "min", "mean", "max", "50%"])
+        .groupby(["CMC", "FS", "roi"])
+        .apply(lambda g: g.sort_values(by=["5%", "95%"]))
+        .droplevel([3, 4, 5])
+    )
+
+    roi_x = corrs.x.apply(lambda s: s.split("-")[-1])
+    roi_y = corrs.y.apply(lambda s: s.split("-")[-1])
+    same_roi = roi_x == roi_y
+    all_descs = []
+    for feat in FS_FEATS:
+        # != below is xor, so prevents case of identical pairings
+        has_feat = corrs.x.str.contains(feat) != corrs.y.str.contains(feat)
+        rel = corrs[has_feat]  # relevant correlations
+        rel_diff = corrs[has_feat & ~same_roi]
+        rel_same = corrs[has_feat & same_roi]
+
+        # quick and dirty way to get name of CMC highest correlating feature
+        cmc = str(rel.iloc[0, 0]).split("__")[2]
+        cmc_same = str(rel_same.iloc[0, 0]).split("__")[2]
+        cmc_diff = str(rel_diff.iloc[0, 0]).split("__")[2]
+
+        # rel_desc = rel.r.abs().to_frame().describe().T
+        # rel_desc_diff = rel_diff.r.abs().to_frame().describe().T
+        # rel_desc_same = rel_same.r.abs().to_frame().describe().T
+
+        rel_desc = rel.r.to_frame().describe().T
+        rel_desc_diff = rel_diff.r.to_frame().describe().T
+        rel_desc_same = rel_same.r.to_frame().describe().T
+
+        cmc_col = "cmc_max_corr_feature"
+
+        rel_desc[cmc_col] = cmc
+        rel_desc_same[cmc_col] = cmc_same
+        rel_desc_diff[cmc_col] = cmc_diff
+
+        rel_desc.index = Index(name="ROIs", data=["all"])
+        rel_desc_diff.index = Index(name="ROIs", data=["diff"])
+        rel_desc_same.index = Index(name="ROIs", data=["same"])
+        descs = pd.concat([rel_desc_same, rel_desc, rel_desc_diff], axis=0)
+        descs = descs.loc[:, ["min", "mean", "max", "std", cmc_col]]
+        descs[cmc_col] = descs[cmc_col].apply(lambda s: "lateral" if s == "cmc" else s)
+        all_descs.append(descs)
+
+    desc = pd.concat(all_descs, keys=FS_FEATS, axis=0)
+    print(desc.round(2))
+    print(desc.round(3).to_latex(index=True, sparsify=True, float_format="%0.3f"))
+
+
+def hcp_cmc_fs_raw_sds() -> None:
+    # from src/munging/fs_stats/tabularize.py::compute_cmcs
+    subclasses = [
+        "__cmc__",  # GrayVol / pseudoVolume
+        "__asym__",  # cmc_l - cmc_r  # PROBLEM! no matter if bh, lh, rh
+        "__asym_abs__",  # |cmc_l - cmc_r|
+        "__asym_div__",  # cmc_l / cmc_r
+        "pseudoVolume",
+        "CurvInd",
+        "FoldIndex",
+        "GaussCurv",
+        "GrayVol",
+        "MeanCurv",
+        "SurfArea",
+        "ThickAvg",
+        "ThickStd",
+    ]
+    matplotlib.use("QtAgg")
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+
+    thick_area_ratios = (
+        df.filter(regex="SurfArea")
+        .min()
+        .rename(index=lambda s: s.replace("SurfArea", ""))
+        / df.filter(regex="ThickAvg")
+        .min()
+        .rename(index=lambda s: s.replace("ThickAvg", ""))
+    ).sort_values()
+    # sds = (
+    #     df.apply(
+    #         lambda x: np.log(
+    #             (MinMaxScaler().fit_transform(x.values.reshape(-1, 1)).ravel() + 1)
+    #         )
+    #     )
+    #     .std(ddof=1)
+    #     .to_frame()
+    #     .rename(columns={0: "sd"})
+    #     .reset_index()
+    # )
+    info = df.std(ddof=1).to_frame().rename(columns={0: "sd"}).reset_index()
+    info["mean"] = df.mean().reset_index(drop=True)
+    info["min"] = df.min().reset_index(drop=True)
+    info["max"] = df.max().reset_index(drop=True)
+    info["coef_var"] = info["sd"] / info["mean"]
+    quartiles = df.quantile(q=[0.25, 0.75])
+    info["iqr"] = quartiles.diff(axis=0).iloc[1].reset_index(drop=True)
+    info["med"] = df.median(axis=0).reset_index(drop=True)
+    info["rob_var"] = info["iqr"] / info["med"]
+    info["coef_dis"] = (quartiles.diff() / quartiles.sum()).iloc[1].reset_index(drop=True)
+    info = info[
+        (info["sd"] > 0) & (info["sd"] < 10_000)
+    ]  # eliminate a couple crazy FoldIndex vals
+    info["source"] = info["feature"].apply(
+        lambda f: "FS" if "FS" in f else "CMC" if "CMC" in f else f
+    )
+    info["subclass"] = info["feature"].copy()
+    for subclass in subclasses:
+        idx = info["feature"].str.contains(subclass)
+        info.loc[idx, "subclass"] = subclass.replace("__", "")
+
+    info["hemi"] = info["feature"].apply(
+        lambda s: "left"
+        if "__lh" in s
+        else "right"
+        if "__rh" in s
+        else "both"
+        if "__bh" in s
+        else s
+    )
+
+    info["class"] = info["feature"].apply(lambda s: str(s).split("__")[2])
+    # refine "asym" class to left, right, and bilateral kinds
+    idx = info["class"] == "asym"
+
+    info["subclass"] = info["class"].copy()
+    info.loc[idx, "subclass"] = info.loc[idx, "feature"].apply(
+        lambda s: "left" if "lh" in s else "right" if "rh" in s else "bilateral"
+    )
+    pd.options.display.max_rows = 100
+    print(info.groupby("subclass").describe().T.round(2))
+    laterals = info[info["subclass"] == "asym"]
+
+    # sds = sds[sds["class"].isin(["left", "right", "bilateral"])]
+
+    logged = np.log(info["sd"] + 1)
+    logged = logged[logged > 0]
+    sbn.set_style("white")
+    ax = sbn.histplot(
+        data=info,
+        # binrange=(-10)
+        hue="source",
+        # x=logged,
+        # x="coef_var",
+        x="rob_var",
+        # x="coef_dis",
+        # x="sd",
+        kde=True,
+        bins=200,
+        palette={"FS": "#aaa", "CMC": "black"},
+        legend=False,
+    )
+    # ax.lines[0].set_color("grey")
+    # ax.lines[1].set_color("black")
+
+    legend_elements = [
+        Patch(facecolor="#aaa", edgecolor="#aaa", label="FS"),
+        Patch(facecolor="black", edgecolor="black", label="CMC"),
+    ]
+    ax.legend(handles=legend_elements).set_visible(True)
+    plt.show()
+
+
+def hcp_sa_thick_ratios() -> None:
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+
+    sa_d_ratios = (
+        (
+            df.filter(regex="SurfArea")
+            .min()
+            .rename(index=lambda s: s.replace("SurfArea", "").replace("FS__FEAT____", ""))
+            / df.filter(regex="ThickAvg")
+            .min()
+            .rename(index=lambda s: s.replace("ThickAvg", "").replace("FS__FEAT____", ""))
+        )
+        .sort_values()
+        .to_frame()
+        .rename(columns={0: "ratio"})
+        .reset_index()
+    )
+    sa_d_ratios["hemi"] = sa_d_ratios["feature"].apply(to_hemi)
+    sa_d_ratios["feature"] = sa_d_ratios["feature"].apply(lambda s: s.split("-")[1])
+    sa_d_ratios = (
+        sa_d_ratios.pivot(index="feature", columns=["hemi"], values="ratio")
+        .sort_values(by=["left", "right"])
+        .drop(columns="both")
+    )
+
+    v_sa_max_ratios = (
+        (
+            df.filter(regex="GrayVol")
+            .max()
+            .rename(index=lambda s: s.replace("GrayVol", "").replace("FS__FEAT____", ""))
+            / df.filter(regex="SurfArea")
+            .min()
+            .rename(index=lambda s: s.replace("SurfArea", "").replace("FS__FEAT____", ""))
+        )
+        .sort_values()
+        .to_frame()
+        .rename(columns={0: "Vol/Area"})
+        .reset_index()
+    )
+    v_sa_max_ratios["hemi"] = v_sa_max_ratios["feature"].apply(to_hemi)
+    v_sa_max_ratios["feature"] = v_sa_max_ratios["feature"].apply(
+        lambda s: s.split("-")[1]
+    )
+    v_sa_max_ratios = (
+        v_sa_max_ratios.pivot(index="feature", columns=["hemi"], values="Vol/Area")
+        .sort_values(by=["left", "right"])
+        .drop(columns="both")
+    )
+
+    print(sa_d_ratios.round(1).to_markdown(tablefmt="simple"))
+    print(sa_d_ratios.round(1).to_latex(index=True, float_format="%0.1f"))
+    print("Ratio of ROI surface area to ROI average thickness, by hemisphere")
+    # below are all above 0.975
+    print("Left-right ratio correlations:")
+    print(f"Spearman: {sa_d_ratios.corr(method='spearman').iloc[0, 1]}")
+    print(f"Pearson: {sa_d_ratios.corr().iloc[0, 1]}")
+
+    # table with columns: feature, min, max
+    cmc_extremes = df.filter(regex="__cmc__").describe().T[["min", "max"]].reset_index()
+    cmc_extremes["hemi"] = cmc_extremes["feature"].apply(to_hemi)
+    cmc_extremes["feature"] = cmc_extremes["feature"].apply(lambda s: s.split("-")[1])
+    cmc_extremes = cmc_extremes[cmc_extremes.hemi != "both"].pivot(
+        index="feature", columns="hemi"
+    )
+
+    # these are both above 0.90, so we can basically just ignore one hemi to simplify
+    c = cmc_extremes.copy()
+    min_corr = c.corr(method="spearman").loc[("min", "left"), ("min", "right")]
+    max_corr = c.corr(method="spearman").loc[("max", "left"), ("max", "right")]
+
+    # below are all above 0.9
+    print("Left-right CMC min/max correlations:")
+    print("Spearman:")
+    print(f"corr(L_min, R_min)={min_corr}")
+    print(f"corr(L_max, R_max)={max_corr}")
+
+    c = c.loc[:, [("min", "left"), ("max", "left")]].sort_values(by=(("min", "left")))
+    cmc_ranges = c.diff(axis=1)["max"].sort_values(by="left")  # type: ignore
+    cmc_ranges.columns = ["range"]
+    sa_d_ratios.columns.name = None
+    cmc_sa_ratio_corrs = (
+        pd.concat([cmc_ranges, sa_d_ratios], axis=1)
+        .corr(method="spearman")["range"]
+        .iloc[1:]
+    )
+
+    print("Correlation (Spearman) Between CMC (standard) Range and Vol/SA Ratio")
+    print(cmc_sa_ratio_corrs.round(2))
+
+    return
+
+
+def associations() -> None:
+    """
+    Note in this case the only categorical feature is sex, which is also really
+    only useful for comparing univariate predictions (there aren't really any
+    measures of assocation that work for continuous and categorical predictors
+    both and which can also be compared). So we do NOT need to look at the
+    categorical associations.
+
+    Also, for the associations, it would seem F_p and pearson_p are identical
+    (i.e. the p-values are the same). So for filtering on p-values and presenting
+    stuff, it is really enough to just look at the correlations.
+
+    """
+    # fmt: off
+    P_COLS = [
+        "pearson_p", "spearman_p", "F_p"
+    ]
+    ASSOC_CONTS = [
+        "pearson_r", "pearson_p", "spearman_r",
+        "spearman_p", "F", "F_p", "mut_info",
+    ]
+    PRED_COLS = ["model", "mae", "msqe", "mdae", "r2", "var-exp"]
+    # fmt: on
+    HCP = ROOT / "cmc_results_clean/HCP"
+
+    def to_assoc_tables(conts: list[Path]) -> DataFrame:
+        dfs = []
+        for path in conts:
+            df = pd.read_csv(path, index_col=0)
+            df.index.name = "feature"
+            target = path.parent.parent.parent.parent.parent.name.replace(
+                "TARGET__REG__", ""
+            )
+            df.insert(0, "target", target)
+            dfs.append(df)
+        df = pd.concat(dfs, axis=0)
+        for col in P_COLS:
+            ps_corrected = multipletests(df[col], alpha=0.05, method="holm")[1]
+            df[col] = ps_corrected
+        df = add_feat_info(df)
+
+        return df
+
+    def to_pred_tables(cats: list[Path], conts: list[Path]) -> DataFrame:
+        sex = []
+        for path in cats:
+            df = pd.read_csv(path, index_col=0)
+            target = path.parent.parent.parent.parent.parent.name.replace(
+                "TARGET__REG__", ""
+            )
+            df.insert(0, "target", target)
+            sex.append(df)
+        sex = pd.concat(sex, axis=0)
+
+        tables = []
+        for path in conts:
+            df = pd.read_csv(path, index_col=0)
+            df.index.name = "feature"
+            target = path.parent.parent.parent.parent.parent.name.replace(
+                "TARGET__REG__", ""
+            )
+            df.insert(0, "target", target)
+            tables.append(df)
+        tables = pd.concat(tables, axis=0)
+        df = pd.concat([sex, tables], axis=0)
+        df = add_feat_info(df)
+        return df
+
+    # fmt: off
+    assocs_conts = sorted(HCP.rglob("**/associations/**/continuous_features.csv"))
+    preds_cats   = sorted(HCP.rglob("**/predictions/**/categorical_features.csv"))
+    preds_conts  = sorted(HCP.rglob("**/predictions/**/continuous_features.csv"))
+    # fmt: on
+
+    assocs = to_assoc_tables(assocs_conts)
+    preds = to_pred_tables(cats=preds_cats, conts=preds_conts)
+    print(assocs)
+    print(preds)
+
+    # number of CMC and FS featurea for each target (1011). Enough to just look
+    # at one target to get some counts and stuff.
+    df = assocs[assocs.target == assocs.target.unique()[0]]
+    n_targets = len(assocs.target.unique())
+    n_feat = len(df)
+    n_cmc = df.index.str.contains("CMC").sum()  # 510AAA
+    n_fs = df.index.str.contains("FS").sum()  # 500AAA
+
+    sigs = assocs[
+        (assocs.filter(regex="_p") < 0.05).any(axis=1)
+    ]  # see docstring aboveAAA
+    sig_counts = sigs.groupby("target").count().iloc[:, 0]
+    sig_counts.name = "n_sig"
+    """
+    target         source        n
+    emotion_rt     CMC         1.0
+                   FS         27.0
+    int_g_like     CMC        16.0
+                   FS         63.0
+    language_perf  CMC        32.0
+                   FS        137.0
+    p_matrices     CMC         2.0
+                   FS         11.0
+    wm_perf        CMC        18.0
+                   FS        110.0
+    """
+    sig_counts = (
+        sigs.groupby(["target", "source"])
+        .describe()
+        .round(2)
+        .xs(("count"), axis="columns", level=1)
+        .iloc[:, 0]
+    )
+
+
+def within_subj_corrs() -> None:
+    # fmt: off
+    import matplotlib
+    matplotlib.use("QtAgg")
+    # fmt: on
+
+    FEATS = {**CMC_FEATS, **FS_FEATS}
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+
+    all_corrs, all_ps = [], []
+    for sid in tqdm(
+        df.index, total=len(df.index), desc="Computing within-subject correlations"
+    ):
+        dfs = df.loc[sid].to_frame().rename(columns={sid: "value"}).reset_index()
+        dfs = add_feat_info(dfs)
+
+        corrs = DataFrame(
+            data=np.full([len(FEATS), len(FEATS)], np.nan),
+            index=list(FEATS.values()),
+            columns=list(FEATS.values()),
+        )
+        ps = DataFrame(
+            data=np.full([len(FEATS), len(FEATS)], np.nan),
+            index=list(FEATS.values()),
+            columns=list(FEATS.values()),
+        )
+
+        filterwarnings("ignore", "An input array is constant")
+        for i1, feat1 in enumerate(FEATS.values()):
+            for i2, feat2 in enumerate(FEATS.values()):
+                if i1 <= i2:
+                    continue
+                x = dfs[dfs["fclass"] == feat1]
+                y = dfs[dfs["fclass"] == feat2]
+                try:
+                    r, p = spearmanr(x["value"].values, y["value"].values)
+                except:  # noqa
+                    r = p = np.nan
+                corrs.loc[feat1, feat2] = r
+                ps.loc[feat1, feat2] = p
+
+        ps = ps.stack().reset_index().rename({"level_0": "x", "level_1": "y"})
+        corrs = corrs.stack().reset_index().rename({"level_0": "x", "level_1": "y"})
+        corrs["sid"] = sid
+        ps["sid"] = sid
+        all_corrs.append(corrs)
+        all_ps.append(ps)
+
+    corrs = pd.concat(all_corrs, axis=0).rename(
+        columns={"level_0": "x", "level_1": "y", 0: "r"}
+    )
+    ps = pd.concat(all_ps, axis=0).rename(
+        columns={"level_0": "x", "level_1": "y", 0: "p"}
+    )
+    corrs = pd.merge(corrs, ps, how="inner", on=["sid", "x", "y"], suffixes=(None, None))
+    corrs["p"] = multipletests(ps["p"], method="holm")[1]
+
+    # make insignificant correlations n
+    cs = corrs.copy()
+    cs["r"] = cs["p"].apply(lambda p: 1.0 if p <= 0.05 else np.nan) * cs["r"]
+    sig_counts = (
+        cs.drop(columns="sid").groupby(["x", "y"]).describe().loc[:, [("r", "count")]]
+    )
+    # line above produces sthg like
+    """
+                                  r
+                              count
+    CMC           FS
+    asym_diff     CurvInd      10.0
+                  FoldIndex    11.0
+                  GaussCurv     5.0
+                  MeanCurv      7.0
+                  SA           16.0
+                  V            10.0
+                  d             6.0
+                  d_sd          9.0
+    asym_diff_abs CurvInd     449.0
+                  FoldIndex   374.0
+                  GaussCurv    37.0
+                  MeanCurv     79.0
+                  SA          623.0
+                  V           471.0
+                  d            18.0
+
+    This is very helpful as the "count" columns tell the number of significant correlations, even
+    though the rest of the values are inflated
+    """
+    corrs = corrs.drop(columns=["sid", "p"]).groupby(["x", "y"]).describe()
+    corrs.loc[:, ("r", "count")] = sig_counts.astype(float)
+    corrs = corrs.droplevel(0, axis=1).rename(columns={"count": "n_sig"})
+    print()
+
+
+def roi_corrs() -> None:
+    matplotlib.use("QtAgg")
+    FEATS = {**CMC_FEATS, **FS_FEATS}
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+    df = add_feat_info(df.stack().reset_index()).rename(columns={0: "value"})
+    # grid = sbn.displot(
+    #     data=df[df["fclass"].isin([*CMC_FEATS.values()][:-1])],
+    #     x="value",
+    #     col="roi",
+    #     col_wrap=6,
+    #     hue="fclass",
+    #     kind="kde",
+    #     height=2,
+    #     aspect=1,
+    # )
+    # fig = plt.gcf()
+    # sbn.move_legend(grid, loc="lower right")
+    # fig.tight_layout()
+    # plt.show()
+
+    grid = sbn.catplot(
+        data=df[df["fclass"].isin([*CMC_FEATS.values()][:-1])],
+        x="value",
+        y="fclass",
+        kind="violin",
+        col="roi",
+        col_wrap=6,
+        hue="fclass",
+        height=2,
+        aspect=1.5,
+    )
+    fig = plt.gcf()
+    # sbn.move_legend(grid, loc="lower right")
+    fig.tight_layout()
+    plt.show()
+    # cols = (
+    #     df.columns.to_series()
+    #     .apply(lambda s: s.split("__")[2:])
+    #     .explode()
+    #     .str.split("-")
+    #     .explode()
+    # )
+
+    # corrs = df.corr(method="spearman")
+    # corrs.index.name = "x"
+    # corrs.columns.name = "y"
+    # corrs = (
+    #     corrs.where(np.triu(np.ones(corrs.shape), 1).astype(np.bool))
+    #     .stack()
+    #     .reset_index()
+    #     .rename(columns={"level_0": "x", "level_1": "y", 0: "r"})
+    #     .sort_values(by="r", key=abs, ascending=False)  # top vals are largest
+    #     .reset_index(drop=True)
+    # )
+    # x_corrs = add_feat_info(
+    #     corrs.drop(columns="y").rename(columns={"x": "feature"})
+    # ).drop(columns="feature")
+    # y_corrs = add_feat_info(
+    #     corrs.drop(columns="x").rename(columns={"y": "feature"})
+    # ).drop(columns="feature")
+    # corrs = pd.concat(
+    #     [
+    #         x_corrs.drop(columns=["r", "source"]).rename(columns=lambda s: f"{s}1"),
+    #         y_corrs.drop(columns=["r", "source"]).rename(columns=lambda s: f"{s}2"),
+    #         x_corrs["r"].to_frame(),
+    #     ],
+    #     axis=1,
+    #     ignore_index=False,
+    # )
+    # corrs = corrs.loc[:, ["fclass1", "fclass2", "roi1", "roi2", "hemi1", "hemi2", "r"]]
+    # corrs = corrs[corrs.roi1 == corrs.roi2].drop(columns="roi2")  # subset to same roi
+    # corrs[corrs.fclass1 != corrs.fclass2].drop(
+    #     columns=["roi1", "hemi1", "hemi2"]
+    # ).groupby(["fclass1", "fclass2"]).describe()
+    raise
+
+
 if __name__ == "__main__":
     # target_hists()
     # figure1()
     # hcp_boxplots()
     # hcp_d_p_plots()
     # lateral_tables()
-    tables()
+    # tables()
     # fs_tables()
     # hcp_target_stats()
+
+    # hcp_cmc_corrs()
+    # hcp_cmc_fs_raw_sds()
+    # hcp_sa_thick_ratios()
+    # associations()
+    # within_subj_corrs()
+    roi_corrs()
