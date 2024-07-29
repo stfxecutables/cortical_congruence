@@ -3,6 +3,7 @@
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{float}
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
@@ -105,100 +106,68 @@ pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic reson
 \maketitle
 
 
-\color{gray}
+\color{darkgray}
 
 \section{Overall Concerns}
 
 \note{}
 
-No matter how I slice up this data, I cannot find anything really good to say
-about CMC\@. The best I would be able to do is is basically a
-\href{https://xkcd.com/882/}{green jelly beans paper} (ignore tens of thousands
-of insignificant results and pick out a tiny handful of significances).
+No matter how I slice up this data, I cannot find anything really good (or
+even \emph{clear}) to say about CMC\@. I feel that all I am able to do is
+basically a \href{https://xkcd.com/882/}{green jelly beans paper} (ignore
+tens of thousands of insignificant results and pick out a tiny handful of
+significances, except in this case, also ignoring that the features
+CMC is based on produce \emph{far} more significances \dots).
 
 Ultimately, I do not believe this is an HCP problem, but a CMC problem. CMC
 is a ratio or index variable, i.e.\ a derived variable / engineered feature
-extracted from other features, rather than a novel feature extracted from
-the FreeSurfer meshes. Ratio or index variables have a lot of problems, but
-in this case, it is worse than that, as CMC essentially takes three variables
-(surface area, volume, and average thickness) and reduces them \emph{in a
-completely unsupervised way} with a formula based on, essentially, a geometric
-intuition.
+extracted from other features, rather than a novel feature extracted from the
+FreeSurfer meshes. Ratio or index variables have a lot of known problems, but
+in this case, it is worse than that, as CMC takes three variables (surface
+area, volume, and average thickness) and reduces them \emph{in a completely
+unsupervised way} with a formula based on, essentially, a geometric
+intuition. This is a good intuition (ROI SA times avg.\ thickness---what I
+call psuedovolume---\emph{does} tend to be close to ROI volume), but it is
+not clear to me that this invariance is meaningful. I.e.\ the invariance is
+likely because most ROIs are indeed slab-like or sheet-like, but then, we
+don't have much reason to believe that anatomical ROI \emph{shape} should
+matter much for brain functioning (volume and surface area, perhaps, but this
+should still be secondary to location and connectivity), and plenty of
+evidence against such an idea (the massive variance in cortical ROI shape
+across individuals, despite similar capacities and behaviours across people).
 
-Derived indices like this (e.g.\ BMI) of course contain less information than
-the base features (some subjects that were distinguishable in the
-full-dimensional space of the original features will almost always be
-expected to become indistinguishable in the reduction). They are essentially
-lossy reductions which we make only if the loss is not too large, and if that
-reduction simplifies interpretations and/or decisions in most cases. E.g.\
-provided a person is not a body-builder, or extremely short or tall, then we
-know using the BMI is strongly predictive of various health-related measures,
-and since BMI is quick to compute, non-experts can use BMI most of the time
-as a useful, rough indicator of physical health. Actually, BMI is a shape
-index just like CMC, and is arguably extremely similar, in that BMI is a
-ratio of a mass (extremely proportional to volume) to a height (squared), and
-CMC involves a ratio of a width to a volume (but then also a product of a
-surface area, making correlates more complicated, and CMC more lossy).
+Derived indices like this (e.g.\ BMI), by mathematical necessity, contain
+less information than the base features (some subjects that were
+distinguishable in the full-dimensional space of the original features will
+almost always be expected to become indistinguishable in the reduction). They
+are essentially lossy reductions which we make only if the loss is not too
+large, and if that reduction simplifies interpretations and/or decisions in
+most cases. E.g.\ provided a person is not a body-builder, or extremely short
+or tall, then we know a large BMI is strongly predictive of various
+health-related measures, and even in the exceptional cases, we still know
+that if BMI gets large enough, it definitely indicates a problem (BMI indexes
+size, and being too big is always eventually bad, and there is no way for a
+human to get a massive BMI without also being very large). But, we also know
+because of this, a more general predictive model that can learn a different
+(e.g.\ polynomial) relationship between height and weight will always be
+generally superiour (provided it is adequately regularized).
 
+CMC is \emph{a priori} (i.e.\ theoeretically, mathematically) clearly worse
+than BMI, since it is a larger reduction (three variables to one) and since
+it isn't clear that an ROI being more or less "slab-like" is something that
+is bad, nor is it even clear that non-slab-like-ness is the only way to get a
+CMC deviating from 1.0.
 
-
-
-This discussion of variability I think has no relevance to CMC\@. Unless a
-feature is constant, variability---or really any dsitributional information
-in isolation from information of some target---has essentially nothing to do
-with reproducibility or predictive utility. The only thing one usually
-doesn't want in a feature is extreme skew or kurtosis (i.e.\ asymmetry and/or
-thick tails), but this is only because it is common for a lot of models
-(e.g.\ linear models) to assume otherwise. But basically, for any feature
-\(x\), there is no function \(f\) (e.g.\ mean, skew, entropy) whatsoever such
-that \(f(x)\) can tell you about the value of \(x\), nor even can one define
-a function such that the relationship between \(f(x_1)\) and \(f(x_2)\) tells
-you anything about the relative quality of \(x_1\) to \(x_2\).
-
-This means that any investigation into e.g.\ the sds/means/any univariate
-metric of CMC features, but also any comparison to FreeSurfer features, is
-basically a completely meaningless activity (beyond the case where, if you
-are going to use a linear model, then you need to check if you need to apply
-e.g.\ a log, power, or other normalizing transform first). I.e.\ our signed,
-difference-based CMC asymmetry measures seem to have a highly exponential
-distribution, and seems to require a log or even power transform to even make
-their distributions visualizable relative to the rest of the CMC measures,
-and while this is important to note for anyone hoping to use such a feature
-in a linear model, this really doesn't speak to CMC metrics having any value,
-or having value relative to the FreeSurfer measurements they are based on.
-
-The only things that IMO do speak to CMC value / quality are:
-
-\begin{enumerate}
-	\item measures of association (e.g.\ correlation, mutual information)
-	\item the predictive analyses (e.g.\ utility)
-	\item explainability (e.g.\ if some CMC has some special meaning)
-\end{enumerate}
-
-However, as CMC metrics just muddle
-
-
-
-But even if we do pretend that such summaries have any relevance, the appropriate
-summaries are those that are scale-invariant, i.e.\ that characterize distribution
-shape. This would be e.g.\ skew, kurtosis, or things like the sd/mean ratio, and
-robust variants (e.g.\ IQR/median, or ).
-
-However, I looked at all of these (see table below) and really either
-
-Especially in this case
-
-less variable (unless it is constant) is irrelevant to reproducibility or the
-information value in that measurement, and in general for predictive modeling
-(e.g.\ biomarkers) variability is usually seen as good, since it tends to mean
-``information''. I.e.\ if CMC variable
+And emprically, we just aren't seeing a clear nomological net to give CMC
+explainability. I.e.\ the univariate associations are incredibly weak relative
+to those of the base features, and so are the predictions.  Most ROIs have
+similar / overlapping CMC distributions, and comparing CMC across ROIs (with
+wildly different shapes) is not mathematically sound. So I am not sure CMC
+could ever reveal anything useful in non-longitudinal data.
 
 \color{black}
 
-
-
-
-
+\vspace{1cm}
 
 \begin{abstract}
 We extract a number of novel cortical morphological congruence (CMC) metrics
@@ -216,11 +185,11 @@ ROI surface area, volume, and thickness. Developmental and predictive
 implications are discussed.
 \end{abstract}
 
-\note{I have altered or eliminated many uses of the term `biomarker' here, as
+\note{I have altered or eliminated many uses of the term `biomarker', as
 the CMC features / metrics do very poorly in predictive analyses on our data.
 My feeling is that technical usage of this term is such that new features,
 measures, or metrics can, with significant work, be \emph{revealed} to be
-biomarkers, but one cannot e.g.\ `propose' a biomarke. Rather, research
+biomarkers, but one cannot e.g.\ `propose' a biomarker. Rather, research
 eventually confer biomarker status on some feature once a large body of work
 has established some clear, broad utility or stable nomological net. But
 unfortunately I am unable to see any clear nomological net or predictive
@@ -247,58 +216,18 @@ volume, surface area, or average thickness, have long been relied upon for
 the study of the human brain
 \citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a,mccannStructuralMagneticResonance2021}.
 
-However, these volume, surface area, and thickness
-measurements are known to vary siginificantly aross individuals and populations
-\citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a}, with much of this
-variability still to be explained. The lack of deeper understanding of the sources of variability
-and relationships between these measurements may ,
-potentially contributing to known reproducibility challenges in modern
-neuroscience studies
+However, these volume, surface area, and thickness measurements are known to
+vary siginificantly aross individuals and populations
+\citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a},
+with much of this variability still to be explained. The lack of deeper
+understanding of the sources of variability and relationships between these
+measurements may potentially contribute to known reproducibility challenges
+in modern neuroscience studies
 \citep{martinezReproducibilityBraincognitionRelationships2015,marekReproducibleBrainwideAssociation2022},
 and may be part of the reason that these techniques are generally not yet
 relied upon for clinical characterization.
 
-
-\color{orange}
-The `congruence' stuff below is IMO really weak because:
-
-	\begin{enumerate}
-		\item `congruence' really means geometric \emph{equality} rather than
-		similiarity
-
-		\item CMC values close to 1 or 0 do NOT mathematically imply any kind of
-		clear similarity or congruence to anything, unless some very large
-		assumptions are made
-
-		\begin{itemize}
-			\item these assumptions seem to hold for most, but not all cortical
-			regions, but certainly would not hold for other anatomical or
-			functional ROIs
-		\end{itemize}
-
-		\item what all CMC metrics \emph{actually} index for cortical regions is
-		essentially flattness / curvature, albeit in a very different way from
-		how \href{https://surfer.nmr.mgh.harvard.edu/fswiki/MeanCurvature}{FreeSurfer
-		does it}.
-	\end{enumerate}
-
-Thus whenever I read `congruence' I find myself first asking `congruent' to
-\emph{what}, and then I answer, `to an idealized slab- or sheet-like volume
-of uniform thickness, except actually by congruent we don't even mean
-`similar', just that the pseudoVolume approximates the actual volume closely, even though
-also actually the pseudoVolumne and actual volume can be quite close in a
-large number of cases where the region is not slab- or sheet-like at all, so
-this intepretation is only a generalization which is approximately useful for
-most typical anatomical cortical regions', i.e.\ the name induces mental anguish
-as it simply points the mind in the wrong direction for interpreting CMC values.
-
-I think something like "volumetric regularity"
-
-\color{black}
-
-
-
-Very broadly, congruence is analogous to agreement between two or more
+Broadly, congruence is analogous to agreement between two or more
 objects, studies, shapes, individual measurements, etc. For instance, the
 results of one study may be congruent with those already in the literature,
 or two objects are deemed congruent if they have the same shape and size.
@@ -345,28 +274,30 @@ reported that surface area and cortical thickness are genetically
 uncorrelated.
 \end{quotation}
 
-``Freesurfer generates white and pial surface meshes with identical numbers
-of vertices, and calculates the cortical thickness as the average of the
-distances from the point on the white surface to its nearest neighbor on the
-pial surface, and from the point on the pial surface to its nearest neighbor
-on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
+\note{If the above quote is true, I think this is a problem for both the
+CMC formula and/or the interpreation of CMC. It would also }
 
-\note{The very existence of the notion of cortical ROI (average) thickness relies
-upon an assumption that cortical regions \emph{do} have a broadly slab- or sheet-like
-shape, as in Figure~\ref{fig:slab}. Absent such an assumption, it is unclear how
-to even define thickness for arbtirary non-convex volumes. I.e. \(\hat{V}(r)\) is
-valid/interpretable insofar as \texttt{ThickAvg} is valid, and .}
+% ``Freesurfer generates white and pial surface meshes with identical numbers
+% of vertices, and calculates the cortical thickness as the average of the
+% distances from the point on the white surface to its nearest neighbor on the
+% pial surface, and from the point on the pial surface to its nearest neighbor
+% on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
 
 Define \(V(r)\) to be the volume of region \(r\), and \(A(r)\) and \(d(r)\)
 to be the surface area and average thickness, respectively, of the ROI\@.
 Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
 (e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
-right precuneus). Then define the *lateral* CMC metrics to be:
+right precuneus). Then define the lateral CMC metrics to be:
 
 \begin{equation}
 \text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{A(r) \cdot d(r)}
 \end{equation}
 
+\begin{align}
+\label{eq:cmc-laterals}
+\text{CMC}_l &= \text{CMC}_{\text{Lateral}}(r_l) \\
+\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r)
+\end{align}
 
 Note that \(A(r) \cdot d(r)\) is the expected volume of \(r\) if \(r\) is any
 three-dimensional slab-like shape with constant cross-sectional area
@@ -376,6 +307,7 @@ the \emph{expected volume}, \(\hat{V}(r)\), as
 \begin{equation}
 \hat{V}(r) = \text{CMC}_{V}(r) = V(r) \cdot d(r).
 \end{equation}
+
 
 \begin{figure}
 	\centering
@@ -410,22 +342,14 @@ shapes. However, for comparing indiduals at the \emph{same} ROI, then
 increased curvature (e.g.\ gyration, sulcation), will tend to increase
 \(A(r)\), and thus the value of \(\hat{V}(r)\) relative to \(V(r)\).
 
-\note{What is actual observed ThickStd and ThickAvg relative to SurfArea? The
-largest observed average thickness across all ROIs and subjects is
-approximately 0.30mm, while the smallest observed surface area is 35.61 mm\(^2\),
-i.e. almost 120 times smaller, but the ratio between the median observed surface area and average thickness is approximately 2400.}
+% \note{What is actual observed ThickStd and ThickAvg relative to SurfArea? The
+% largest observed average thickness across all ROIs and subjects is
+% approximately 0.30mm, while the smallest observed surface area is 35.61
+% mm\(^2\), i.e.\ almost 120 times smaller, but the ratio between the median
+% observed surface area and average thickness is approximately 2400.}
 
 
-
-
-
-\begin{align*}
-\label{eq:cmc-laterals}
-\text{CMC}_l &= \text{CMC}_{\text{Lateral}}(r_l) \\
-\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r) \\
-\end{align*}
-
-Also define "bilateral" CMC as:
+Also define \emph{bilateral} CMC as:
 
 \begin{equation}
 \label{eq:cmc-bilateral}
@@ -434,7 +358,7 @@ Also define "bilateral" CMC as:
 =\frac{\text{ROI total volume}}{\text{ROI total expected volume}}
 \end{equation}
 
-Define the *asymmetric* CMC measures:
+Define the \emph{asymmetric} CMC measures:
 
 \[ \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r} \] \label{eq:asym-signed-diff}
 
@@ -442,15 +366,14 @@ and
 
 \[ \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert \] \label{eq:asym-unsigned-diff}
 
-which are the *signed* and *unsigned CMC differences*, respectively. Also define
+which are the \emph{signed} and \emph{unsigned} CMC differences, respectively. Also define
 
 \[ \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r} \] \label{eq:asym-ratio}
 
-to be the asymmetric CMC *ratio* measure.
-
-Then, for each ROI \(r\), this defines seven \(\text{CMC}\) measures:
-\(\text{CMC}_{V}\), \(\text{CMC}_l\), \(\text{CMC}_r\), \(\text{CMC}_{lr}\),
-\(\text{CMC}_{l-r}\), \(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
+to be the asymmetric CMC ratio measure. Then, for each ROI \(r\), this
+defines seven \(\text{CMC}\) measures: \(\text{CMC}_{V}\), \(\text{CMC}_l\),
+\(\text{CMC}_r\), \(\text{CMC}_{lr}\), \(\text{CMC}_{l-r}\),
+\(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
 
 The CMC features defined in Equation~\ref{eq:cmc-laterals} and
 Equation~\ref{eq:cmc-bilateral} are unitless ratios assessing a cortical
@@ -512,19 +435,16 @@ predictive analyses based on these extracted features.
 
 \subsubsection{Descriptive Statistics}
 
-\textcolor{orange}{For all the stats below, we could also alternately
-estimate CIs on the Cohen's d values via a percentile bootstrap, if you don't
-like using Mann-Whitney and Wilcoxon signed-rank tests.}
 
-\paragraph{FreeSurfer Feature Correlations}: To assess whether CMC features
+\paragraph{FreeSurfer Feature Correlations} To assess whether CMC features
 extract  information, for each CMC feature in each CMC
 feature class, and each ROI, we compute the Spearman correlations with a
 number of potentially related original FreeSurfer cortical metrics.
 Specifically, we assess CMC feature correlations with the original FreeSurfer
 components (volume, surface area, and average thickness), and those relating
-to ROI shape (e.g. thickness variation and curvature or folding).
+to ROI shape (e.g.\ thickness variation and curvature or folding).
 
-\paragraph{Sex}: For each CMC feature, we compute descriptive measures of
+\paragraph{Sex} For each CMC feature, we compute descriptive measures of
 group separation by sex using Cohen's d and the Mann-Whitney U test. We also
 consider each of the seven classes of CMC feature, and compare whether these
 feature classes differ in variability. This is done by computing the average
@@ -532,14 +452,14 @@ CMC metric in each CMC class for each group (e.g.\ sex, laterality, age), and
 then comparing these two group averages with a measure of scale (standard
 deviation; \(\sigma\), or interquartile range; IQR).
 
-\paragraph{Laterality}: For each ROI, it is reasonable to ask whether
+\paragraph{Laterality} For each ROI, it is reasonable to ask whether
 \(\text{CMC}_l\) and \(\text{CMC}_r\) differ. We also compare relevant CMC
 features in this manner.
 
-\paragraph{Age and Sex}: For each CMC feature in each CMC feature class, we
-compute the Spearman correlations with subject age class (HCP phenotypic data
-includes only broad age bins, and thus requires a correlation appropriate for
-ordinal variables).
+\paragraph{Age and Sex} For each CMC feature in each CMC feature class, we
+compute the Spearman correlations with subject age class. Spearman
+correlation is preferred as only age bins are available in the HCP phenotypic
+data.
 
 
 
@@ -557,8 +477,9 @@ online}.
 To investigate the predictive potential of CMC features, a number of \emph{ad
 hoc} regression targets were constructed from the HCP behavioural data.
 First, behavioural data were cleaned of irrelevant, missing, constant, or
-redundant features (see section \ref{sec:cleaning}).
-(\texttt{src/munging/hcp.py::load\_hcp\_phenotypic}).
+redundant features (see Section~\ref{sec:cleaning}).
+(\texttt{src/munging/hcp.py::load\_hcp\_phenotypic}). Then, the remaining
+behavioural features were reduced in an exploratory fashion.
 
 \begin{figure}
 \centering
@@ -595,9 +516,9 @@ redundant features (see section \ref{sec:cleaning}).
 \normalsize
 \caption{Junk features include, book-keeping (IDs, scan counts) and subscale
 items, or features with 200 or more NaN values. Highly-correlated features
-include e.g\@. \texttt{various dexterity\_unadj} and
-\texttt{dexterity\_ageadj} pairs, with correlations above 0.95, and other
-features with correlations of 1.0.}
+include e.g\@. pairs like \texttt{dexterity\_unadj} and
+\texttt{dexterity\_ageadj}, with correlations above 0.95, and other features
+with correlations of 1.0.}
 \end{figure}
 
 
@@ -630,8 +551,6 @@ features with correlations of 1.0.}
 % 				  (1113, 367)
 % \end{verbatim}
 
-Then, the remaining behavioural features were reduced in an exploratory
-fashion.
 
 First, clustering was performed on the features using HDBSCAN [cite
 paper, cite sklearn algorithm] with the absolute value of the Pearson
@@ -645,15 +564,13 @@ of the same behavioural test or measurement instrument.
 
 Second, after interpolating missing values with the feature means, HDBSCAN
 feature clusters were reduced to a single dimension via exploratory factor
-analysis (FA; [cite]). Factor analysis is a linear dimensionality reduction
-method wherein the reduced factor can be interpreted as a latent variable
-that well-describes the unreduced data, accounting for noise. FA was chosen
-here over PCA as the reduced unidimensional feature is more readily
-interpreted as a latent variable free from error variance [cite some good
-links
-\href{https://en.wikipedia.org/w/index.php?title=Factor\_analysis&oldid=1223130166#Exploratory\_factor\_analysis\_(EFA)\_versus\_principal\_components\_analysis\_(PCA)}{here
-} re: FA] and thus more suitable as a synthetic regression target. In
-addition, fact \cite{attiasIndependentFactorAnalysis1999}
+analysis. Factor analysis is a linear dimensionality reduction method wherein
+the reduced factor can be interpreted as a latent variable that
+well-describes the unreduced data, accounting for noise
+\citep{cattellScientificUseFactor1978,childEssentialsFactorAnalysis2006a}. FA
+was chosen here over PCA as the reduced unidimensional feature is more
+readily interpreted as a latent variable free from error variance
+\cite{attiasIndependentFactorAnalysis1999}.
 
 The resulting synthetic feature names, clusters and loadings are shown in
 \hyperref[sec:appendix-b]{Appendix B}, as are descriptive statistics in Table~\ref{tab:target-stats}.
@@ -704,12 +621,6 @@ features.
 
 \paragraph{AutoML via \texttt{df-analyze}}
 
-\textcolor{orange}{Get Derek to provide a little description of the psychological explained
-variance test with citation(s) was performed. Anything interesting from the
-machine learning analysis? Can you run this again with current df-analyze? If
-so is there anything interesting in there worth including in this manuscript?
-If so describe the methods here and adapt the text immediately below. If not,
-cut the text below.}
 
 Predictive analyses were completed with
 \href{github.com/stfxecutables/df-analyze}{\texttt{df-analyze}}, publicly
@@ -718,7 +629,9 @@ cleaning and preprocessing, and the subsequent feature selection, fitting,
 tuning, and validation of various classic machine-learning (ML) models from
 scikit-learn [cite], LightGBM [cite], and PyTorch [cite]. The software was
 previously applied to brain MRI predictive application focused on
-schizophrenia diagnostics \citep{levmanMorphologicalStudySchizophrenia2022}.
+schizophrenia diagnostics \citep{levmanMorphologicalStudySchizophrenia2022},
+and automates the search for an optimal combination of feature selection,
+models, and hyperparameters on simple tabular data.
 
 In the current work, \texttt{df-analyze} is used to compare all combinations
 of the following:
@@ -755,28 +668,9 @@ selection is done on a separate training data split using 50\% of the available
 samples, with final results reported on the remaining 50\%, to ensure there is
 no double-dipping or data leakage during these steps.
 
-
-
-\textcolor{orange}{phenotypic features from the subjects in our dataset from
-the proposed CMC biomarkers. The targeted phenotypic features include insert
-list and basic descriptions and justification for their selection - input
-from Derek. The software selects the best combination of CMC biomarkers, the
-best combination of traditional FreeSurfer biomarkers, and the best
-combination of both, while being restricted by the user to limit the analysis
-to a fixed number of biomarkers double check this with Derek. The number of
-fixed biomarkers to provide to machine learning is varied, and the resultant
-predictive capacity of the models, alongside which biomarkers were selected
-for, is reported. This was just a blurb of what we could/maybe do, any
-\texttt{df-analyze} methods providing something interesting to say is fine,
-please adapt the text. Making \texttt{df-analyze}
-\href{https://github.com/stfxecutables/df-analyze}{publicly available}
-facilitates reproducibility of our study findings, alongside our use of large
-public datasets of MRI examinations. In addition, we make available source
-code used for the analyses in this study
-\href{https://github.com/stfxecutables/cortical_congruence}{online} [TODO:
-get a DOI for this and make public] analytic software that helps demonstrate
-to the user how to use df-analyze and how to perform the statistical analyses
-employed in this study.}
+In addition, we make available source code used for the analyses in this
+study \href{https://github.com/stfxecutables/cortical_congruence}{online}
+[TODO: get a DOI for this and make public].
 
 
 \section{Results}
@@ -1642,7 +1536,7 @@ Talk to Bruce Fischl with Emi about possibility of it being included in future v
 \section{Appendix A - FreeSurfer / CMC Compoment Feature} \label{sec:appendix-a}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lrrr}
 	\toprule
@@ -1831,7 +1725,7 @@ Holm-Bonferroni stepdown method
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lrr}
 \toprule
@@ -1895,7 +1789,7 @@ loadings are the Pearson correlation between the original, unreduced variable
 \_rt = reaction time, i.e.\ reaction times on a test
 wm = working memory
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1914,7 +1808,7 @@ gambling\_task\_punish\_perc\_larger & -0.8337 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1933,7 +1827,7 @@ emotion\_task\_face\_acc & -0.8298 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1952,7 +1846,7 @@ language\_task\_math\_median\_rt & 0.8138 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1971,7 +1865,7 @@ relational\_task\_match\_median\_rt & -0.8610 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1990,7 +1884,7 @@ emotion\_task\_shape\_median\_rt & 0.9373 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2009,7 +1903,7 @@ language\_task\_story\_avg\_difficulty\_level & -0.7606 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2028,7 +1922,7 @@ pmat24\_a\_si & -0.7005 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2048,7 +1942,7 @@ social\_task\_median\_rt\_tom & 0.4017 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2069,7 +1963,7 @@ psqi\_comp7 & 0.4649 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2091,7 +1985,7 @@ gambling\_task\_punish\_median\_rt\_larger & 0.8357 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2116,7 +2010,7 @@ social\_task\_tom\_perc\_random & 0.0638 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2143,7 +2037,7 @@ picseq\_unadj & -0.4938 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2178,7 +2072,7 @@ fearsomat\_unadj & 0.3752 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2217,7 +2111,7 @@ wm\_task\_0bk\_place\_median\_rt\_target & 0.5302 \\
 \end{table}
 
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2259,7 +2153,7 @@ wm\_task\_2bk\_place\_acc\_target & -0.4516 \\
 
 \section{Appendix C} \label{sec:appendix-c}
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{llllrrr}
 	\toprule
@@ -2412,7 +2306,7 @@ mae+ = improvement in MAE relative to dummy model MAE.}
 
 % from summary.py
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lllr}
 \toprule
@@ -2512,32 +2406,32 @@ exceeds\_dummy = proportion of runs with performance exceeding dummy models;
 \end{table}
 
 
-\section{Examples of citations, figures, tables, references}
-\label{sec:others}
+% \section{Examples of citations, figures, tables, references}
+% \label{sec:others}
 
-\subsection{Citations}
-Citations use \verb+natbib+. The documentation may be found at
-\begin{center}
-	\url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
-\end{center}
+% \subsection{Citations}
+% Citations use \verb+natbib+. The documentation may be found at
+% \begin{center}
+% 	\url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
+% \end{center}
 
-Here is an example usage of the two main commands (\verb+citet+ and
-\verb+citep+): Some people thought a thing
-\citep{buyssePittsburghSleepQuality1989} but other people thought something
-else \citep{cattellScientificUseFactor1978}. Many people have speculated that
-if we knew exactly why \citet{cattellScientificUseFactor1978} thought
-this\dots
+% Here is an example usage of the two main commands (\verb+citet+ and
+% \verb+citep+): Some people thought a thing
+% \citep{buyssePittsburghSleepQuality1989} but other people thought something
+% else \citep{cattellScientificUseFactor1978}. Many people have speculated that
+% if we knew exactly why \citet{cattellScientificUseFactor1978} thought
+% this\dots
 
-\subsection{Figures}
+% \subsection{Figures}
 
-See Figure~\ref{fig:fig1}. Here is how you add footnotes\footnote{Sample of the first footnote.}.
+% See Figure~\ref{fig:fig1}. Here is how you add footnotes\footnote{Sample of the first footnote.}.
 
-\begin{figure}
-	\centering
-	\fbox{\rule[-.5cm]{4cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-	\caption{Sample figure caption.}
-	\label{fig:fig1}
-\end{figure}
+% \begin{figure}
+% 	\centering
+% 	\fbox{\rule[-.5cm]{4cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
+% 	\caption{Sample figure caption.}
+% 	\label{fig:fig1}
+% \end{figure}
 
 % \subsection{Tables}
 % See awesome Table~\ref{tab:table}.
@@ -2548,7 +2442,7 @@ See Figure~\ref{fig:fig1}. Here is how you add footnotes\footnote{Sample of the 
 % \end{center}
 
 
-% \begin{table}
+% \begin{table}[H]
 % 	\caption{Sample table title}
 % 	\centering
 % 	\begin{tabular}{lll}
