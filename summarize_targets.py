@@ -825,6 +825,12 @@ def hcp_cmc_corrs() -> None:
     corrs.drop(columns=["x", "y"], inplace=True)  # no more info in them now
     pd.options.display.max_rows = 500
     print(corrs.groupby(["feat_x", "feat_y"]).describe().round(3))
+    print(
+        corrs.groupby(["feat_x", "feat_y"])
+        .describe()
+        .round(3)
+        .to_latex(float_format="%0.3f", sparsify=True)
+    )
     print("Correlations (across subjects) Between FS and CMC Features, by Feature Types")
 
     print(
@@ -835,6 +841,16 @@ def hcp_cmc_corrs() -> None:
         .groupby(["feat_x", "feat_y"])
         .describe()
         .round(3)
+    )
+    print(
+        corrs[
+            (corrs["roi_x"] == corrs["roi_y"])
+            & ((corrs.hemi_x != "both") & (corrs.hemi_y != "both"))
+        ]
+        .groupby(["feat_x", "feat_y"])
+        .describe()
+        .round(3)
+        .to_latex(float_format="%0.3f", sparsify=True)
     )
     print("Correlations, restricting to same ROI (ignoring hemisphere)")
 
@@ -853,6 +869,11 @@ def hcp_cmc_corrs() -> None:
         corrs.groupby(["CMC", "FS"]).apply(
             lambda grp: (grp["r"] > 0).mean(), include_groups=False
         )
+    )
+    print(
+        corrs.groupby(["CMC", "FS"])
+        .apply(lambda grp: (grp["r"] > 0).mean(), include_groups=False)
+        .to_latex(float_format="%0.3f", sparsify=True)
     )
     print("Percent of feature correlations above 0.0:")
     plt.show()
@@ -1413,9 +1434,9 @@ if __name__ == "__main__":
     # fs_tables()
     # hcp_target_stats()
 
-    # hcp_cmc_corrs()
+    hcp_cmc_corrs()
     # hcp_cmc_fs_raw_sds()
     # hcp_sa_thick_ratios()
     # associations()
     # within_subj_corrs()
-    roi_corrs()
+    # roi_corrs()

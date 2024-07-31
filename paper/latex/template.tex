@@ -4,6 +4,8 @@
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
 \usepackage{float}
+\usepackage{longtable}
+\usepackage{multirow}
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
@@ -112,12 +114,16 @@ pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic reson
 
 \note{}
 
-No matter how I slice up this data, I cannot find anything really good (or
-even \emph{clear}) to say about CMC\@. I feel that all I am able to do is
-basically a \href{https://xkcd.com/882/}{green jelly beans paper} (ignore
-tens of thousands of insignificant results and pick out a tiny handful of
-significances, except in this case, also ignoring that the features
-CMC is based on produce \emph{far} more significances \dots).
+No matter how I slice up this data (I have spent hours of looking at tens of
+\texttt{.groupby().describe()} and \texttt{.groupby().corr().describe()}
+combinations), I cannot find anything really good (or even \emph{clear}) to
+say about CMC\@. I feel that all I am able to do is basically a
+\href{https://xkcd.com/882/}{green jelly beans paper} (ignore tens of
+thousands of insignificant results and pick out a tiny handful of
+significances, except in this case, also ignoring that the features CMC is
+based on produce \emph{far} more significances \dots). I.e.\ if you slice up
+the data enough ways, \emph{eventually} you find a table that looks good
+for CMC, but I know about all the other tables being hidden\dots
 
 Ultimately, I do not believe this is an HCP problem, but a CMC problem. CMC
 is a ratio or index variable, i.e.\ a derived variable / engineered feature
@@ -164,6 +170,9 @@ to those of the base features, and so are the predictions.  Most ROIs have
 similar / overlapping CMC distributions, and comparing CMC across ROIs (with
 wildly different shapes) is not mathematically sound. So I am not sure CMC
 could ever reveal anything useful in non-longitudinal data.
+
+Honestly, for the current data, CMC assocations, predictions, and correlations
+are such that the CMC variance almost just looks like noise.
 
 \color{black}
 
@@ -274,8 +283,9 @@ reported that surface area and cortical thickness are genetically
 uncorrelated.
 \end{quotation}
 
-\note{If the above quote is true, I think this is a problem for both the
-CMC formula and/or the interpreation of CMC. It would also }
+\note{If the above quote is true, I think this could be a problem for both the
+CMC formula and/or the interpreation of CMC\@. If two FS features are independent,
+we probably don't want to form an index out of them.}
 
 % ``Freesurfer generates white and pial surface meshes with identical numbers
 % of vertices, and calculates the cortical thickness as the average of the
@@ -669,31 +679,166 @@ samples, with final results reported on the remaining 50\%, to ensure there is
 no double-dipping or data leakage during these steps.
 
 In addition, we make available source code used for the analyses in this
-study \href{https://github.com/stfxecutables/cortical_congruence}{online}
-[TODO: get a DOI for this and make public].
+study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
 
 
 \section{Results}
 
 
-\textcolor{orange}{\subsection{[DEREK] Note}}
+\begin{figure}
+	\centering
+	\includegraphics[width=6.5in]{figures/cmc_violins.png}
+	\caption{Distributions of CMC features across subjects, for each ROI, ignoring laterality.}
+	\label{fig:violins}
+\end{figure}
 
-\textcolor{orange}{There are generally no differences for group comparisons
-(male vs.\ female, left vs.\ right), and also each CMC feature "class" has 34
-ROIs, which is too much to summarize in almost any kind of plot. Tables are
-probably best?}
-
-
-\textcolor{orange}{Violion / box /
-\href{https://seaborn.pydata.org/generated/seaborn.boxenplot.html}{boxen
-plots} will all end up looking like @Fig:cmc\_sex\_diffs below. These plots
-are actually sorted so that the most significant differences are at the left,
-and still, nothing is really visually discernably as different between cases,
-and this is so with swarm, strip, scatter, violin, box, or boxen plots.}
 
 \subsection{Interpretation}
 
 Note: curvature indices are defined in \citep{vanessenStructuralFunctionalAnalyses1997}.
+
+% \begin{table}
+% \centering
+% \begin{tabular}{llrrrrrrrr}
+% 	\toprule
+% 	&  & \multicolumn{8}{r}{r} \\
+% 	&  & count & mean & std & min & 25\% & 50\% & 75\% & max \\
+%  feat\_x & feat\_y &  &  &  &  &  &  &  &  \\
+%  \midrule
+%  \multirow[t]{9}{*}{CurvInd} & CurvInd & 34.000 & 0.593 & 0.148 & 0.212 & 0.537 & 0.613 & 0.698 & 0.813 \\
+% 	& FoldIndex & 136.000 & 0.594 & 0.207 & 0.111 & 0.440 & 0.602 & 0.778 & 0.872 \\
+% 	& GaussCurv & 136.000 & 0.619 & 0.181 & 0.122 & 0.488 & 0.660 & 0.768 & 0.876 \\
+% 	& MeanCurv & 136.000 & 0.578 & 0.150 & 0.109 & 0.496 & 0.596 & 0.692 & 0.845 \\
+% 	& SA & 136.000 & 0.388 & 0.122 & 0.079 & 0.292 & 0.391 & 0.489 & 0.626 \\
+% 	& SA/V & 136.000 & 0.093 & 0.109 & -0.293 & 0.034 & 0.084 & 0.145 & 0.456 \\
+% 	& V & 136.000 & 0.326 & 0.143 & -0.180 & 0.249 & 0.326 & 0.424 & 0.621 \\
+% 	& d & 136.000 & -0.090 & 0.097 & -0.409 & -0.131 & -0.078 & -0.023 & 0.175 \\
+% 	& d\_sd & 136.000 & 0.141 & 0.112 & -0.152 & 0.063 & 0.143 & 0.209 & 0.537 \\
+%  \cline{1-10}
+%  \multirow[t]{8}{*}{FoldIndex} & FoldIndex & 34.000 & 0.379 & 0.142 & 0.074 & 0.299 & 0.387 & 0.482 & 0.683 \\
+% 	& GaussCurv & 136.000 & 0.463 & 0.213 & 0.036 & 0.273 & 0.463 & 0.651 & 0.846 \\
+% 	& MeanCurv & 136.000 & 0.414 & 0.159 & 0.023 & 0.281 & 0.442 & 0.526 & 0.775 \\
+% 	& SA & 136.000 & 0.412 & 0.152 & 0.065 & 0.303 & 0.416 & 0.517 & 0.708 \\
+% 	& SA/V & 136.000 & 0.066 & 0.102 & -0.347 & 0.008 & 0.063 & 0.117 & 0.406 \\
+% 	& V & 136.000 & 0.360 & 0.164 & -0.118 & 0.259 & 0.366 & 0.463 & 0.687 \\
+% 	& d & 136.000 & -0.075 & 0.090 & -0.364 & -0.123 & -0.065 & -0.023 & 0.154 \\
+% 	& d\_sd & 136.000 & 0.118 & 0.104 & -0.136 & 0.055 & 0.103 & 0.166 & 0.501 \\
+%  \cline{1-10}
+%  \multirow[t]{7}{*}{GaussCurv} & GaussCurv & 34.000 & 0.528 & 0.143 & 0.119 & 0.477 & 0.569 & 0.614 & 0.723 \\
+% 	& MeanCurv & 136.000 & 0.679 & 0.160 & 0.123 & 0.591 & 0.704 & 0.815 & 0.889 \\
+% 	& SA & 136.000 & -0.011 & 0.073 & -0.140 & -0.064 & -0.011 & 0.030 & 0.324 \\
+% 	& SA/V & 136.000 & 0.063 & 0.105 & -0.208 & -0.008 & 0.062 & 0.112 & 0.402 \\
+% 	& V & 136.000 & -0.039 & 0.086 & -0.271 & -0.101 & -0.043 & 0.011 & 0.219 \\
+% 	& d & 136.000 & -0.074 & 0.098 & -0.385 & -0.129 & -0.077 & -0.014 & 0.167 \\
+% 	& d\_sd & 136.000 & 0.162 & 0.118 & -0.184 & 0.087 & 0.154 & 0.244 & 0.481 \\
+%  \cline{1-10}
+%  \multirow[t]{5}{*}{MeanCurv} & MeanCurv & 34.000 & 0.661 & 0.152 & 0.290 & 0.600 & 0.687 & 0.771 & 0.892 \\
+% 	& SA & 136.000 & -0.032 & 0.087 & -0.203 & -0.097 & -0.033 & 0.027 & 0.244 \\
+% 	& SA/V & 136.000 & 0.107 & 0.139 & -0.282 & 0.026 & 0.113 & 0.193 & 0.478 \\
+% 	& d & 136.000 & -0.112 & 0.127 & -0.418 & -0.198 & -0.126 & -0.039 & 0.285 \\
+% 	& d\_sd & 136.000 & 0.118 & 0.123 & -0.210 & 0.043 & 0.116 & 0.205 & 0.490 \\
+%  \cline{1-10}
+%  \multirow[t]{4}{*}{SA} & SA & 34.000 & 0.660 & 0.146 & 0.287 & 0.547 & 0.691 & 0.784 & 0.861 \\
+% 	& SA/V & 136.000 & 0.063 & 0.109 & -0.145 & -0.007 & 0.050 & 0.121 & 0.445 \\
+% 	& d & 136.000 & -0.033 & 0.096 & -0.375 & -0.080 & -0.035 & 0.032 & 0.152 \\
+% 	& d\_sd & 136.000 & 0.001 & 0.127 & -0.263 & -0.075 & -0.013 & 0.065 & 0.487 \\
+%  \cline{1-10}
+%  SA/V & SA/V & 34.000 & 0.601 & 0.177 & 0.104 & 0.490 & 0.627 & 0.752 & 0.853 \\
+%  \cline{1-10}
+%  \multirow[t]{6}{*}{V} & MeanCurv & 136.000 & -0.074 & 0.095 & -0.308 & -0.148 & -0.076 & -0.013 & 0.179 \\
+% 	& SA & 136.000 & 0.751 & 0.189 & 0.223 & 0.643 & 0.785 & 0.916 & 0.956 \\
+% 	& SA/V & 136.000 & -0.248 & 0.116 & -0.556 & -0.315 & -0.265 & -0.165 & 0.064 \\
+% 	& V & 34.000 & 0.652 & 0.156 & 0.186 & 0.557 & 0.692 & 0.783 & 0.868 \\
+% 	& d & 136.000 & 0.256 & 0.105 & -0.037 & 0.190 & 0.246 & 0.322 & 0.573 \\
+% 	& d\_sd & 136.000 & 0.080 & 0.095 & -0.201 & 0.011 & 0.100 & 0.138 & 0.321 \\
+%  \cline{1-10}
+%  \multirow[t]{14}{*}{asym\_diff} & CurvInd & 136.000 & -0.002 & 0.080 & -0.216 & -0.047 & 0.002 & 0.042 & 0.263 \\
+% 	& FoldIndex & 136.000 & -0.001 & 0.090 & -0.221 & -0.057 & -0.007 & 0.047 & 0.331 \\
+% 	& GaussCurv & 136.000 & 0.001 & 0.062 & -0.150 & -0.041 & -0.002 & 0.029 & 0.189 \\
+% 	& MeanCurv & 136.000 & 0.002 & 0.083 & -0.248 & -0.052 & -0.001 & 0.052 & 0.293 \\
+% 	& SA & 136.000 & -0.005 & 0.089 & -0.227 & -0.066 & -0.001 & 0.060 & 0.205 \\
+% 	& SA/V & 136.000 & 0.002 & 0.272 & -0.579 & -0.239 & -0.013 & 0.256 & 0.456 \\
+% 	& V & 136.000 & -0.004 & 0.132 & -0.269 & -0.112 & -0.002 & 0.108 & 0.313 \\
+% 	& asym\_diff & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+% 	& asym\_diff\_abs & 136.000 & -0.015 & 0.428 & -0.715 & -0.416 & 0.003 & 0.280 & 0.731 \\
+% 	& asym\_div & 136.000 & 1.000 & 0.000 & 0.999 & 1.000 & 1.000 & 1.000 & 1.000 \\
+% 	& cmc & 136.000 & -0.005 & 0.534 & -0.745 & -0.523 & 0.002 & 0.513 & 0.797 \\
+% 	& d & 136.000 & 0.002 & 0.080 & -0.133 & -0.062 & 0.008 & 0.047 & 0.215 \\
+% 	& d\_sd & 136.000 & 0.009 & 0.125 & -0.250 & -0.084 & -0.004 & 0.112 & 0.463 \\
+% 	& pV & 136.000 & -0.004 & 0.081 & -0.225 & -0.064 & 0.002 & 0.056 & 0.195 \\
+%  \cline{1-10}
+%  \multirow[t]{13}{*}{asym\_diff\_abs} & CurvInd & 136.000 & -0.008 & 0.053 & -0.208 & -0.033 & -0.017 & 0.033 & 0.117 \\
+% 	& FoldIndex & 136.000 & -0.006 & 0.061 & -0.265 & -0.037 & -0.002 & 0.024 & 0.210 \\
+% 	& GaussCurv & 136.000 & 0.017 & 0.043 & -0.117 & -0.004 & 0.011 & 0.038 & 0.125 \\
+% 	& MeanCurv & 136.000 & 0.015 & 0.051 & -0.169 & -0.018 & 0.012 & 0.047 & 0.151 \\
+% 	& SA & 136.000 & -0.039 & 0.053 & -0.241 & -0.064 & -0.037 & -0.004 & 0.082 \\
+% 	& SA/V & 136.000 & -0.022 & 0.121 & -0.309 & -0.099 & -0.018 & 0.049 & 0.407 \\
+% 	& V & 136.000 & -0.028 & 0.070 & -0.266 & -0.054 & -0.028 & 0.014 & 0.142 \\
+% 	& asym\_diff\_abs & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+% 	& asym\_div & 136.000 & -0.015 & 0.427 & -0.715 & -0.416 & 0.003 & 0.280 & 0.731 \\
+% 	& cmc & 136.000 & 0.012 & 0.218 & -0.508 & -0.156 & 0.019 & 0.163 & 0.402 \\
+% 	& d & 136.000 & 0.023 & 0.050 & -0.104 & -0.002 & 0.026 & 0.053 & 0.153 \\
+% 	& d\_sd & 136.000 & 0.038 & 0.069 & -0.279 & 0.007 & 0.040 & 0.083 & 0.196 \\
+% 	& pV & 136.000 & -0.031 & 0.056 & -0.212 & -0.059 & -0.027 & 0.002 & 0.082 \\
+%  \cline{1-10}
+%  \multirow[t]{12}{*}{asym\_div} & CurvInd & 136.000 & -0.002 & 0.080 & -0.217 & -0.048 & 0.002 & 0.040 & 0.265 \\
+% 	& FoldIndex & 136.000 & -0.001 & 0.090 & -0.222 & -0.057 & -0.005 & 0.048 & 0.334 \\
+% 	& GaussCurv & 136.000 & 0.001 & 0.062 & -0.151 & -0.041 & -0.001 & 0.029 & 0.190 \\
+% 	& MeanCurv & 136.000 & 0.002 & 0.084 & -0.248 & -0.051 & -0.001 & 0.053 & 0.295 \\
+% 	& SA & 136.000 & -0.005 & 0.089 & -0.228 & -0.065 & -0.001 & 0.060 & 0.197 \\
+% 	& SA/V & 136.000 & 0.001 & 0.272 & -0.585 & -0.239 & -0.013 & 0.253 & 0.444 \\
+% 	& V & 136.000 & -0.003 & 0.132 & -0.270 & -0.111 & -0.000 & 0.108 & 0.316 \\
+% 	& asym\_div & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+% 	& cmc & 136.000 & -0.004 & 0.534 & -0.740 & -0.523 & -0.002 & 0.509 & 0.804 \\
+% 	& d & 136.000 & 0.002 & 0.080 & -0.132 & -0.060 & 0.008 & 0.047 & 0.209 \\
+% 	& d\_sd & 136.000 & 0.009 & 0.124 & -0.243 & -0.084 & -0.003 & 0.112 & 0.467 \\
+% 	& pV & 136.000 & -0.004 & 0.081 & -0.226 & -0.064 & 0.001 & 0.056 & 0.189 \\
+%  \cline{1-10}
+%  \multirow[t]{11}{*}{cmc} & CurvInd & 136.000 & -0.055 & 0.103 & -0.358 & -0.122 & -0.055 & 0.009 & 0.251 \\
+% 	& FoldIndex & 136.000 & -0.018 & 0.102 & -0.318 & -0.081 & -0.019 & 0.034 & 0.351 \\
+% 	& GaussCurv & 136.000 & -0.008 & 0.092 & -0.292 & -0.063 & -0.015 & 0.041 & 0.254 \\
+% 	& MeanCurv & 136.000 & -0.036 & 0.120 & -0.384 & -0.087 & -0.035 & 0.033 & 0.277 \\
+% 	& SA & 136.000 & -0.093 & 0.125 & -0.380 & -0.178 & -0.093 & -0.010 & 0.311 \\
+% 	& SA/V & 136.000 & -0.415 & 0.187 & -0.756 & -0.556 & -0.413 & -0.276 & 0.135 \\
+% 	& V & 136.000 & 0.078 & 0.124 & -0.168 & -0.002 & 0.069 & 0.165 & 0.489 \\
+% 	& cmc & 34.000 & 0.381 & 0.163 & -0.115 & 0.294 & 0.418 & 0.492 & 0.612 \\
+% 	& d & 136.000 & 0.163 & 0.132 & -0.153 & 0.062 & 0.157 & 0.262 & 0.464 \\
+% 	& d\_sd & 136.000 & 0.226 & 0.181 & -0.171 & 0.105 & 0.225 & 0.353 & 0.679 \\
+% 	& pV & 136.000 & -0.034 & 0.107 & -0.317 & -0.099 & -0.030 & 0.034 & 0.307 \\
+%  \cline{1-10}
+%  \multirow[t]{3}{*}{d} & SA/V & 136.000 & -0.742 & 0.195 & -0.968 & -0.904 & -0.806 & -0.606 & -0.186 \\
+% 	& d & 34.000 & 0.642 & 0.161 & 0.296 & 0.518 & 0.673 & 0.785 & 0.874 \\
+% 	& d\_sd & 136.000 & 0.153 & 0.179 & -0.443 & 0.053 & 0.181 & 0.287 & 0.552 \\
+%  \cline{1-10}
+%  \multirow[t]{2}{*}{d\_sd} & SA/V & 136.000 & -0.219 & 0.189 & -0.557 & -0.369 & -0.252 & -0.074 & 0.398 \\
+% 	& d\_sd & 34.000 & 0.372 & 0.160 & 0.045 & 0.250 & 0.371 & 0.485 & 0.668 \\
+%  \cline{1-10}
+%  \multirow[t]{10}{*}{pV} & CurvInd & 136.000 & 0.341 & 0.131 & -0.083 & 0.264 & 0.340 & 0.432 & 0.622 \\
+% 	& FoldIndex & 136.000 & 0.368 & 0.154 & -0.046 & 0.265 & 0.376 & 0.466 & 0.673 \\
+% 	& GaussCurv & 136.000 & -0.036 & 0.080 & -0.193 & -0.094 & -0.040 & 0.016 & 0.226 \\
+% 	& MeanCurv & 136.000 & -0.067 & 0.088 & -0.247 & -0.137 & -0.069 & -0.009 & 0.175 \\
+% 	& SA & 136.000 & 0.779 & 0.186 & 0.237 & 0.665 & 0.806 & 0.938 & 0.968 \\
+% 	& SA/V & 136.000 & -0.178 & 0.100 & -0.417 & -0.246 & -0.186 & -0.104 & 0.114 \\
+% 	& V & 136.000 & 0.817 & 0.196 & 0.203 & 0.699 & 0.900 & 0.986 & 0.994 \\
+% 	& d & 136.000 & 0.231 & 0.095 & -0.017 & 0.173 & 0.230 & 0.288 & 0.457 \\
+% 	& d\_sd & 136.000 & 0.046 & 0.096 & -0.235 & -0.017 & 0.051 & 0.103 & 0.331 \\
+% 	& pV & 34.000 & 0.668 & 0.148 & 0.233 & 0.580 & 0.699 & 0.798 & 0.862 \\
+%  \cline{1-10}
+% 	\bottomrule
+% \end{tabular}
+% \label{tab:sig-cmc-sex}
+% \footnotesize
+% \caption{Feature correlations ignoring laterality, and restricting to the same ROI.
+% E.g.\ Left, right, and bilateral CMC metrics can be computed for each of the 34
+% ROIs,
+% d = Cohen's d, with positive sign indicating larger metric values for males;
+% U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U.
+% bh = bilateral (both hemispheres) CMC metric;
+% lh/rh = left/right hemisphere lateral CMC metric
+% Note: p-values are adjusted for multiple comparisons using the
+% Holm-Bonferroni stepdown method.}
+% \normalsize
+% \end{table}
 
 
 \subsection{Descriptive Statistic}
@@ -1533,7 +1678,7 @@ and abnormal brain, reliably and reproducibly.
 Talk to Bruce Fischl with Emi about possibility of it being included in future versions of FreeSurfer and whether he has any feedback that might be relevant and may want to join on this project as a co-author.
 
 
-\section{Appendix A - FreeSurfer / CMC Compoment Feature} \label{sec:appendix-a}
+\section{Appendix A - FreeSurfer / CMC Compoment Feature}\label{sec:appendix-a}
 
 
 \begin{table}[H]
@@ -1769,9 +1914,8 @@ superiorfrontal & 2485.1 & 2077.1 \\
 \bottomrule
 \end{tabular}
 \footnotesize
-\caption{Ratios of ROI surface area divided by ROI average thickness.}
+\caption{Ratios of ROI surface area divided by ROI average thickness.}\label{tab:sa-ratios}
 \normalsize
-\label{tab:sa-ratios}
 \end{table}
 
 \section{Appendix B - Synthetic Targets} \label{sec:appendix-b}
@@ -1802,9 +1946,8 @@ gambling\_task\_punish\_perc\_larger & -0.8337 \\
 \end{tabular}
 
 \footnotesize
-\caption{Synthetic target \texttt{gambling-perf} factor loadings.}
+\caption{Synthetic target \texttt{gambling-perf} factor loadings.}\label{tab:gambling-perf}
 \normalsize
-\label{tab:gambling-perf}
 \end{table}
 
 
@@ -2146,19 +2289,33 @@ wm\_task\_2bk\_place\_acc\_target & -0.4516 \\
 \end{tabular}
 
 \footnotesize
-\caption{Synthetic target \texttt{wm-perf} factor loadings.}
 \normalsize
-\label{tab:wm-perf}
 \end{table}
 
-\section{Appendix C} \label{sec:appendix-c}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{llllrrr}
+\section{Appendix C}\label{sec:appendix-c}
+
+s
+
+\begin{longtable}{llllrrr}
+\caption{
+	Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;}\label{tab:cmc-p-model-predictive} \\
 	\toprule
 	target & feats & selection & model & r2 & mae & mae+ \\
 	\midrule
+	\endfirsthead
+	\caption[]{
+	Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;} \\
+	\toprule
+	target & feats & selection & model & r2 & mae & mae+ \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{7}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\endlastfoot
 	int\_g\_like & FS & none & elastic & 0.144 & 0.184 & 0.018 \\
 	int\_g\_like & FS & assoc & elastic & 0.143 & 0.184 & 0.018 \\
 	int\_g\_like & FS & pred & elastic & 0.143 & 0.184 & 0.018 \\
@@ -2288,122 +2445,120 @@ wm\_task\_2bk\_place\_acc\_target & -0.4516 \\
 	social\_rt & FS & embed\_lgbm & lgbm & 0.001 & 0.194 & 0.000 \\
 	social\_rt & FS & wrap & elastic & 0.001 & 0.194 & 0.000 \\
 	gambling\_perf & FS & embed\_linear & lgbm & 0.001 & 0.166 & 0.000 \\
-	\bottomrule
-\end{tabular}
-\footnotesize
-\caption{Performance of models exceeding dummy model performance.
-FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used;
-wrap = forward stepwise feature selection with a linear model;
-assoc = feature selection by univariate association (mutual information);
-pred = feature selection by (linear) univariate prediction performance (accuracy);
-none = no feature selection (all features used in model)
-lgbm = LightGBM regressor; elastic = ElasticNet;
-r2 = coefficient of determination; mae = mean absolute error;
-mae+ = improvement in MAE relative to dummy model MAE.}
-\normalsize
-\label{tab:cmc-p-model-predictive}
-\end{table}
+\end{longtable}
+
 
 % from summary.py
 
-\begin{table}[H]
-\centering
-\begin{tabular}{lllr}
-\toprule
-target & feats & model & exceeds\_dummy \\
-\midrule
-emotion\_rt & FS & lgbm & 1.000 \\
-int\_g\_like & CMC & elastic & 1.000 \\
-int\_g\_like & CMC & lgbm & 1.000 \\
-int\_g\_like & FS & elastic & 1.000 \\
-int\_g\_like & FS & lgbm & 1.000 \\
-int\_g\_like & FS+CMC & elastic & 1.000 \\
-language\_perf & CMC & lgbm & 1.000 \\
-int\_g\_like & FS+CMC & lgbm & 0.833 \\
-language\_perf & FS+CMC & lgbm & 0.833 \\
-p\_matrices & FS & lgbm & 0.833 \\
-language\_perf & FS & lgbm & 0.833 \\
-emotion\_rt & FS+CMC & lgbm & 0.833 \\
-gambling\_rt & CMC & lgbm & 0.667 \\
-emotion\_rt & CMC & lgbm & 0.667 \\
-gambling\_rt & FS+CMC & lgbm & 0.667 \\
-gambling\_rt & FS & lgbm & 0.500 \\
-language\_perf & FS & elastic & 0.500 \\
-p\_matrices & FS+CMC & lgbm & 0.500 \\
-language\_perf & FS+CMC & elastic & 0.333 \\
-language\_perf & CMC & elastic & 0.333 \\
-wm\_perf & FS & lgbm & 0.333 \\
-gambling\_rt & CMC & elastic & 0.333 \\
-gambling\_perf & FS & lgbm & 0.333 \\
-emotion\_rt & FS+CMC & elastic & 0.333 \\
-p\_matrices & FS & elastic & 0.333 \\
-wm\_rt & CMC & lgbm & 0.333 \\
-wm\_perf & CMC & lgbm & 0.167 \\
-wm\_perf & CMC & elastic & 0.167 \\
-social\_rt & FS & lgbm & 0.167 \\
-social\_rt & FS & elastic & 0.167 \\
-p\_matrices & CMC & elastic & 0.167 \\
-language\_rt & FS & lgbm & 0.167 \\
-p\_matrices & CMC & lgbm & 0.167 \\
-p\_matrices & FS+CMC & elastic & 0.167 \\
-wm\_perf & FS & elastic & 0.167 \\
-wm\_rt & FS+CMC & lgbm & 0.167 \\
-gambling\_perf & CMC & elastic & 0.167 \\
-emotion\_rt & CMC & elastic & 0.167 \\
-gambling\_rt & FS+CMC & elastic & 0.167 \\
-gambling\_rt & FS & elastic & 0.167 \\
-wm\_rt & CMC & elastic & 0.167 \\
-wm\_rt & FS+CMC & elastic & 0.167 \\
-wm\_rt & FS & lgbm & 0.167 \\
-emotion\_rt & FS & elastic & 0.167 \\
-relational\_rt & FS & lgbm & 0.000 \\
-social\_random\_perf & CMC & elastic & 0.000 \\
-social\_random\_perf & CMC & lgbm & 0.000 \\
-wm\_rt & FS & elastic & 0.000 \\
-wm\_perf & FS+CMC & elastic & 0.000 \\
-relational\_rt & CMC & lgbm & 0.000 \\
-social\_random\_perf & FS & elastic & 0.000 \\
-social\_random\_perf & FS & lgbm & 0.000 \\
-social\_rt & CMC & elastic & 0.000 \\
-social\_rt & CMC & lgbm & 0.000 \\
-wm\_perf & FS+CMC & lgbm & 0.000 \\
-relational\_rt & FS & elastic & 0.000 \\
-emotion\_perf & CMC & elastic & 0.000 \\
-relational\_rt & CMC & elastic & 0.000 \\
-language\_rt & FS+CMC & elastic & 0.000 \\
-emotion\_perf & FS & elastic & 0.000 \\
-emotion\_perf & FS & lgbm & 0.000 \\
-emotion\_perf & FS+CMC & elastic & 0.000 \\
-emotion\_perf & FS+CMC & lgbm & 0.000 \\
-gambling\_perf & CMC & lgbm & 0.000 \\
-gambling\_perf & FS & elastic & 0.000 \\
-language\_rt & CMC & elastic & 0.000 \\
-language\_rt & CMC & lgbm & 0.000 \\
-language\_rt & FS & elastic & 0.000 \\
-language\_rt & FS+CMC & lgbm & 0.000 \\
-psqi\_latent & FS & lgbm & 0.000 \\
-emotion\_perf & CMC & lgbm & 0.000 \\
-neg\_emotionality & CMC & lgbm & 0.000 \\
-neg\_emotionality & FS & elastic & 0.000 \\
-neg\_emotionality & FS & lgbm & 0.000 \\
-neg\_emotionality & FS+CMC & elastic & 0.000 \\
-neg\_emotionality & FS+CMC & lgbm & 0.000 \\
-psqi\_latent & CMC & elastic & 0.000 \\
-psqi\_latent & CMC & lgbm & 0.000 \\
-psqi\_latent & FS & elastic & 0.000 \\
-neg\_emotionality & CMC & elastic & 0.000 \\
-\bottomrule
-\end{tabular}
+% \begin{longtable}{lllr}
+% 	\caption{
+% 	: Proportion of model runs that exceed dummy performance.\
+% 	feats = feature set; model = predictive model;
+% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models;
+% 	} \label{tab:cmc-model-p-predictive} \\
+% 	\toprule
+% 	target & feats & model & exceeds\_dummy \\
+% 	\midrule
+% 	\endfirsthead
 
-\footnotesize
-\caption{%
-Proportion of model runs that exceed dummy performance.\
-feats = feature set; model = predictive model;
-exceeds\_dummy = proportion of runs with performance exceeding dummy models;
-}
-\normalsize
-\label{tab:cmc-model-p-predictive}
-\end{table}
+% 	\caption[]{
+% 	Proportion of model runs that exceed dummy performance.\
+% 	feats = feature set; model = predictive model;
+% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models;
+
+% 	} \\
+% 	\toprule
+% 	target & feats & model & exceeds\_dummy \\
+% 	\midrule
+% 	\endhead
+% 	\midrule
+% 	\multicolumn{4}{r}{Continued on next page} \\
+% 	\midrule
+% 	\endfoot
+% 	\bottomrule
+% 	\endlastfoot
+% 	emotion\_rt & FS & lgbm & 1.000 \\
+% 	int\_g\_like & CMC & elastic & 1.000 \\
+% 	int\_g\_like & CMC & lgbm & 1.000 \\
+% 	int\_g\_like & FS & elastic & 1.000 \\
+% 	int\_g\_like & FS & lgbm & 1.000 \\
+% 	int\_g\_like & FS+CMC & elastic & 1.000 \\
+% 	language\_perf & CMC & lgbm & 1.000 \\
+% 	int\_g\_like & FS+CMC & lgbm & 0.833 \\
+% 	language\_perf & FS+CMC & lgbm & 0.833 \\
+% 	p\_matrices & FS & lgbm & 0.833 \\
+% 	language\_perf & FS & lgbm & 0.833 \\
+% 	emotion\_rt & FS+CMC & lgbm & 0.833 \\
+% 	gambling\_rt & CMC & lgbm & 0.667 \\
+% 	emotion\_rt & CMC & lgbm & 0.667 \\
+% 	gambling\_rt & FS+CMC & lgbm & 0.667 \\
+% 	gambling\_rt & FS & lgbm & 0.500 \\
+% 	language\_perf & FS & elastic & 0.500 \\
+% 	p\_matrices & FS+CMC & lgbm & 0.500 \\
+% 	language\_perf & FS+CMC & elastic & 0.333 \\
+% 	language\_perf & CMC & elastic & 0.333 \\
+% 	wm\_perf & FS & lgbm & 0.333 \\
+% 	gambling\_rt & CMC & elastic & 0.333 \\
+% 	gambling\_perf & FS & lgbm & 0.333 \\
+% 	emotion\_rt & FS+CMC & elastic & 0.333 \\
+% 	p\_matrices & FS & elastic & 0.333 \\
+% 	wm\_rt & CMC & lgbm & 0.333 \\
+% 	wm\_perf & CMC & lgbm & 0.167 \\
+% 	wm\_perf & CMC & elastic & 0.167 \\
+% 	social\_rt & FS & lgbm & 0.167 \\
+% 	social\_rt & FS & elastic & 0.167 \\
+% 	p\_matrices & CMC & elastic & 0.167 \\
+% 	language\_rt & FS & lgbm & 0.167 \\
+% 	p\_matrices & CMC & lgbm & 0.167 \\
+% 	p\_matrices & FS+CMC & elastic & 0.167 \\
+% 	wm\_perf & FS & elastic & 0.167 \\
+% 	wm\_rt & FS+CMC & lgbm & 0.167 \\
+% 	gambling\_perf & CMC & elastic & 0.167 \\
+% 	emotion\_rt & CMC & elastic & 0.167 \\
+% 	gambling\_rt & FS+CMC & elastic & 0.167 \\
+% 	gambling\_rt & FS & elastic & 0.167 \\
+% 	wm\_rt & CMC & elastic & 0.167 \\
+% 	wm\_rt & FS+CMC & elastic & 0.167 \\
+% 	wm\_rt & FS & lgbm & 0.167 \\
+% 	emotion\_rt & FS & elastic & 0.167 \\
+% 	relational\_rt & FS & lgbm & 0.000 \\
+% 	social\_random\_perf & CMC & elastic & 0.000 \\
+% 	social\_random\_perf & CMC & lgbm & 0.000 \\
+% 	wm\_rt & FS & elastic & 0.000 \\
+% 	wm\_perf & FS+CMC & elastic & 0.000 \\
+% 	relational\_rt & CMC & lgbm & 0.000 \\
+% 	social\_random\_perf & FS & elastic & 0.000 \\
+% 	social\_random\_perf & FS & lgbm & 0.000 \\
+% 	social\_rt & CMC & elastic & 0.000 \\
+% 	social\_rt & CMC & lgbm & 0.000 \\
+% 	wm\_perf & FS+CMC & lgbm & 0.000 \\
+% 	relational\_rt & FS & elastic & 0.000 \\
+% 	emotion\_perf & CMC & elastic & 0.000 \\
+% 	relational\_rt & CMC & elastic & 0.000 \\
+% 	language\_rt & FS+CMC & elastic & 0.000 \\
+% 	emotion\_perf & FS & elastic & 0.000 \\
+% 	emotion\_perf & FS & lgbm & 0.000 \\
+% 	emotion\_perf & FS+CMC & elastic & 0.000 \\
+% 	emotion\_perf & FS+CMC & lgbm & 0.000 \\
+% 	gambling\_perf & CMC & lgbm & 0.000 \\
+% 	gambling\_perf & FS & elastic & 0.000 \\
+% 	language\_rt & CMC & elastic & 0.000 \\
+% 	language\_rt & CMC & lgbm & 0.000 \\
+% 	language\_rt & FS & elastic & 0.000 \\
+% 	language\_rt & FS+CMC & lgbm & 0.000 \\
+% 	psqi\_latent & FS & lgbm & 0.000 \\
+% 	emotion\_perf & CMC & lgbm & 0.000 \\
+% 	neg\_emotionality & CMC & lgbm & 0.000 \\
+% 	neg\_emotionality & FS & elastic & 0.000 \\
+% 	neg\_emotionality & FS & lgbm & 0.000 \\
+% 	neg\_emotionality & FS+CMC & elastic & 0.000 \\
+% 	neg\_emotionality & FS+CMC & lgbm & 0.000 \\
+% 	psqi\_latent & CMC & elastic & 0.000 \\
+% 	psqi\_latent & CMC & lgbm & 0.000 \\
+% 	psqi\_latent & FS & elastic & 0.000 \\
+% 	neg\_emotionality & CMC & elastic & 0.000 \\
+% \end{longtable}
+
 
 
 % \section{Examples of citations, figures, tables, references}
@@ -2445,7 +2600,7 @@ exceeds\_dummy = proportion of runs with performance exceeding dummy models;
 % \begin{table}[H]
 % 	\caption{Sample table title}
 % 	\centering
-% 	\begin{tabular}{lll}
+% 	\begin{longtable}{lll}
 % 		\toprule
 % 		\multicolumn{2}{c}{Part}                   \\
 % 		\cmidrule(r){1-2}
@@ -2455,7 +2610,7 @@ exceeds\_dummy = proportion of runs with performance exceeding dummy models;
 % 		Axon     & Output terminal & $\sim$10      \\
 % 		Soma     & Cell body       & up to $10^6$  \\
 % 		\bottomrule
-% 	\end{tabular}
+% 	\end{longtable}
 % 	\label{tab:table}
 % \end{table}
 
