@@ -246,6 +246,13 @@ the \emph{expected volume}, \(\hat{V}(r)\), as
 	\label{fig:slab}
 \end{figure}
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% small average thickness shouldn't matter, but small variability in
+% thickness does, is this what you meant to say?
+
 The more an ROI \(r\) resembles or is congruent to a shape like in
 Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
 small average thickness relative to the surface area---then the closer
@@ -287,6 +294,13 @@ Also define \emph{bilateral} CMC as:
 
 Define the \emph{asymmetric} CMC measures:
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% These equations need equation numbers and the text connecting them needs to
+% properly introduce each equation. (He just means provide numbers /references)
+
 \begin{equation} \label{eq:asym-signed-diff}
 \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
 \end{equation}
@@ -307,6 +321,18 @@ to be the asymmetric CMC ratio measure. Then, for each ROI \(r\), this
 defines seven \(\text{CMC}\) measures: \(\text{CMC}_{V}\), \(\text{CMC}_l\),
 \(\text{CMC}_r\), \(\text{CMC}_{lr}\), \(\text{CMC}_{l-r}\),
 \(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
+
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% We aren't exactly measuring deviation from uniform thickness, though when
+% that happens, CMC should shift.
+%
+% this should become: .....deviation from volumetric expectation for a simple
+% structure. (or something like that, also cut the second half of the
+% sentence "where the region......")
 
 The CMC features defined in Equation~\ref{eq:cmc-laterals} and
 Equation~\ref{eq:cmc-bilateral} are unitless ratios assessing a cortical
@@ -357,6 +383,13 @@ results (see Table A\ref{tab:lateral-fs} for the base FreeSurfer features),
 Cortical Morphological Congruence (CMC) measurements were computed in each
 subject.
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% THis table (tab:lateral-fs) is a mess. Please cut it out. Please summarize
+% the FS features here (there is are surface area, volume, cortical thickness
+% variability, etc. for each cortical ROI)
 
 
 \subsection{Statistical and Predictive Analyses}
@@ -377,6 +410,13 @@ Specifically, we assess CMC feature correlations with the original FreeSurfer
 components (volume, surface area, and average thickness), and those relating
 to ROI shape (e.g.\ thickness variation and curvature or folding).
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% I dont see these (above) results and there is no table referred to here.
+% This sounds like it will be very boring and can be removed.
+
 \paragraph{Sex} For each CMC feature, we compute descriptive measures of
 group separation by sex using Cohen's d and the Mann-Whitney U test. We also
 consider each of the seven classes of CMC feature, and compare whether these
@@ -385,15 +425,24 @@ CMC metric in each CMC class for each group (e.g.\ sex, laterality, age), and
 then comparing these two group averages with a measure of scale (standard
 deviation; \(\sigma\), or interquartile range; IQR).
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% I would like violin plots that summarize one CMC measurement across male
+% and female and left and right hemisphere (so each subplot in the montage
+% has 4 values, male left, male right, female left and female right). We can
+% choose one of the 7 metrics to show off. We can also put the remaining 6
+% metric's montages in the appendix.
+
 \paragraph{Laterality} For each ROI, it is reasonable to ask whether
 \(\text{CMC}_l\) and \(\text{CMC}_r\) differ. We also compare relevant CMC
 features in this manner.
 
 \paragraph{Age and Sex} For each CMC feature in each CMC feature class, we
-compute the Spearman correlations with subject age class. Spearman
+compute the Spearman correlations with subject age. Spearman
 correlation is preferred as only age bins are available in the HCP phenotypic
 data.
-
 
 
 \subsubsection{Predictive Analyses}
@@ -405,7 +454,15 @@ features are
 \href{https://wiki.humanconnectome.org/docs/HCP-YA%20Data%20Dictionary-%20Updated%20for%20the%201200%20Subject%20Release.html}{available
 online}.
 
-\paragraph{Synthetic Behavioural Targets} \label{sec:cleaning}
+\paragraph{Behavioural Targets} \label{sec:cleaning}
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% What do you mean by synthetic?? These are real phenotypic targets aren't
+% they?, so the word synthetic might mislead the reader.
+
 
 To investigate the predictive potential of CMC features, a number of \emph{ad
 hoc} regression targets were constructed from the HCP behavioural data.
@@ -544,6 +601,50 @@ standard deviation of approximately 1.0, by construction.}
 \normalsize
 \end{table}
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% I don't see much value in this boring table, please remove unless you can well justify its inclusion.
+% We need a description of each of the regression targets
+
+In the interest of space, and since many factor targets turn out not to be
+predictable at all, we refrain from describing each of the extracted factor
+targets here, and relegate such explanation to the discussion. Ultimately, the
+factors are defined by the loadings of their respective items: these are
+listed in Appendix~\ref{sec:appendix-b}.
+
+Likewise, the battery of behavioural tasks administered to HCP subjects is
+too extensive to detail here: the interested reader is referred to
+\citet{Barch2013}.
+
+\begin{table}
+\centering
+\begin{tabular}{lrr}
+	\toprule
+	target & task & component(s)  \\
+	\midrule
+	gambling\_perf       & gambling              & performance   \\
+	emotion\_perf        & emotion processing    & performance   \\
+	language\_rt         & language processing   & reaction time \\
+	relational\_rt       & relational processing & reaction time \\
+	emotion\_rt          & emotion processing    & reaction time \\
+	language\_perf       & language              & reaction time \\
+	p\_matrices          & progressive matrices  & performance   \\
+	social\_rt           & social cognition      & reaction time \\
+	psqi\_latent         & Pittsburg Sleep Quality Index factor \citep{buyssePittsburghSleepQuality1989} & score \\
+	gambling\_rt         & gambling task         & reaction time \\
+	social\_random\_perf & social cognition (random blocks) & performance \\
+	int\_g\_like         & general intelligence & see Table A~\ref{tab:int-g-like} \\
+	neg\_emotionality    & negative emotionality & see Table A~\ref{tab:neg-emotionality} \\
+	wm\_rt               & working memory (n-back) & reaction time \\
+	wm\_perf             & working memory          & performance \\
+	\bottomrule
+\end{tabular}
+\footnotesize
+\caption{Descriptions of factor targets. } \label{tab:target-descs}
+\normalsize
+\end{table}
 
 \paragraph{FreeSurfer Comparisons}
 
@@ -552,26 +653,29 @@ cortical analyses, we compare model predictions on feature sets that: include
 only FS features, include only CMC features, and include both FS and CMC
 features.
 
-\paragraph{AutoML via \texttt{df-analyze}}
+\paragraph{Automated Machine Learning via \texttt{df-analyze}}
 
 
 Predictive analyses were completed with
 \href{github.com/stfxecutables/df-analyze}{\texttt{df-analyze}}, publicly
-available AutoML [cite] software, developed in house to automate data
-cleaning and preprocessing, and the subsequent feature selection, fitting,
-tuning, and validation of various classic machine-learning (ML) models from
-scikit-learn [cite], LightGBM [cite], and PyTorch [cite]. The software was
-previously applied to brain MRI predictive application focused on
-schizophrenia diagnostics \citep{levmanMorphologicalStudySchizophrenia2022},
-and automates the search for an optimal combination of feature selection,
-models, and hyperparameters on simple tabular data.
+available software, developed in house to automate data cleaning and
+preprocessing, and the subsequent feature selection, fitting, tuning, and
+validation of various classic machine-learning (ML) models from scikit-learn
+\citep{JMLR:v12:pedregosa11a}, LightGBM \citep{LightGBMNIPS2017} , and
+PyTorch \citep{Ansel2024PyTorch}. The software was previously applied to
+brain MRI predictive application focused on schizophrenia diagnostics
+\citep{levmanMorphologicalStudySchizophrenia2022}, and automates the search
+for an optimal combination of feature selection, models, and hyperparameters
+on simple tabular data.
 
 In the current work, \texttt{df-analyze} is used to compare all combinations
 of the following:
 
 \begin{itemize}
 \item feature sets (FS only, CMC only, and FS and CMC features)
-\item regression models (ElasticNet [cite], LightGBM [cite], and a dummy regressor)
+\item regression models (ElasticNet \citep{Zou2005,JMLR:v12:pedregosa11a},
+LightGBM \citep{LightGBMNIPS2017}, and dummy regressors
+\citep{JMLR:v12:pedregosa11a})
 \item feature selection methods
 	\begin{itemize}
 		\item no selection (all features are used for predictions)
@@ -579,14 +683,16 @@ of the following:
 		\item embedded methods (feature importances from ElasticNet and LightGBM)
 		\item two filter methods:
 		\begin{enumerate}
-			\item mutual information of each univariate feature with respect to the synthetic target
-			\item predictive accuracy of each univariate feature with respect to the synthetic target
+			\item mutual information of each univariate feature with respect to the
+			factor target
+			\item predictive accuracy of each univariate feature with respect to
+			the factor target
 		\end{enumerate}
 	\end{itemize}
-\item synthetic targets (see [Appendix B](appendix-b))
+\item factor targets (see [Appendix B](appendix-b))
 \end{itemize}
 
-As all synthetic targets are continuous variables, we use \(R^2\), the
+As all factor targets are continuous variables, we use \(R^2\), the
 coefficient of determination, and the mean absolute error (MAE) to assess
 model fit. For any combination of feature set, feature selection method, and
 target, a dummy regression model (which predicts either the target mean or
@@ -595,11 +701,12 @@ the intention that prediction performance of other models is considered
 meaningful only if both \(R^2 > 0\) and the the non-dummy model has a lower MAE
 than the dummy model.
 
-All models are hyperparameter-tuned with Optuna [cite] using a tuning budget of
-100 trials and 5-fold cross-validation for evaluation. All tuning, and feature
-selection is done on a separate training data split using 50\% of the available
-samples, with final results reported on the remaining 50\%, to ensure there is
-no double-dipping or data leakage during these steps.
+All models are hyperparameter-tuned with Optuna \citep{Optuna2019}, using a
+tuning budget of 100 trials and 5-fold cross-validation for evaluation. All
+tuning, and feature selection is done on a separate training data split using
+50\% of the available samples, with final results reported on the remaining
+50\%, to ensure there is no double-dipping or data leakage during these
+steps.
 
 In addition, we make available source code used for the analyses in this
 study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
@@ -610,15 +717,22 @@ study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=6.5in]{figures/cmc_violins.png}
+	\includegraphics[width=6.5in]{figures/example_violins.png}
 	\caption{Distributions of CMC features across subjects, for each ROI, ignoring laterality.}
 	\label{fig:violins}
 \end{figure}
 
 
-\subsection{Interpretation}
+% \subsection{Interpretation}
 
-Note: curvature indices are defined in \citep{vanessenStructuralFunctionalAnalyses1997}.
+% Note: curvature indices are defined in \citep{vanessenStructuralFunctionalAnalyses1997}.
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% This section (Interpretation) isn't needed.
+
 
 % \begin{table}
 % \centering
@@ -764,7 +878,7 @@ Note: curvature indices are defined in \citep{vanessenStructuralFunctionalAnalys
 % \end{table}
 
 
-\subsection{Descriptive Statistic}
+\subsection{Descriptive Statistics}
 
 \subsubsection{CMC Features by Sex}
 
@@ -788,7 +902,6 @@ slightly higher congruence (Table~\ref{tab:sig-cmc-sex}).
 	rh-paracentral  & -0.177 & 136298.000 & 0.039 \\
 	\bottomrule
 \end{tabular}
-\label{tab:sig-cmc-sex}
 \footnotesize
 \caption{CMC features with significant separation by sex.\
 d = Cohen's d, with positive sign indicating larger metric values for males;
@@ -796,7 +909,7 @@ U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U.
 bh = bilateral (both hemispheres) CMC metric;
 lh/rh = left/right hemisphere lateral CMC metric
 Note: p-values are adjusted for multiple comparisons using the
-Holm-Bonferroni stepdown method.}
+Holm-Bonferroni stepdown method.} \label{tab:sig-cmc-sex}
 \normalsize
 \end{table}
 
@@ -829,13 +942,12 @@ measure of scale (IQR).
 \(d_{[\cdot]}\) = Cohen's \(d\) for metric \([\cdot]\), with positive sign indicating larger metric values for males;
 \(W_{[\cdot]}\) = Wilcoxon signed rank test \(W\) for measure of scale \([\cdot]\);
 \(p_{[\cdot]}\) = p-value for \(W_{[\cdot]}\);
-Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method}
+Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \label{tab:sig-cmc-scale-sex}
 \normalsize
-\label{tab:sig-cmc-scale-sex}
 \end{table}
 
 
-\subsubsection{CMC Features by Laterality}
+\subsubsection{CMC Features by Laterality, Age, and Sex}
 
 We find the lateral CMC measures differ significantly for all but the
 superior frontal and parsopercularis regions (Table~\ref{tab:lateral-cmc}).
@@ -888,13 +1000,16 @@ hemisphere). d = Cohen's d, with a positive sign indicating greater congruence i
 U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U;
 W = Wilcoxon signed rank test; W (p) = p-value for W
 Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
-}
+} \label{tab:lateral-cmc}
 \normalsize
-\label{tab:lateral-cmc}
 \end{table}
 
 
-\subsubsection{CMC Features by Age and Sex}
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% This [table above] is good - keep this
 
 Significant feature age correlations are shown in Table~\ref{tab:cmc-age-spearman}.
 
@@ -1225,9 +1340,26 @@ Note: All p-values are adjusted for multiple comparisons using the Holm-Bonferro
 \end{table}
 
 
+
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% This [table above] is also good - it shows that CMC changes with age,
+% implying potential for characterizing development. That should be said in
+% the discussion.
+
+
 \subsection{Predictive Analyses}
 
 \subsubsection{Predictive Performance}
+
+For the factor targets \texttt{emotion\_perf}, \texttt{neg\_emotionality},
+\texttt{psqi\_latent}, \texttt{relational\_rt}, and
+\texttt{social\_random\_perf}, no models exceeded the performance of the
+dummy regressors, implying that neither FreeSurfer nor CMC features had
+predictive utility for these targets.
 
 A breakdown of the proportion of models exceeding dummy regressor
 performance, for each group of target and feature sets, is presented below in
@@ -1270,6 +1402,13 @@ exceeds\_dummy = proportion of runs with performance exceeding dummy models;}
 \label{tab:cmc-p-target-predictive}
 \end{table}
 
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% This [table above] is really boring and doesn't add much. It doesn't tell
+% us anything about CMC, so can be cut.
 
 \begin{table}
 \centering
@@ -1341,6 +1480,12 @@ proportion of explained variance [cite], then this suggests either FS or CMC
 features (or both) explain over 10\% of the variance in these two synthetic
 targets.
 
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% This [above] isn't easy to follow at all
+
 [**FOR DISCUSSION**] All synthetic targets that are best-predicted are
 \texttt{int\_g\_like}, \texttt{language\_perf} (performance on language
 tasks, e.g.\ verbal intelligence), \texttt{wm\_perf} (performance on working
@@ -1370,34 +1515,34 @@ feature selection was employed.
 
 \begin{table}
 \centering
-\begin{tabular}{lllrrrrrr}
+\begin{tabular}{lllrrrrr}
 	\toprule
-	target & selection & model & r2 & mae & mae+ & p\_sel\_cmc & p\_sel\_feat\_cmc & cmc\_win \\
+	target & selection & model & r2 & mae & mae+ & p\_sel\_cmc & p\_sel\_feat\_cmc \\
 	\midrule
-	int\_g\_like & assoc & lgbm & 0.110 & 0.193 & 0.009 & 1.000 & 0.504 & True \\
-	int\_g\_like & assoc & elastic & 0.072 & 0.192 & 0.010 & 1.000 & 0.504 & True \\
-	p\_matrices & assoc & lgbm & 0.015 & 0.237 & 0.002 & 1.000 & 0.504 & True \\
-	wm\_rt & assoc & lgbm & 0.016 & 0.197 & 0.000 & 1.000 & 0.504 & True \\
-	gambling\_rt & assoc & lgbm & 0.019 & 0.203 & 0.003 & 1.000 & 0.504 & True \\
-	p\_matrices & assoc & knn & 0.021 & 0.237 & 0.001 & 1.000 & 0.504 & True \\
-	emotion\_rt & assoc & lgbm & 0.004 & 0.193 & 0.001 & 1.000 & 0.504 & True \\
-	language\_perf & assoc & lgbm & 0.089 & 0.197 & 0.007 & 1.000 & 0.504 & True \\
-	gambling\_rt & pred & lgbm & 0.021 & 0.200 & 0.006 & 0.467 & 0.469 & False \\
-	language\_perf & embed\_lgbm & elastic & 0.073 & 0.201 & 0.003 & 0.088 & 0.455 & False \\
-	language\_perf & embed\_lgbm & lgbm & 0.056 & 0.201 & 0.002 & 0.088 & 0.455 & False \\
-	int\_g\_like & embed\_lgbm & elastic & 0.104 & 0.192 & 0.010 & 0.080 & 0.414 & False \\
-	language\_perf & embed\_linear & lgbm & 0.090 & 0.197 & 0.007 & 0.410 & 0.386 & False \\
-	emotion\_rt & pred & lgbm & 0.026 & 0.192 & 0.002 & 0.382 & 0.385 & False \\
-	gambling\_rt & embed\_linear & lgbm & 0.018 & 0.202 & 0.003 & 0.386 & 0.375 & False \\
-	int\_g\_like & embed\_linear & knn & 0.073 & 0.195 & 0.007 & 0.443 & 0.369 & False \\
-	int\_g\_like & embed\_linear & elastic & 0.067 & 0.192 & 0.010 & 0.443 & 0.369 & False \\
-	int\_g\_like & embed\_linear & lgbm & 0.071 & 0.196 & 0.006 & 0.443 & 0.369 & False \\
-	emotion\_rt & embed\_lgbm & elastic & 0.026 & 0.193 & 0.001 & 0.022 & 0.367 & False \\
-	emotion\_rt & embed\_linear & lgbm & 0.032 & 0.191 & 0.003 & 0.357 & 0.357 & False \\
-	emotion\_rt & embed\_linear & knn & 0.012 & 0.194 & 0.000 & 0.357 & 0.357 & False \\
-	int\_g\_like & pred & elastic & 0.076 & 0.191 & 0.011 & 0.331 & 0.333 & False \\
-	int\_g\_like & pred & lgbm & 0.042 & 0.198 & 0.004 & 0.331 & 0.333 & False \\
-	language\_perf & pred & lgbm & 0.087 & 0.197 & 0.007 & 0.324 & 0.325 & False \\
+	int\_g\_like & assoc & lgbm & 0.110 & 0.193 & 0.009 & 1.000 & 0.504 \\
+	int\_g\_like & assoc & elastic & 0.072 & 0.192 & 0.010 & 1.000 & 0.504 \\
+	p\_matrices & assoc & lgbm & 0.015 & 0.237 & 0.002 & 1.000 & 0.504 \\
+	wm\_rt & assoc & lgbm & 0.016 & 0.197 & 0.000 & 1.000 & 0.504 \\
+	gambling\_rt & assoc & lgbm & 0.019 & 0.203 & 0.003 & 1.000 & 0.504 \\
+	p\_matrices & assoc & knn & 0.021 & 0.237 & 0.001 & 1.000 & 0.504 \\
+	emotion\_rt & assoc & lgbm & 0.004 & 0.193 & 0.001 & 1.000 & 0.504 \\
+	language\_perf & assoc & lgbm & 0.089 & 0.197 & 0.007 & 1.000 & 0.504 \\
+	gambling\_rt & pred & lgbm & 0.021 & 0.200 & 0.006 & 0.467 & 0.469 \\
+	language\_perf & embed\_lgbm & elastic & 0.073 & 0.201 & 0.003 & 0.088 & 0.455 \\
+	language\_perf & embed\_lgbm & lgbm & 0.056 & 0.201 & 0.002 & 0.088 & 0.455 \\
+	int\_g\_like & embed\_lgbm & elastic & 0.104 & 0.192 & 0.010 & 0.080 & 0.414 \\
+	language\_perf & embed\_linear & lgbm & 0.090 & 0.197 & 0.007 & 0.410 & 0.386 \\
+	emotion\_rt & pred & lgbm & 0.026 & 0.192 & 0.002 & 0.382 & 0.385 \\
+	gambling\_rt & embed\_linear & lgbm & 0.018 & 0.202 & 0.003 & 0.386 & 0.375 \\
+	int\_g\_like & embed\_linear & knn & 0.073 & 0.195 & 0.007 & 0.443 & 0.369 \\
+	int\_g\_like & embed\_linear & elastic & 0.067 & 0.192 & 0.010 & 0.443 & 0.369 \\
+	int\_g\_like & embed\_linear & lgbm & 0.071 & 0.196 & 0.006 & 0.443 & 0.369 \\
+	emotion\_rt & embed\_lgbm & elastic & 0.026 & 0.193 & 0.001 & 0.022 & 0.367 \\
+	emotion\_rt & embed\_linear & lgbm & 0.032 & 0.191 & 0.003 & 0.357 & 0.357 \\
+	emotion\_rt & embed\_linear & knn & 0.012 & 0.194 & 0.000 & 0.357 & 0.357 \\
+	int\_g\_like & pred & elastic & 0.076 & 0.191 & 0.011 & 0.331 & 0.333 \\
+	int\_g\_like & pred & lgbm & 0.042 & 0.198 & 0.004 & 0.331 & 0.333 \\
+	language\_perf & pred & lgbm & 0.087 & 0.197 & 0.007 & 0.324 & 0.325 \\
 	\bottomrule
 \end{tabular}
 \footnotesize
@@ -1432,8 +1577,8 @@ reliability and reproducibility from the proposed methods.
 \subsection{Interpretation of CMC and its potential relationship with macro-structural cortical development}
 
 The proposed CMC biomarkers, defined in equations 1 through 4, rely on
-underlying measurements of gray matter volume (measured in mm3), surface area
-(measured in mm2) and average cortical thickness (measured in mm). The nature
+underlying measurements of gray matter volume (measured in mm\(^3\)), surface area
+(measured in mm\(^2\)) and average cortical thickness (measured in mm). The nature
 of the proposed equations are such that they each produce a unitless index of
 CMC, different values of which imply potentially major differences in the
 conformation of the local cortical region, potentially implying major
@@ -1443,7 +1588,7 @@ expected for very regularly shaped structures, that region exhibits a
 relatively simple cortical morphological presentation, and can be said to
 have high underlying cortical morphological congruence. Examples of this can
 be found consistently across subjects in brain structures such as the banks
-of the superior temporal sulcus (n=1,113, mean CMCLateral=1.0*, std dev
+of the superior temporal sulcus (n=1,113, mean CMCLateral=1.0*, sd
 CMCLateral=0.025*), and the insula (mean CMCLateral=1.0?, std dev
 CMCLateral=???). When CMC values deviate from 1, this implies varying degrees
 of incongruence between the region's volumetric biomarkers and its surface
@@ -1475,6 +1620,7 @@ temporal sulcus, or the insula. Results demonstrate that in addition to the
 entorhinal cortex, multiple regions exhibit consistently high CMC values,
 including the temporal pole, frontal pole, and pars orbitalis (see Figure 1).
 
+
 When a cortical region exhibits CMC values below 1, the combination of the
 surface area times the mean thickness has developed to be larger than the
 gray matter volume. This can occur when the surface area, which is expected
@@ -1489,6 +1635,13 @@ pericalcarine cortex exhibit low CMC values (mean = 0.95*, standard deviation
 = \verb|??|), which could imply that surface area growth has outpaced corresponding
 volumetric growth in this region's development relative to other cortical
 regions.
+
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% Please insert the correct values for these regions
 
 \subsection{Potential for CMC to characterize important aspects of brain development}
 
@@ -1529,6 +1682,19 @@ and language development, there is a wide amount of variability in function
 across both genders, which is reflected in our CMC biomarker results
 exhibiting partially overlapping distributions between the sexes.
 
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% Please add some short blurbs on how CMC helps with getting AI models with
+% value above the dummy model more often for predicting the two things I
+% outlined in the email. Please add a blurb about how CMC features are being
+% selected for in leading models as is outlined in Table 8.
+%
+% If the variation explained test has been run and is clearly presented in
+% the results, then this can be briefly discussed here as well, otherwise it
+% can be dropped from the manuscript.
 
 \textcolor{orange}{%
 ***Hopefully there is something related to phenotypic data that Derek's
@@ -1596,12 +1762,10 @@ variety of neurodevelopmental disorders. It is also hoped that congruence
 based biomarkers will assist in characterizing important aspects of healthy
 and abnormal brain, reliably and reproducibly.
 
-***
-
-Talk to Bruce Fischl with Emi about possibility of it being included in future versions of FreeSurfer and whether he has any feedback that might be relevant and may want to join on this project as a co-author.
 
 
-\section{Appendix A - FreeSurfer / CMC Compoment Feature}\label{sec:appendix-a}
+
+\section{Appendix A - FreeSurfer / CMC Compobent Feature}\label{sec:appendix-a}
 
 
 \begin{longtable}{lrrr}
@@ -1845,9 +2009,18 @@ superiorfrontal & 2485.1 & 2077.1 \\
 \normalsize
 \end{table}
 
-\section{Appendix B - Synthetic Targets} \label{sec:appendix-b}
+\section{Appendix B - Factor Targets} \label{sec:appendix-b}
 
 % generated by src/munging/hcp.py::load_HCP_complete
+
+%%%%%%%%%%%%%%%
+% Jacob says: %
+%%%%%%%%%%%%%%%
+%
+% Appendix B is overwhelming and I don't see much value in it. I would cut
+% this out.
+
+
 
 In the tables below, names follow HCP data naming conventions, unless otherwise
 indicated. The right column label indicates the name given to the single-factor

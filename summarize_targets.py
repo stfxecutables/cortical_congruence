@@ -1666,7 +1666,12 @@ def two_roi_violin_plot() -> None:
     print(cohen_ds_lat.loc["cmc"].loc[rois])
     print("Cohen's d's Male vs. Female:")
     print(cohen_ds_sex.loc["cmc"].loc[rois])
+
+    out = ROOT / "paper/latex/figures/example_violins.png"
+    grid.figure.savefig(out, dpi=600)
+    print(f"Saved example distribution violin plots to {out}")
     plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
