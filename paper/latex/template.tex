@@ -22,6 +22,7 @@
 \usepackage{doi}
 \usepackage[normalem]{ulem}  % strikethrough
 
+
 % below means 2 arguments, default of "cyan" for first
 \newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
 
@@ -46,7 +47,7 @@
 \ifuniqueAffiliation % Standard variant of author block
 \author{%
 	\href{https://orcid.org/0000-0002-9604-3157}{\includegraphics[scale=0.06]{orcid.pdf}\hspace{1mm}Jacob Levman}
-	\thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.} \\
+	% \thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.} \\
 	Department of Computer Science\\
 	St. Francis Xavier University\\
 	Antigonish, Nova Scotia, Canada\\
@@ -73,8 +74,11 @@
 \setlength{\affilsep}{0em}
 % box is needed for correct spacing with authblk
 \newbox{\orcid}\sbox{\orcid}{\includegraphics[scale=0.06]{orcid.pdf}}
-\author[1,2]{%
+\author[1,2,3,4]{%
 	\href{https://orcid.org/0000-0002-9604-3157}{\usebox{\orcid}\hspace{1mm}Jacob Levman\thanks{\texttt{jlevman@stfx.ca}}}%
+}
+\author[1,4]{%
+	Emi Takahashi\thanks{\texttt{emi@nmr.mgh.harvard.edu}}%
 }
 \author[1]{%
 	\href{https://orcid.org/0000-0003-4733-0624}{\usebox{\orcid}\hspace{1mm}Derek Berger\thanks{\texttt{dberger@stfx.ca}}}%
@@ -101,13 +105,7 @@ pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic reson
 
 \begin{document}
 
-
-
-
-
 \maketitle
-
-
 
 \begin{abstract}
 We extract a number of novel cortical morphological congruence (CMC) metrics
@@ -184,26 +182,25 @@ may help characterize neurodevelopment.
 
 \subsection{Cortical Morphology Metrics}
 
-\citep{winklerCorticalThicknessGrey2010}
+% \citep{winklerCorticalThicknessGrey2010}
+% \begin{quotation}
+% Although the human brain is gyrencephalic, with no absolute
+% linear relationship between brain volume and surface area (Hofman,
+% 1985; Armstrong et al., 1995), simple geometric laws still hold within
+% the cortical mantle, where the grey matter volume is defined as the
+% amount of grey matter that lies between the grey-white interface and
+% the pia mater (Fig. 1, left). Previous findings suggest that cortical
+% surface area and cortical thickness are independent, both globally and
+% regionally, that grey matter volume is a function of these two indices
+% and each of these three measurements are heritable (Winkler et al.,
+% 2009; Panizzon et al., 2009). Furthermore, Panizzon et al. (2009)
+% reported that surface area and cortical thickness are genetically
+% uncorrelated.
+% \end{quotation}
 
-\begin{quotation}
-Although the human brain is gyrencephalic, with no absolute
-linear relationship between brain volume and surface area (Hofman,
-1985; Armstrong et al., 1995), simple geometric laws still hold within
-the cortical mantle, where the grey matter volume is defined as the
-amount of grey matter that lies between the grey-white interface and
-the pia mater (Fig. 1, left). Previous findings suggest that cortical
-surface area and cortical thickness are independent, both globally and
-regionally, that grey matter volume is a function of these two indices
-and each of these three measurements are heritable (Winkler et al.,
-2009; Panizzon et al., 2009). Furthermore, Panizzon et al. (2009)
-reported that surface area and cortical thickness are genetically
-uncorrelated.
-\end{quotation}
-
-\note{If the above quote is true, I think this could be a problem for both the
-CMC formula and/or the interpreation of CMC\@. If two FS features are independent,
-we probably don't want to form an index out of them.}
+% \note{If the above quote is true, I think this could be a problem for both the
+% CMC formula and/or the interpreation of CMC\@. If two FS features are independent,
+% we probably don't want to form an index out of them.}
 
 % ``Freesurfer generates white and pial surface meshes with identical numbers
 % of vertices, and calculates the cortical thickness as the average of the
@@ -212,14 +209,57 @@ we probably don't want to form an index out of them.}
 % on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
 
 Define \(V(r)\) to be the volume of region \(r\), and \(A(r)\) and \(d(r)\)
-to be the surface area and average thickness, respectively, of the ROI\@.
-Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
-(e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
-right precuneus). Then define the lateral CMC metrics to be:
+to be the (outer) surface area and average thickness, respectively, of the
+cortical ROI\@. Then \(A(r) \cdot d(r)\) is the
+expected volume of \(r\) if \(r\) is any three-dimensional slab-like shape
+with constant cross-sectional area \(A(r)\), and uniform height \(d(r)\), as
+in Figure~\ref{fig:slab}. We denote the \emph{pseudo-volume},
+\(\hat{V}(r)\), as
+
+\begin{equation}
+\hat{V}(r) = A(r) \cdot d(r).
+\end{equation}
+
+We wish to define metrics relating \(\hat{V}\) and \(V\). The more an ROI
+\(r\) resembles or is congruent to a shape like in
+Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
+small average thickness relative to the surface area---then the closer
+\(\hat{V}(r)\) will be to \(V(r)\). By contrast, the dissimilarity between
+\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which are more blob-like
+(i.e.\ have large thickness relative to the surface area\footnote{As is clear
+from Figure~\ref{fig:slab}, if \(d(r)\) is large relative to \(A(r)\), then
+the cortical surface area, \(SA(r)\), is \(SA(r) = \partial(A(r)) \cdot d(r)
++ A(r)\), where \(\partial(A(r))\) the length of the boundary of the top
+surface \(A(r)\). That is, the slab-like idealization is no longer accurate,
+and there is no longer any reason to expect either \(V(r) = \text{SA} \cdot
+d(r)\) or \(V(r) = A(r) \cdot d(r)\)}), or may increase for ROIs which have
+more variable thickness and/or curvature (e.g.\ any ROI with with convoluted
+and/or tube-like structures, have higher overall curvature, or are more
+gyrated or sulcated).
+
+For more exotic volumes (e.g.\ horn-shaped, extremely non-convex, or volumes
+with blobs joined by thin strands), the relationship between \(\hat{V}(r)\)
+and \(V(r)\) lacks interepretability. However, as most anatomical ROIs are
+not such exotic shapes, and generally have a large surface area to average
+thickness ratio (see Table~A\ref{tab:sa-ratios}), comparing \(\hat{V}(r)\) to
+\(V(r)\) can be informative of the ROI shape.
+
+In this sense, for \emph{any} metric \(\mu_r = \mu(\hat{V}(r), V(r))\) that
+compares these two quantities, and where \(|\mu_r|\) is positively correlated
+with the similarity of \(\hat{V}(r)\) and \(V(r)\), it is not particularly
+meaningful to compare the metrics of different ROIs, i.e.\ \(\mu_{r_1}\) and
+\(\mu_{r_2}\), as there is little reason to expect any broad similiary in the
+shapes. However, for comparing indiduals at the \emph{same} ROI, then
+increased curvature (e.g.\ gyration, sulcation), will tend to increase
+\(A(r)\), and thus the value of \(\hat{V}(r)\) relative to \(V(r)\).
+
+Then define the (unilateral) CMC metrics to be:
 
 \begin{equation}
 \text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{A(r) \cdot d(r)}
 \end{equation}
+
+i.e.\
 
 \begin{align}
 \label{eq:cmc-laterals}
@@ -227,14 +267,6 @@ right precuneus). Then define the lateral CMC metrics to be:
 \text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r)
 \end{align}
 
-Note that \(A(r) \cdot d(r)\) is the expected volume of \(r\) if \(r\) is any
-three-dimensional slab-like shape with constant cross-sectional area
-\(A(r)\), and uniform height \(d(r)\), as in Figure~\ref{fig:slab}. We denote
-the \emph{expected volume}, \(\hat{V}(r)\), as
-
-\begin{equation}
-\hat{V}(r) = \text{CMC}_{V}(r) = A(r) \cdot d(r).
-\end{equation}
 
 
 \begin{figure}
@@ -253,29 +285,6 @@ the \emph{expected volume}, \(\hat{V}(r)\), as
 % small average thickness shouldn't matter, but small variability in
 % thickness does, is this what you meant to say?
 
-The more an ROI \(r\) resembles or is congruent to a shape like in
-Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
-small average thickness relative to the surface area---then the closer
-\(\hat{V}(r)\) will be to \(V(r)\). By contrast, the dissimilarity between
-\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which are more blob-like
-(i.e.\ have large thickness relative to the surface area), or which have more
-variable thickness and/or curvature (e.g.\ any ROI with with convoluted
-and/or tube-like structures, have higher overall curvature, or are more
-gyrated or sulcated). For more exotic volumes (e.g.\ horn-shaped, extremely
-non-convex, or volumes with blobs joined by thin strands), the relationship
-between \(\hat{V}(r)\) and \(V(r)\) lacks interepretability. However, as most
-anatomical ROIs are not such exotic shapes, and generally have a large
-surface area to average thickness ratio (see Table~A\ref{tab:sa-ratios}),
-comparing \(\hat{V}(r)\) to \(V(r)\) can be informative of the ROI shape.
-
-In this sense, for \emph{any} metric \(\mu_r = \mu(\hat{V}(r), V(r))\) that
-compares these two quantities, and where \(|\mu_r|\) is positively correlated
-with the similarity of \(\hat{V}(r)\) and \(V(r)\), it is not particularly
-meaningful to compare the metrics of different ROIs, i.e.\ \(\mu_{r_1}\) and
-\(\mu_{r_2}\), as there is little reason to expect any broad similiary in the
-shapes. However, for comparing indiduals at the \emph{same} ROI, then
-increased curvature (e.g.\ gyration, sulcation), will tend to increase
-\(A(r)\), and thus the value of \(\hat{V}(r)\) relative to \(V(r)\).
 
 % \note{What is actual observed ThickStd and ThickAvg relative to SurfArea? The
 % largest observed average thickness across all ROIs and subjects is
@@ -284,7 +293,9 @@ increased curvature (e.g.\ gyration, sulcation), will tend to increase
 % observed surface area and average thickness is approximately 2400.}
 
 
-Also define \emph{bilateral} CMC as:
+Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
+(e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
+right precuneus). Then define the \emph{bilateral} CMC metrics as:
 
 \begin{equation} \label{eq:cmc-bilateral}
 \text{CMC}_{lr}
@@ -718,7 +729,12 @@ study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
 \begin{figure}
 	\centering
 	\includegraphics[width=6.5in]{figures/example_violins.png}
-	\caption{Distributions of CMC features across subjects, for each ROI, ignoring laterality.}
+	\caption{Example distributions of CMC features for two ROIs. The temporal
+	pole has the largest CMC separation by sex (see
+	Table~\ref{tab:sig-cmc-sex}; Cohen's \(|d|=0.50\)), and relatively large
+	standard deviations compared to other ROIs. The paracentral lobule, by
+	contrast, has a typical standard deviation for CMC metrics, but the largest
+	differences between hemispheres (Cohen's \(|d|=0.80\)).}
 	\label{fig:violins}
 \end{figure}
 
