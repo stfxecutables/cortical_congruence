@@ -113,11 +113,10 @@ from various anatomical cortical regions of interest (ROIs) in neurological
 magnetic resonance imaging (MRI) examinations. These metrics quantify the
 deviation of a cortical region's volume from the volume of an idealized
 region with the same, constant average cortical thickness and constant
-cross-sectional area equal to the region's cortical surface area.
-
-We examine descriptive and predictive properties of these metrics on a large
-sample (n=1113) of healthy subjects from the Human Connectome Project (HCP).
-We find a surprising degree of consistency in CMC metrics across ROIs and
+cross-sectional area equal to the region's cortical surface area. We examine
+descriptive and predictive properties of these metrics on a large
+(\(n\)=1113) sample of healthy subjects from the Human Connectome Project
+(HCP). We find a considerable consistency in CMC metrics across ROIs and
 subjects, suggesting a consistent proportionality relation between cortical
 ROI surface area, volume, and thickness. Developmental and predictive
 implications are discussed.
@@ -208,19 +207,50 @@ may help characterize neurodevelopment.
 % pial surface, and from the point on the pial surface to its nearest neighbor
 % on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
 
-Define \(V(r)\) to be the volume of region \(r\), and \(A(r)\) and \(d(r)\)
-to be the (outer) surface area and average thickness, respectively, of the
-cortical ROI\@. Then \(A(r) \cdot d(r)\) is the
-expected volume of \(r\) if \(r\) is any three-dimensional slab-like shape
-with constant cross-sectional area \(A(r)\), and uniform height \(d(r)\), as
-in Figure~\ref{fig:slab}. We denote the \emph{pseudo-volume},
-\(\hat{V}(r)\), as
+\subsubsection{Motivation}
+
+Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
+volume of that region, and \(A(r)\) and \(d(r)\) to be the (outer, pial)
+surface area and average thickness, respectively. Then, if \(r\) has a
+slab- or sheet-like shape with constant cross-sectional area equal to
+\(A(r)\), and uniform height equal to \(d(r)\), as in Figure~\ref{fig:slab}, then
+\(A(r) \cdot d(r)\) is the expected volume of \(r\). We thus denote the
+\emph{expected-volume}, \(\hat{V}(r)\), as
 
 \begin{equation}
 \hat{V}(r) = A(r) \cdot d(r).
 \end{equation}
 
-We wish to define metrics relating \(\hat{V}\) and \(V\). The more an ROI
+\begin{figure}
+	\centering
+	\includegraphics[width=5in]{figures/ROI_slabs_strip.pdf}
+	\caption{Left: Example idealized slab-like ROI \(r\) with constant
+	cross-sectional area \(A(r)\), surface areas \(SA(r)\), thickness \(d(r)\),
+	and boundary length (perimeter) \(\partial A(r)\). and thus actual volume
+	\(V(r)\) equal to \(\hat{V}(r) = A(r) \cdot d(r)\). Right: example
+	simplified deviation from slab-like ideal, with raised gyrus-like
+	structure. An actual ROI will not, in general, have a clearly-defined
+	perimeter, as the pial surface may curve smoothly inward to the underlying
+	white matter, however, provided \(A(r)\) is large relative to \(d(r)\),
+	then the \(\partial A(r) \cdot d(r)\) term will be small, and \(\hat{V}(r) = SA(r)
+	\cdot d(r) \approx A(r) \cdot d(r) = V(r)\). Likewise, in the right figure,
+	deviations from the ideal (e.g.\ gyration, of which \(A^{\prime}\) is a simplified
+	representation) mean that FreeSurfer reported SA measurements will differ from
+	those of an ideal volume on the left.}
+	\label{fig:slab}
+\end{figure}
+
+For more exotic volumes (e.g.\ horn-shaped, extremely non-convex, volumes
+with blobs joined by thin strands, regular polyhedra), the relationship
+between \(\hat{V}(r)\) and \(V(r)\) lacks interepretability. However, as most
+anatomical ROIs are not such exotic shapes, and generally have a large
+surface area to average thickness ratio (see Table~A\ref{tab:sa-ratios}),
+we expect \(\hat{V}(r) \approx V(r)\), and thus for
+comparing \(\hat{V}(r)\) to \(V(r)\) can be informative of the ROI shape.
+
+We wish to define metrics relating \(\hat{V}\) and \(V\).
+
+The more an ROI
 \(r\) resembles or is congruent to a shape like in
 Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
 small average thickness relative to the surface area---then the closer
@@ -237,12 +267,7 @@ more variable thickness and/or curvature (e.g.\ any ROI with with convoluted
 and/or tube-like structures, have higher overall curvature, or are more
 gyrated or sulcated).
 
-For more exotic volumes (e.g.\ horn-shaped, extremely non-convex, or volumes
-with blobs joined by thin strands), the relationship between \(\hat{V}(r)\)
-and \(V(r)\) lacks interepretability. However, as most anatomical ROIs are
-not such exotic shapes, and generally have a large surface area to average
-thickness ratio (see Table~A\ref{tab:sa-ratios}), comparing \(\hat{V}(r)\) to
-\(V(r)\) can be informative of the ROI shape.
+
 
 In this sense, for \emph{any} metric \(\mu_r = \mu(\hat{V}(r), V(r))\) that
 compares these two quantities, and where \(|\mu_r|\) is positively correlated
@@ -269,14 +294,6 @@ i.e.\
 
 
 
-\begin{figure}
-	\centering
-	\includegraphics[width=5cm]{figures/ROI_slab_bw.pdf}
-	\caption{Example idealized ROI \(r\) with constant cross-sectional \(A(r)\)
-	area and thickness \(d(r)\), and thus actual volume \(V(r)\) equal to
-	\(\hat{V}(r) = A(r) \cdot d(r)\).}
-	\label{fig:slab}
-\end{figure}
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -383,6 +400,9 @@ examinations) was processed by FreeSurfer \citep{fischlFreeSurfer2012} and
 the results were made publicly available through the Human Connectome
 Project's \href{%
 https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release}{website}.
+Notably, the cortex is parcellated into the 34 anatomical ROIs defined in
+\citet{desikanAutomatedLabelingSystem2006}, and corresponding ROI geometric
+statistics are available for each ROI.
 
 
 \subsubsection{Congruence Features}
