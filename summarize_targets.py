@@ -16,6 +16,7 @@ from matplotlib.patches import Patch
 import os
 import seaborn as sbn
 import re
+from joblib import Memory
 import sys
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
@@ -59,6 +60,8 @@ from src.munging.hcp import (
 )
 
 DATA = ROOT / "data/complete_tables"
+MEMORY = Memory(ROOT / "__JOBLIB_CACHE__")
+
 
 ABIDEI = (
     DATA
@@ -453,6 +456,7 @@ def lateral_tables() -> None:
         lh = datas["Left Lateral CMC Feature"]
         rh = datas["Right Lateral CMC Feature"]
         lh = lh.rename(columns=lambda s: s.replace("__lh", "__rh"))
+        # sd_pooled = pd.concat([lh, rh], axis=0).std(ddof=1)
         sd_pooled = pd.concat([lh, rh], axis=0).std(ddof=1)
         cohen_ds = (lh.mean() - rh.mean()) / sd_pooled
 
@@ -560,7 +564,22 @@ def fs_tables() -> None:
             inplace=True,
         )
         print(df_lat.round(3).to_markdown(floatfmt="0.3f"))
-        print(df_lat.round(3).to_latex(float_format="%0.3f"))
+        print(
+            df_lat.round(3).to_latex(
+                float_format="%0.3f",
+                escape=True,
+                sparsify=True,
+                longtable=True,
+                label="tab:lateral-fs",
+                caption=(
+                    "Measures of Separation of base FreeSurfer Features "
+                    "(left vs.\\ right hemisphere). d = Cohen's d, W = Wilcoxon "
+                    "signed rank test, W (p) = p-value for W. Note: p-values "
+                    "are adjusted for multiple comparisons using the "
+                    "Holm-Bonferroni stepdown method"
+                ),
+            )
+        )
         print("Table XX: Measures of Separation of Lateral FS Features.")
         csv = TABLES / f"{dsname}_FS_lateral_separations.csv"
         pqt = TABLES / f"{dsname}_FS_lateral_separations.parquet"
@@ -1424,6 +1443,232 @@ def roi_corrs() -> None:
     raise
 
 
+@MEMORY.cache
+def _load_violin_data() -> DataFrame:
+    df = pd.read_parquet(SINGLE_TABLES["HCP"])
+    sex, age = get_hemi_data(df)[1:]
+
+    df = load_HCP_CMC_table(keep_corr_relevant=True)
+    df = to_wide_subject_table(df)
+    df = add_feat_info(df.stack().reset_index()).rename(columns={0: "value"})
+    df = pd.merge(
+        df,
+        sex.reset_index(),
+        how="inner",
+        left_on="sid",
+        right_on="sid",
+        suffixes=(None, None),  # type: ignore
+    )
+    return df
+
+
+def load_violin_data() -> DataFrame:
+    return cast(DataFrame, _load_violin_data())
+
+
+def sample_violin_plot(
+    cmc_only: bool = True,
+    sds: Literal["small", "large", "avg", "med", "custom", "all"] = "all",
+) -> None:
+    matplotlib.use("QtAgg")
+
+    df = load_violin_data()
+    custom = sds == "custom"
+
+    feats = ["cmc"] if cmc_only else [*CMC_FEATS.values()][:-1]
+
+    all_data = df[df["fclass"].isin(feats)]
+    all_data = all_data[all_data["hemi"] != "both"]
+    # rois = ["temporalpole", "insula", "paracentral"]  # sig sex differences
+    small_sds = ["postcentral", "precentral", "superiorparietal"]
+    avg_sds = ["inferiortemporal", "fusiform", "lingual"]  # lingual is most average sd
+    large_sds = ["temporalpole", "frontalpole", "entorhinal"]
+    rois = []
+    if sds == "small":
+        rois += small_sds
+    if sds in ["avg", "med"]:
+        rois += avg_sds
+    elif sds == "large":
+        rois += large_sds
+    elif sds == "custom":
+        rois = ["temporalpole", "lingual"]
+    else:
+        rois = large_sds + avg_sds + small_sds
+
+    data = all_data[all_data["roi"].isin(rois)]
+
+    if not cmc_only:
+        # deal with scaling issues
+        ix_invert = data["fclass"].isin(["asym_diff", "asym_diff_abs"])
+        data.loc[ix_invert, "value"] = 1 - data.loc[ix_invert, "value"]
+        data.loc[ix_invert, "fclass"] = data.loc[ix_invert, "fclass"].apply(
+            lambda s: f"1 - {s}"
+        )
+
+    fclass = "Lateral CMC" if cmc_only else "CMC Feature"
+    data.rename(columns={"fclass": fclass}, inplace=True)
+    data.rename(columns={"value": "Metric Value"}, inplace=True)
+    data.rename(columns={"roi": "ROI"}, inplace=True)
+    data.loc[:, "hemi"] = data["hemi"].str.capitalize()
+
+    x, y = fclass, "Metric Value"
+    row, col, order = "hemi", "ROI", rois
+
+    swap_orient = custom
+    orient_args = {
+        "x": y if swap_orient else x,
+        "y": x if swap_orient else y,
+        "row": col if swap_orient else row,
+        "col": row if swap_orient else col,
+        "row_order" if swap_orient else "col_order": order,
+    }
+    if custom:
+        grid = sbn.catplot(
+            data=data,
+            kind="violin",
+            y="Metric Value",
+            x="ROI",
+            col="hemi",
+            hue="sex",
+            palette={"M": "#bbb", "F": "#FFF"},
+            inner="quart",  # only thing that works
+            # inner="point",
+            linewidth=1.0,
+            split=True,
+            bw_adjust=0.75,
+            # height=2,
+            # aspect=0.75,
+        )
+        grid.set_titles("{col_name} Hemisphere")
+    else:
+        grid = sbn.catplot(
+            data=data,
+            kind="violin",
+            hue="sex",
+            palette={"M": "#bbb", "F": "#FFF"},
+            inner="quart",  # only thing that works
+            # inner="point",
+            linewidth=1.0,
+            split=True,
+            bw_adjust=0.75,
+            **orient_args,
+            # height=2,
+            # aspect=0.75,
+        )
+    s1 = "Lateral CMC Metric" if cmc_only else "All CMC Metrics"
+    s2 = {
+        "small": "Small",
+        "avg": "Average",
+        "med": "Average",
+        "large": "Large",
+        "custom": "",
+        "all": "Large and Small",
+    }[sds]
+    suptitle = f"{s1} Example Distributions"
+    if custom:
+        suptitle = f"{s1} Example ROI Distributions"
+    else:
+        suptitle = f"{suptitle}: {s2} SDs"
+    grid.figure.suptitle(suptitle)
+
+    grid.figure.set_size_inches(w=12, h=4)
+    loc = {
+        "small": "lower left",
+        "avg": "lower left",
+        "med": "lower left",
+        "large": "lower left",
+        "custom": (0.55, 0.65),
+        "all": "lower left",
+    }[sds]
+    sbn.move_legend(grid, loc=loc)
+    grid.figure.tight_layout()
+    plt.show()
+
+
+def two_roi_violin_plot() -> None:
+    matplotlib.use("QtAgg")
+    df = load_violin_data().drop(columns=["sid", "feature", "source"])
+    df = df[df["fclass"].isin([*CMC_FEATS.values()])]
+    df = df[df["hemi"] != "both"]
+
+    nums = (
+        df.groupby(["fclass", "roi", "hemi"])
+        .mean(numeric_only=True)
+        .groupby(["fclass", "roi"])
+        .diff()
+        .dropna()
+        .droplevel("hemi")
+    )
+    var = df.groupby(["fclass", "roi", "hemi"]).var(numeric_only=True, ddof=1)
+    cnts = df.groupby(["fclass", "roi", "hemi"]).count()["value"].to_frame() - 1
+    sd_pooleds = (
+        (cnts * var).groupby(["fclass", "roi"]).sum()
+        / cnts.groupby(["fclass", "roi"]).sum()
+    ).apply(np.sqrt)
+    cohen_ds_lat = nums / sd_pooleds
+
+    nums = (
+        df.groupby(["fclass", "roi", "sex"])
+        .mean(numeric_only=True)
+        .groupby(["fclass", "roi"])
+        .diff()
+        .dropna()
+        .droplevel("sex")
+    )
+    var = df.groupby(["fclass", "roi", "sex"]).var(numeric_only=True, ddof=1)
+    cnts = df.groupby(["fclass", "roi", "sex"]).count()["value"].to_frame() - 1
+    sd_pooleds = (
+        (cnts * var).groupby(["fclass", "roi"]).sum()
+        / cnts.groupby(["fclass", "roi"]).sum()
+    ).apply(np.sqrt)
+    cohen_ds_sex = nums / sd_pooleds
+
+    all_data = df[(df["fclass"] == "cmc") & (df["hemi"] != "both")]
+    # lingual has most "average" sd
+    # paracentral has largest lateral separation, average sd
+    # temporalpole has largest sex separation
+
+    # rois = ["temporalpole", "lingual"]
+    # rois = ["temporalpole", "lingual", "paracentral"]
+    rois = ["temporalpole", "paracentral"]
+    data = all_data[all_data["roi"].isin(rois)]
+
+    fclass = "Lateral CMC"
+    data.rename(columns={"fclass": fclass}, inplace=True)
+    data.rename(columns={"value": "CMC Metric Value"}, inplace=True)
+    data.rename(columns={"roi": "ROI"}, inplace=True)
+    data.loc[:, "hemi"] = data["hemi"].str.capitalize()
+
+    grid = sbn.catplot(
+        data=data,
+        kind="violin",
+        y="CMC Metric Value",
+        x="ROI",
+        col="hemi",
+        hue="sex",
+        palette={"M": "#bbb", "F": "#FFF"},
+        # inner="quart",  # only thing that works
+        inner="point",  # only thing that works
+        linewidth=1.0,
+        split=True,
+        bw_adjust=0.75,
+        gap=0.15,
+        # height=2,
+        # aspect=0.75,
+    )
+    grid.set_titles("{col_name} Hemisphere")
+
+    grid.figure.suptitle("Lateral CMC Example ROI Distributions")
+    grid.figure.set_size_inches(w=6.5, h=4)
+    sbn.move_legend(grid, loc=(0.575, 0.65))  # type: ignore
+    grid.figure.tight_layout()
+    print("Cohen's d's Left vs. Right:")
+    print(cohen_ds_lat.loc["cmc"].loc[rois])
+    print("Cohen's d's Male vs. Female:")
+    print(cohen_ds_sex.loc["cmc"].loc[rois])
+    plt.show()
+
+
 if __name__ == "__main__":
     # target_hists()
     # figure1()
@@ -1434,9 +1679,19 @@ if __name__ == "__main__":
     # fs_tables()
     # hcp_target_stats()
 
-    hcp_cmc_corrs()
+    # hcp_cmc_corrs()
     # hcp_cmc_fs_raw_sds()
     # hcp_sa_thick_ratios()
     # associations()
     # within_subj_corrs()
     # roi_corrs()
+    # sample_violin_plot(cmc_only=True, sds="small")
+    # sample_violin_plot(cmc_only=True, sds="large")
+    # sample_violin_plot(cmc_only=True, sds="all")
+    # sample_violin_plot(cmc_only=True, sds="custom")
+
+    # sample_violin_plot(cmc_only=False, sds="small")
+    # sample_violin_plot(cmc_only=False, sds="large")
+    # sample_violin_plot(cmc_only=False, sds="all")
+
+    two_roi_violin_plot()

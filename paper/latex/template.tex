@@ -108,75 +108,6 @@ pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic reson
 \maketitle
 
 
-\color{darkgray}
-
-\section{Overall Concerns}
-
-\note{}
-
-No matter how I slice up this data (I have spent hours of looking at tens of
-\texttt{.groupby().describe()} and \texttt{.groupby().corr().describe()}
-combinations), I cannot find anything really good (or even \emph{clear}) to
-say about CMC\@. I feel that all I am able to do is basically a
-\href{https://xkcd.com/882/}{green jelly beans paper} (ignore tens of
-thousands of insignificant results and pick out a tiny handful of
-significances, except in this case, also ignoring that the features CMC is
-based on produce \emph{far} more significances \dots). I.e.\ if you slice up
-the data enough ways, \emph{eventually} you find a table that looks good
-for CMC, but I know about all the other tables being hidden\dots
-
-Ultimately, I do not believe this is an HCP problem, but a CMC problem. CMC
-is a ratio or index variable, i.e.\ a derived variable / engineered feature
-extracted from other features, rather than a novel feature extracted from the
-FreeSurfer meshes. Ratio or index variables have a lot of known problems, but
-in this case, it is worse than that, as CMC takes three variables (surface
-area, volume, and average thickness) and reduces them \emph{in a completely
-unsupervised way} with a formula based on, essentially, a geometric
-intuition. This is a good intuition (ROI SA times avg.\ thickness---what I
-call psuedovolume---\emph{does} tend to be close to ROI volume), but it is
-not clear to me that this invariance is meaningful. I.e.\ the invariance is
-likely because most ROIs are indeed slab-like or sheet-like, but then, we
-don't have much reason to believe that anatomical ROI \emph{shape} should
-matter much for brain functioning (volume and surface area, perhaps, but this
-should still be secondary to location and connectivity), and plenty of
-evidence against such an idea (the massive variance in cortical ROI shape
-across individuals, despite similar capacities and behaviours across people).
-
-Derived indices like this (e.g.\ BMI), by mathematical necessity, contain
-less information than the base features (some subjects that were
-distinguishable in the full-dimensional space of the original features will
-almost always be expected to become indistinguishable in the reduction). They
-are essentially lossy reductions which we make only if the loss is not too
-large, and if that reduction simplifies interpretations and/or decisions in
-most cases. E.g.\ provided a person is not a body-builder, or extremely short
-or tall, then we know a large BMI is strongly predictive of various
-health-related measures, and even in the exceptional cases, we still know
-that if BMI gets large enough, it definitely indicates a problem (BMI indexes
-size, and being too big is always eventually bad, and there is no way for a
-human to get a massive BMI without also being very large). But, we also know
-because of this, a more general predictive model that can learn a different
-(e.g.\ polynomial) relationship between height and weight will always be
-generally superiour (provided it is adequately regularized).
-
-CMC is \emph{a priori} (i.e.\ theoeretically, mathematically) clearly worse
-than BMI, since it is a larger reduction (three variables to one) and since
-it isn't clear that an ROI being more or less "slab-like" is something that
-is bad, nor is it even clear that non-slab-like-ness is the only way to get a
-CMC deviating from 1.0.
-
-And emprically, we just aren't seeing a clear nomological net to give CMC
-explainability. I.e.\ the univariate associations are incredibly weak relative
-to those of the base features, and so are the predictions.  Most ROIs have
-similar / overlapping CMC distributions, and comparing CMC across ROIs (with
-wildly different shapes) is not mathematically sound. So I am not sure CMC
-could ever reveal anything useful in non-longitudinal data.
-
-Honestly, for the current data, CMC assocations, predictions, and correlations
-are such that the CMC variance almost just looks like noise.
-
-\color{black}
-
-\vspace{1cm}
 
 \begin{abstract}
 We extract a number of novel cortical morphological congruence (CMC) metrics
@@ -193,19 +124,6 @@ subjects, suggesting a consistent proportionality relation between cortical
 ROI surface area, volume, and thickness. Developmental and predictive
 implications are discussed.
 \end{abstract}
-
-\note{I have altered or eliminated many uses of the term `biomarker', as
-the CMC features / metrics do very poorly in predictive analyses on our data.
-My feeling is that technical usage of this term is such that new features,
-measures, or metrics can, with significant work, be \emph{revealed} to be
-biomarkers, but one cannot e.g.\ `propose' a biomarker. Rather, research
-eventually confer biomarker status on some feature once a large body of work
-has established some clear, broad utility or stable nomological net. But
-unfortunately I am unable to see any clear nomological net or predictive
-utility for CMC metrics.}
-
-\note{I have replaced all instances of `patient' with `subject', as these are
-healthy individuals undergoing no treatments. `Individuals' would be fine too.}
 
 
 % keywords can be removed
@@ -315,7 +233,7 @@ three-dimensional slab-like shape with constant cross-sectional area
 the \emph{expected volume}, \(\hat{V}(r)\), as
 
 \begin{equation}
-\hat{V}(r) = \text{CMC}_{V}(r) = V(r) \cdot d(r).
+\hat{V}(r) = \text{CMC}_{V}(r) = A(r) \cdot d(r).
 \end{equation}
 
 
@@ -361,8 +279,7 @@ increased curvature (e.g.\ gyration, sulcation), will tend to increase
 
 Also define \emph{bilateral} CMC as:
 
-\begin{equation}
-\label{eq:cmc-bilateral}
+\begin{equation} \label{eq:cmc-bilateral}
 \text{CMC}_{lr}
 =\frac{V(r_l) + V(r_r)}{\hat{V}(r_l) + \hat{V}(r_r)}
 =\frac{\text{ROI total volume}}{\text{ROI total expected volume}}
@@ -370,15 +287,21 @@ Also define \emph{bilateral} CMC as:
 
 Define the \emph{asymmetric} CMC measures:
 
-\[ \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r} \] \label{eq:asym-signed-diff}
+\begin{equation} \label{eq:asym-signed-diff}
+\text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
+\end{equation}
 
 and
 
-\[ \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert \] \label{eq:asym-unsigned-diff}
+\begin{equation} \label{eq:asym-unsigned-diff}
+\text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
+\end{equation}
 
 which are the \emph{signed} and \emph{unsigned} CMC differences, respectively. Also define
 
-\[ \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r} \] \label{eq:asym-ratio}
+\begin{equation} \label{eq:asym-ratio}
+\text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r}
+\end{equation}
 
 to be the asymmetric CMC ratio measure. Then, for each ROI \(r\), this
 defines seven \(\text{CMC}\) measures: \(\text{CMC}_{V}\), \(\text{CMC}_l\),
@@ -1681,12 +1604,25 @@ Talk to Bruce Fischl with Emi about possibility of it being included in future v
 \section{Appendix A - FreeSurfer / CMC Compoment Feature}\label{sec:appendix-a}
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{lrrr}
+\begin{longtable}{lrrr}
+	\caption{Measures of Separation of base FreeSurfer Features (left vs.\ right hemisphere). d = Cohen's d, W = Wilcoxon signed rank test, W (p) = p-value for W. Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \label{tab:lateral-fs} \\
 	\toprule
-	ROI & d & W & W (p) \\
+	 & d & W & W (p) \\
+	ROI &  &  &  \\
 	\midrule
+	\endfirsthead
+	\caption[]{Measures of Separation of base FreeSurfer Features (left vs.\ right hemisphere). d = Cohen's d, W = Wilcoxon signed rank test, W (p) = p-value for W. Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \\
+	\toprule
+	 & d & W & W (p) \\
+	ROI &  &  &  \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{4}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\endlastfoot
 	ThickAvg\_\_inferiortemporal & 1.913 & 168552.000 & 0.000 \\
 	ThickAvg\_\_rostralanteriorcingulate & -1.898 & 4993.500 & 0.000 \\
 	ThickAvg\_\_fusiform & -1.843 & 0.000 & 0.000 \\
@@ -1857,17 +1793,8 @@ Talk to Bruce Fischl with Emi about possibility of it being included in future v
 	GrayVol\_\_lateraloccipital & 0.024 & 232025.500 & 0.000 \\
 	SurfArea\_\_superiorparietal & -0.009 & 592.500 & 0.000 \\
 	Area\_\_superiorparietal & -0.009 & 215625.000 & 0.000 \\
-	\bottomrule
-\end{tabular}
-\footnotesize
-\caption{Measures of Separation of base FreeSurfer Features (left vs.\ right
-hemisphere). d = Cohen's d, W = Wilcoxon signed rank test, W (p) = p-value
-for W. Note: p-values were adjusted for multiple comparisons using the
-Holm-Bonferroni stepdown method
-}
-\normalsize
-\label{tab:lateral-fs}
-\end{table}
+	\end{longtable}
+
 
 
 \begin{table}[H]
@@ -2450,114 +2377,111 @@ s
 
 % from summary.py
 
-% \begin{longtable}{lllr}
-% 	\caption{
-% 	: Proportion of model runs that exceed dummy performance.\
-% 	feats = feature set; model = predictive model;
-% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models;
-% 	} \label{tab:cmc-model-p-predictive} \\
-% 	\toprule
-% 	target & feats & model & exceeds\_dummy \\
-% 	\midrule
-% 	\endfirsthead
+\begin{longtable}{lllr}
+	\caption{Proportion of model runs that exceed dummy performance.\
+	feats = feature set; model = predictive model;
+	exceeds\_dummy = proportion of runs with performance exceeding dummy models
+	} \label{tab:cmc-model-p-predictive} \\
+	\toprule
+	target & feats & model & exceeds\_dummy \\
+	\midrule
+	\endfirsthead
 
-% 	\caption[]{
-% 	Proportion of model runs that exceed dummy performance.\
-% 	feats = feature set; model = predictive model;
-% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models;
-
-% 	} \\
-% 	\toprule
-% 	target & feats & model & exceeds\_dummy \\
-% 	\midrule
-% 	\endhead
-% 	\midrule
-% 	\multicolumn{4}{r}{Continued on next page} \\
-% 	\midrule
-% 	\endfoot
-% 	\bottomrule
-% 	\endlastfoot
-% 	emotion\_rt & FS & lgbm & 1.000 \\
-% 	int\_g\_like & CMC & elastic & 1.000 \\
-% 	int\_g\_like & CMC & lgbm & 1.000 \\
-% 	int\_g\_like & FS & elastic & 1.000 \\
-% 	int\_g\_like & FS & lgbm & 1.000 \\
-% 	int\_g\_like & FS+CMC & elastic & 1.000 \\
-% 	language\_perf & CMC & lgbm & 1.000 \\
-% 	int\_g\_like & FS+CMC & lgbm & 0.833 \\
-% 	language\_perf & FS+CMC & lgbm & 0.833 \\
-% 	p\_matrices & FS & lgbm & 0.833 \\
-% 	language\_perf & FS & lgbm & 0.833 \\
-% 	emotion\_rt & FS+CMC & lgbm & 0.833 \\
-% 	gambling\_rt & CMC & lgbm & 0.667 \\
-% 	emotion\_rt & CMC & lgbm & 0.667 \\
-% 	gambling\_rt & FS+CMC & lgbm & 0.667 \\
-% 	gambling\_rt & FS & lgbm & 0.500 \\
-% 	language\_perf & FS & elastic & 0.500 \\
-% 	p\_matrices & FS+CMC & lgbm & 0.500 \\
-% 	language\_perf & FS+CMC & elastic & 0.333 \\
-% 	language\_perf & CMC & elastic & 0.333 \\
-% 	wm\_perf & FS & lgbm & 0.333 \\
-% 	gambling\_rt & CMC & elastic & 0.333 \\
-% 	gambling\_perf & FS & lgbm & 0.333 \\
-% 	emotion\_rt & FS+CMC & elastic & 0.333 \\
-% 	p\_matrices & FS & elastic & 0.333 \\
-% 	wm\_rt & CMC & lgbm & 0.333 \\
-% 	wm\_perf & CMC & lgbm & 0.167 \\
-% 	wm\_perf & CMC & elastic & 0.167 \\
-% 	social\_rt & FS & lgbm & 0.167 \\
-% 	social\_rt & FS & elastic & 0.167 \\
-% 	p\_matrices & CMC & elastic & 0.167 \\
-% 	language\_rt & FS & lgbm & 0.167 \\
-% 	p\_matrices & CMC & lgbm & 0.167 \\
-% 	p\_matrices & FS+CMC & elastic & 0.167 \\
-% 	wm\_perf & FS & elastic & 0.167 \\
-% 	wm\_rt & FS+CMC & lgbm & 0.167 \\
-% 	gambling\_perf & CMC & elastic & 0.167 \\
-% 	emotion\_rt & CMC & elastic & 0.167 \\
-% 	gambling\_rt & FS+CMC & elastic & 0.167 \\
-% 	gambling\_rt & FS & elastic & 0.167 \\
-% 	wm\_rt & CMC & elastic & 0.167 \\
-% 	wm\_rt & FS+CMC & elastic & 0.167 \\
-% 	wm\_rt & FS & lgbm & 0.167 \\
-% 	emotion\_rt & FS & elastic & 0.167 \\
-% 	relational\_rt & FS & lgbm & 0.000 \\
-% 	social\_random\_perf & CMC & elastic & 0.000 \\
-% 	social\_random\_perf & CMC & lgbm & 0.000 \\
-% 	wm\_rt & FS & elastic & 0.000 \\
-% 	wm\_perf & FS+CMC & elastic & 0.000 \\
-% 	relational\_rt & CMC & lgbm & 0.000 \\
-% 	social\_random\_perf & FS & elastic & 0.000 \\
-% 	social\_random\_perf & FS & lgbm & 0.000 \\
-% 	social\_rt & CMC & elastic & 0.000 \\
-% 	social\_rt & CMC & lgbm & 0.000 \\
-% 	wm\_perf & FS+CMC & lgbm & 0.000 \\
-% 	relational\_rt & FS & elastic & 0.000 \\
-% 	emotion\_perf & CMC & elastic & 0.000 \\
-% 	relational\_rt & CMC & elastic & 0.000 \\
-% 	language\_rt & FS+CMC & elastic & 0.000 \\
-% 	emotion\_perf & FS & elastic & 0.000 \\
-% 	emotion\_perf & FS & lgbm & 0.000 \\
-% 	emotion\_perf & FS+CMC & elastic & 0.000 \\
-% 	emotion\_perf & FS+CMC & lgbm & 0.000 \\
-% 	gambling\_perf & CMC & lgbm & 0.000 \\
-% 	gambling\_perf & FS & elastic & 0.000 \\
-% 	language\_rt & CMC & elastic & 0.000 \\
-% 	language\_rt & CMC & lgbm & 0.000 \\
-% 	language\_rt & FS & elastic & 0.000 \\
-% 	language\_rt & FS+CMC & lgbm & 0.000 \\
-% 	psqi\_latent & FS & lgbm & 0.000 \\
-% 	emotion\_perf & CMC & lgbm & 0.000 \\
-% 	neg\_emotionality & CMC & lgbm & 0.000 \\
-% 	neg\_emotionality & FS & elastic & 0.000 \\
-% 	neg\_emotionality & FS & lgbm & 0.000 \\
-% 	neg\_emotionality & FS+CMC & elastic & 0.000 \\
-% 	neg\_emotionality & FS+CMC & lgbm & 0.000 \\
-% 	psqi\_latent & CMC & elastic & 0.000 \\
-% 	psqi\_latent & CMC & lgbm & 0.000 \\
-% 	psqi\_latent & FS & elastic & 0.000 \\
-% 	neg\_emotionality & CMC & elastic & 0.000 \\
-% \end{longtable}
+	\caption[]{
+	Proportion of model runs that exceed dummy performance.\
+	feats = feature set; model = predictive model;
+	exceeds\_dummy = proportion of runs with performance exceeding dummy models} \\
+	\toprule
+	target & feats & model & exceeds\_dummy \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{4}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\endlastfoot
+	emotion\_rt & FS & lgbm & 1.000 \\
+	int\_g\_like & CMC & elastic & 1.000 \\
+	int\_g\_like & CMC & lgbm & 1.000 \\
+	int\_g\_like & FS & elastic & 1.000 \\
+	int\_g\_like & FS & lgbm & 1.000 \\
+	int\_g\_like & FS+CMC & elastic & 1.000 \\
+	language\_perf & CMC & lgbm & 1.000 \\
+	int\_g\_like & FS+CMC & lgbm & 0.833 \\
+	language\_perf & FS+CMC & lgbm & 0.833 \\
+	p\_matrices & FS & lgbm & 0.833 \\
+	language\_perf & FS & lgbm & 0.833 \\
+	emotion\_rt & FS+CMC & lgbm & 0.833 \\
+	gambling\_rt & CMC & lgbm & 0.667 \\
+	emotion\_rt & CMC & lgbm & 0.667 \\
+	gambling\_rt & FS+CMC & lgbm & 0.667 \\
+	gambling\_rt & FS & lgbm & 0.500 \\
+	language\_perf & FS & elastic & 0.500 \\
+	p\_matrices & FS+CMC & lgbm & 0.500 \\
+	language\_perf & FS+CMC & elastic & 0.333 \\
+	language\_perf & CMC & elastic & 0.333 \\
+	wm\_perf & FS & lgbm & 0.333 \\
+	gambling\_rt & CMC & elastic & 0.333 \\
+	gambling\_perf & FS & lgbm & 0.333 \\
+	emotion\_rt & FS+CMC & elastic & 0.333 \\
+	p\_matrices & FS & elastic & 0.333 \\
+	wm\_rt & CMC & lgbm & 0.333 \\
+	wm\_perf & CMC & lgbm & 0.167 \\
+	wm\_perf & CMC & elastic & 0.167 \\
+	social\_rt & FS & lgbm & 0.167 \\
+	social\_rt & FS & elastic & 0.167 \\
+	p\_matrices & CMC & elastic & 0.167 \\
+	language\_rt & FS & lgbm & 0.167 \\
+	p\_matrices & CMC & lgbm & 0.167 \\
+	p\_matrices & FS+CMC & elastic & 0.167 \\
+	wm\_perf & FS & elastic & 0.167 \\
+	wm\_rt & FS+CMC & lgbm & 0.167 \\
+	gambling\_perf & CMC & elastic & 0.167 \\
+	emotion\_rt & CMC & elastic & 0.167 \\
+	gambling\_rt & FS+CMC & elastic & 0.167 \\
+	gambling\_rt & FS & elastic & 0.167 \\
+	wm\_rt & CMC & elastic & 0.167 \\
+	wm\_rt & FS+CMC & elastic & 0.167 \\
+	wm\_rt & FS & lgbm & 0.167 \\
+	emotion\_rt & FS & elastic & 0.167 \\
+	relational\_rt & FS & lgbm & 0.000 \\
+	social\_random\_perf & CMC & elastic & 0.000 \\
+	social\_random\_perf & CMC & lgbm & 0.000 \\
+	wm\_rt & FS & elastic & 0.000 \\
+	wm\_perf & FS+CMC & elastic & 0.000 \\
+	relational\_rt & CMC & lgbm & 0.000 \\
+	social\_random\_perf & FS & elastic & 0.000 \\
+	social\_random\_perf & FS & lgbm & 0.000 \\
+	social\_rt & CMC & elastic & 0.000 \\
+	social\_rt & CMC & lgbm & 0.000 \\
+	wm\_perf & FS+CMC & lgbm & 0.000 \\
+	relational\_rt & FS & elastic & 0.000 \\
+	emotion\_perf & CMC & elastic & 0.000 \\
+	relational\_rt & CMC & elastic & 0.000 \\
+	language\_rt & FS+CMC & elastic & 0.000 \\
+	emotion\_perf & FS & elastic & 0.000 \\
+	emotion\_perf & FS & lgbm & 0.000 \\
+	emotion\_perf & FS+CMC & elastic & 0.000 \\
+	emotion\_perf & FS+CMC & lgbm & 0.000 \\
+	gambling\_perf & CMC & lgbm & 0.000 \\
+	gambling\_perf & FS & elastic & 0.000 \\
+	language\_rt & CMC & elastic & 0.000 \\
+	language\_rt & CMC & lgbm & 0.000 \\
+	language\_rt & FS & elastic & 0.000 \\
+	language\_rt & FS+CMC & lgbm & 0.000 \\
+	psqi\_latent & FS & lgbm & 0.000 \\
+	emotion\_perf & CMC & lgbm & 0.000 \\
+	neg\_emotionality & CMC & lgbm & 0.000 \\
+	neg\_emotionality & FS & elastic & 0.000 \\
+	neg\_emotionality & FS & lgbm & 0.000 \\
+	neg\_emotionality & FS+CMC & elastic & 0.000 \\
+	neg\_emotionality & FS+CMC & lgbm & 0.000 \\
+	psqi\_latent & CMC & elastic & 0.000 \\
+	psqi\_latent & CMC & lgbm & 0.000 \\
+	psqi\_latent & FS & elastic & 0.000 \\
+	neg\_emotionality & CMC & elastic & 0.000 \\
+\end{longtable}
 
 
 
