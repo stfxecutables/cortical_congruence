@@ -11,6 +11,7 @@
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{amsmath}        % why is this not included by default?
+\usepackage{amssymb}        % why is this not included by default?
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colored text
@@ -25,6 +26,10 @@
 
 % below means 2 arguments, default of "cyan" for first
 \newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
+
+% https://tex.stackexchange.com/a/514599
+% make longtable captions text width
+\setlength{\LTcapwidth}{\textwidth}
 
 \usetikzlibrary{shapes.geometric, arrows}
 \tikzstyle{startstop} = [rectangle, rounded corners=2mm, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=white!30]
@@ -136,7 +141,7 @@ concentration, which is variable across tissues, thus MRI provides excellent
 soft tissue contrast, including between the gray and white matter in the
 brain \citep{duboisMRINeonatalBrain2021}. Automated methods for extracting
 potential biomarkers of interest, such as a regional cortical tissue's
-volume, surface area, or average thickness, have long been relied upon for
+volume, surface area (SA), or average thickness, have long been relied upon for
 the study of the human brain
 \citep{fischlFreeSurfer2012,levmanPediatricStructuralMRI2017,levmanStructuralMagneticResonance2019a,mccannStructuralMagneticResonance2021}.
 
@@ -207,93 +212,55 @@ may help characterize neurodevelopment.
 % pial surface, and from the point on the pial surface to its nearest neighbor
 % on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
 
-\subsubsection{Motivation}
-
-Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
-volume of that region, and \(A(r)\) and \(d(r)\) to be the (outer, pial)
-surface area and average thickness, respectively. Then, if \(r\) has a
-slab- or sheet-like shape with constant cross-sectional area equal to
-\(A(r)\), and uniform height equal to \(d(r)\), as in Figure~\ref{fig:slab}, then
-\(A(r) \cdot d(r)\) is the expected volume of \(r\). We thus denote the
-\emph{expected-volume}, \(\hat{V}(r)\), as
-
-\begin{equation}
-\hat{V}(r) = A(r) \cdot d(r).
-\end{equation}
-
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=5in]{figures/ROI_slabs_strip.pdf}
 	\caption{Left: Example idealized slab-like ROI \(r\) with constant
 	cross-sectional area \(A(r)\), surface areas \(SA(r)\), thickness \(d(r)\),
-	and boundary length (perimeter) \(\partial A(r)\). and thus actual volume
+	and boundary length (perimeter) \(\partial A(r)\), and thus actual volume
 	\(V(r)\) equal to \(\hat{V}(r) = A(r) \cdot d(r)\). Right: example
 	simplified deviation from slab-like ideal, with raised gyrus-like
 	structure. An actual ROI will not, in general, have a clearly-defined
 	perimeter, as the pial surface may curve smoothly inward to the underlying
 	white matter, however, provided \(A(r)\) is large relative to \(d(r)\),
-	then the \(\partial A(r) \cdot d(r)\) term will be small, and \(\hat{V}(r) = SA(r)
-	\cdot d(r) \approx A(r) \cdot d(r) = V(r)\). Likewise, in the right figure,
-	deviations from the ideal (e.g.\ gyration, of which \(A^{\prime}\) is a simplified
-	representation) mean that FreeSurfer reported SA measurements will differ from
-	those of an ideal volume on the left.}
-	\label{fig:slab}
+	then the \(\partial A(r) \cdot d(r)\) term will be small, and \(\hat{V}(r)
+	= SA(r) \cdot d(r) \approx A(r) \cdot d(r) = V(r)\). Likewise, in the right
+	figure, deviations from the ideal (e.g.\ gyration, of which \(A^{\prime}\)
+	is a simplified representation) means that FreeSurfer reported SA
+	measurements will differ from those of an ideal volume on the left.
+	However, provided \(d(r)\) and \(d^{\prime}\) are small relative to their
+	respective areas, then the underlined terms above will be small.} \label{fig:slab}
 \end{figure}
 
-For more exotic volumes (e.g.\ horn-shaped, extremely non-convex, volumes
-with blobs joined by thin strands, regular polyhedra), the relationship
-between \(\hat{V}(r)\) and \(V(r)\) lacks interepretability. However, as most
-anatomical ROIs are not such exotic shapes, and generally have a large
-surface area to average thickness ratio (see Table~A\ref{tab:sa-ratios}),
-we expect \(\hat{V}(r) \approx V(r)\), and thus for
-comparing \(\hat{V}(r)\) to \(V(r)\) can be informative of the ROI shape.
+\subsubsection{Motivation}
 
-We wish to define metrics relating \(\hat{V}\) and \(V\).
-
-The more an ROI
-\(r\) resembles or is congruent to a shape like in
-Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
-small average thickness relative to the surface area---then the closer
-\(\hat{V}(r)\) will be to \(V(r)\). By contrast, the dissimilarity between
-\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which are more blob-like
-(i.e.\ have large thickness relative to the surface area\footnote{As is clear
-from Figure~\ref{fig:slab}, if \(d(r)\) is large relative to \(A(r)\), then
-the cortical surface area, \(SA(r)\), is \(SA(r) = \partial(A(r)) \cdot d(r)
-+ A(r)\), where \(\partial(A(r))\) the length of the boundary of the top
-surface \(A(r)\). That is, the slab-like idealization is no longer accurate,
-and there is no longer any reason to expect either \(V(r) = \text{SA} \cdot
-d(r)\) or \(V(r) = A(r) \cdot d(r)\)}), or may increase for ROIs which have
-more variable thickness and/or curvature (e.g.\ any ROI with with convoluted
-and/or tube-like structures, have higher overall curvature, or are more
-gyrated or sulcated).
-
-
-
-In this sense, for \emph{any} metric \(\mu_r = \mu(\hat{V}(r), V(r))\) that
-compares these two quantities, and where \(|\mu_r|\) is positively correlated
-with the similarity of \(\hat{V}(r)\) and \(V(r)\), it is not particularly
-meaningful to compare the metrics of different ROIs, i.e.\ \(\mu_{r_1}\) and
-\(\mu_{r_2}\), as there is little reason to expect any broad similiary in the
-shapes. However, for comparing indiduals at the \emph{same} ROI, then
-increased curvature (e.g.\ gyration, sulcation), will tend to increase
-\(A(r)\), and thus the value of \(\hat{V}(r)\) relative to \(V(r)\).
-
-Then define the (unilateral) CMC metrics to be:
+Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
+volume of that region, and \(SA(r)\) and \(\tau(r)\) to be the (outer, pial)
+surface area and average thickness, respectively\footnote{Practically, these
+will be the cortical ``GrayVol'', ``SurfArea'', and ``ThickAvg'' metrics
+computed by FreeSurfer.}. Then, if \(r\) has a slab- or sheet-like shape with
+constant cross-sectional area equal to \(A(r)\), and uniform height equal to
+\(d(r)\), then \(A(r) \cdot d(r)\) is the expected volume of \(r\)
+(Figure~\ref{fig:slab}). We thus denote the \emph{expected-volume},
+\(\hat{V}(r)\), as
 
 \begin{equation}
-\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{A(r) \cdot d(r)}
+\hat{V}(r) = SA(r) \cdot \tau(r).
 \end{equation}
 
-i.e.\
-
-\begin{align}
-\label{eq:cmc-laterals}
-\text{CMC}_l &= \text{CMC}_{\text{Lateral}}(r_l) \\
-\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r)
-\end{align}
-
-
-
+As most anatomical ROIs generally have a large surface area to average
+thickness ratio (see Table~A\ref{tab:sa-ratios}, for the ratios on the
+current data), and relatively small variance in thickness
+\citep{imBrainSizeCortical2008}, we expect \(\hat{V}(r) \approx V(r)\)
+(Figure~\ref{fig:slab}). For more exotic volumes (e.g.\ horn-shaped,
+extremely non-convex, volumes with blobs joined by thin strands) or for
+blob-like volumes (e.g.\ cubelike, spherical, or regular polyhedral), the
+relationship between \(\hat{V}(r)\) and \(V(r)\) (and indeed the values of
+\(d(r)\) itself) lacks interpretability. However, for regions that are more
+sheet-like (or which resemble a crumpled sheet), we expect \(\hat{V}(r)\) to
+better approximate \(\approx V(r)\). Thus, for cortical ROIs, we expect
+greater dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to index the
+complexity of the shape of \(r\).
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -302,25 +269,53 @@ i.e.\
 % small average thickness shouldn't matter, but small variability in
 % thickness does, is this what you meant to say?
 
+\subsubsection{Base Metrics}
 
-% \note{What is actual observed ThickStd and ThickAvg relative to SurfArea? The
-% largest observed average thickness across all ROIs and subjects is
-% approximately 0.30mm, while the smallest observed surface area is 35.61
-% mm\(^2\), i.e.\ almost 120 times smaller, but the ratio between the median
-% observed surface area and average thickness is approximately 2400.}
+We wish to define metrics relating \(\hat{V}\) and \(V\) for an ROI  \(r\).
+The more an ROI \(r\) resembles or is congruent to a shape like in
+Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
+small average thickness relative to the surface area---then the closer
+\(\hat{V}(r)\) will be to \(V(r)\). By contrast, incongruence between
+\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which are more blob-like
+(i.e.\ have large \(\tau(r)\) relative to \(SA\)), or may increase for ROIs
+which have more variable thickness and/or curvature (e.g.\ any ROI with with
+convoluted and/or tube-like structures, have higher overall curvature, or are
+more gyrated or sulcated).
 
+We thus define the \emph{cortical morphological congruence}\footnote{The
+motivation for the terminology being \emph{congruence to simple} (i.e.\
+sheet-like) \emph{structure}, and the term `congruence' chosen since when
+\(V(r) \approx \hat{V}(r)\), it suggests \(SA(r) \approx A(r)\) and \(\tau(r)
+\approx d(r)\), i.e.\ the shapes measurements are approximately equal.}, CMC,
+to be:
 
-Denote the left and right ROIs for \(r\) as \(r_l\) and \(r_r\) respectively
-(e.g\@. if \(r=\text{precuneus}\), then \(r_l\) and \(r_r\) are the left and
-right precuneus). Then define the \emph{bilateral} CMC metrics as:
+\begin{equation}
+\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{\hat{V}(r)}.
+\end{equation}
+
+As cortical ROIs manifest in both hemispheres, we more precisely define the \emph{left}
+and \emph{right} CMC as:
+
+\begin{align}
+\label{eq:cmc-laterals}
+\text{CMC}_{\ell} &= \text{CMC}_{\text{Lateral}}(r_{\ell}) \\
+\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r).
+\end{align}
+
+We also define the \emph{bilateral} CMC, for ROI \(r\) with left and right
+hemisphere volumes \(r_l\) and \(r_r\), respectively, as:
 
 \begin{equation} \label{eq:cmc-bilateral}
 \text{CMC}_{lr}
 =\frac{V(r_l) + V(r_r)}{\hat{V}(r_l) + \hat{V}(r_r)}
-=\frac{\text{ROI total volume}}{\text{ROI total expected volume}}
+=\frac{\text{ROI total volume}}{\text{ROI total expected volume}}.
 \end{equation}
 
-Define the \emph{asymmetric} CMC measures:
+
+
+\subsubsection{Asymmetry Metrics}
+
+Define the \emph{asymmetric} CMC metrics:
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -339,16 +334,55 @@ and
 \text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
 \end{equation}
 
-which are the \emph{signed} and \emph{unsigned} CMC differences, respectively. Also define
+to be the \emph{asymmetric CMC differences}, with
+Equation~\ref{eq:asym-signed-diff} and Equation~\ref{eq:asym-unsigned-diff}
+defining the \emph{signed} and \emph{unsigned} CMC asymmetric differences,
+respectively. Also define
 
 \begin{equation} \label{eq:asym-ratio}
 \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r}
 \end{equation}
 
-to be the asymmetric CMC ratio measure. Then, for each ROI \(r\), this
-defines seven \(\text{CMC}\) measures: \(\text{CMC}_{V}\), \(\text{CMC}_l\),
-\(\text{CMC}_r\), \(\text{CMC}_{lr}\), \(\text{CMC}_{l-r}\),
-\(\text{CMC}_{\lvert l-r \rvert}\), and \(\text{CMC}_{l / r}\).
+to be the \emph{asymmetric CMC ratio}.
+
+In addition, the expected volume
+can be computed unilaterally
+
+\begin{equation} \label{eq:ev-unilateral}
+\hat{V}(r_{\ell}) = SA(r_{\ell}) \cdot \tau(r_{\ell}) \\
+\hat{V}(r_r) = SA(r_r) \cdot \tau(r_r),
+\end{equation}
+
+or bilaterally
+
+\begin{equation} \label{eq:ev-bilateral}
+\hat{V}(r_{\ell r}) = \hat{V}(r_{\ell}) + \hat{V}(r_r).
+\end{equation}
+
+This yields a varying number of metrics to assess, depending on the
+hemispheres of interest (Table~\ref{tab:cmc-variants}).
+
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+	\toprule
+
+	                          &    \multicolumn{3}{c}{Can be computed for hemisphere:}  &       &      \\
+  \cline{2-4}
+	CMC Metric Class          &    left             &    right       & both             & Asym & $n$   \\
+	\midrule
+	$\hat{V}$                 & $\hat{V}_{\ell}$    & $\hat{V}_r$    & $\hat{V}_{\ell r}$        & $\times$   & 102 \\
+	$\text{CMC}$              & $\text{CMC}_{\ell}$ & $\text{CMC}_r$ & $\text{CMC}_{\ell r}$     & $\times$   & 102 \\
+	$\text{CMC}_{\ell - r}$   & $\times$            & $\times$       & $\text{CMC}_{\ell - r}$   & \checkmark &  34 \\
+	$\text{CMC}_{|\ell - r|}$ & $\times$            & $\times$       & $\text{CMC}_{|\ell - r|}$ & \checkmark &  34 \\
+	$\text{CMC}_{\ell / r}$   & $\times$            & $\times$       & $\text{CMC}_{\ell / r}$   & \checkmark &  34 \\
+	\bottomrule
+\end{tabular}
+\footnotesize
+\normalsize
+\caption{CMC feature classes and variants. Asym = metric assesses CMC asymmetry; \(n\) = number of distinct features per subject (34 for each ROI hemisphere, including bilateral metric variants.)} \label{tab:cmc-variants}
+\end{table}
+
 
 
 %%%%%%%%%%%%%%%
@@ -362,14 +396,12 @@ defines seven \(\text{CMC}\) measures: \(\text{CMC}_{V}\), \(\text{CMC}_l\),
 % structure. (or something like that, also cut the second half of the
 % sentence "where the region......")
 
-The CMC features defined in Equation~\ref{eq:cmc-laterals} and
-Equation~\ref{eq:cmc-bilateral} are unitless ratios assessing a cortical
-region's deviation from uniform thickness, where the region expected
-would be expected to be equal to the surface area times the average cortical
-thickness. In the case of equality, this produces a lateral CMC biomarker
-value of 1. Deviations from 1 in either direction have major implications for
-structural cortical presentation, imply differential neurological development
-has occurred, and is addressed in detail in the Discussion.
+All CMC metrics are unitless ratios or differences indexing aspects of a
+cortical region's shape. In the case of equality of \(\hat{V}(r)\) and
+\(V(r)\), this produces a lateral CMC biomarker value of \(1\). Deviations
+from unity in either direction may have implications for structural cortical
+presentation and neurological development (see:
+\hyperref[sec:discussion]{Discussion}).
 
 Equation~\ref{eq:asym-signed-diff} defines a metric that preserves
 directionality of asymmetry, with left/right dominant regions taking on
@@ -404,15 +436,46 @@ Notably, the cortex is parcellated into the 34 anatomical ROIs defined in
 \citet{desikanAutomatedLabelingSystem2006}, and corresponding ROI geometric
 statistics are available for each ROI.
 
+\subsection{Features for Predictive Analysis}
 
-\subsubsection{Congruence Features}
-\label{sec:cmc-features}
+For each of the 34 cortical ROIs, all CMC measurements were computed for
+each subject. These were computed from the base FreeSurfer cortical measurements
+available in the HCP data. That is the FreeSurfer ``ThickAvg'', ``GrayVol'', and
+``SurfArea'' measurements were used for \(\tau(r)\),  \(V(r)\), and \(SA(r)\),
+respectively. Descriptive statistics of both the base FreeSurfer and extracted features
+are shown in Table~\ref{tab:pred-feature-stats}.
 
-For each cortical region of interest (ROI) \(r\) (e.g.
-\(r=\text{precuneus}\)) supported by the publicly available FreeSurfer
-results (see Table A\ref{tab:lateral-fs} for the base FreeSurfer features),
-Cortical Morphological Congruence (CMC) measurements were computed in each
-subject.
+
+
+\begin{longtable}{lrrrr}
+	\toprule
+	ROI Statistic & $\mu$ & $\sigma$ & CD & rCD \\
+	Feature &  &  &  &  \\
+	\midrule
+	\endfirsthead
+	\caption[]{Median descriptive statistics of features used in predictive models, summarizing across all ROIs and hemispheres (left, right, and both hemispheres for non-asymmetry CMC metrics). \(n\) = number of ROI statistics summarized (1113 subjects \(\times\) 34 ROIs = 37\,842); CD = coefficient of dispersion / variation, e.g.\ \(\sigma / \mu\); rCD = robust / quartile coefficient of dispersion \citep{bonettConfidenceIntervalCoefficient2006}.} \\
+	\toprule
+	ROI Statistic & $\mu$ & $\sigma$ & CD & rCD \\
+	Feature &  &  &  &  \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{5}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\caption{Median descriptive statistics of features used in predictive models, summarizing across all ROIs and hemispheres (left, right, and both hemispheres for non-asymmetry CMC metrics). \(n\) = number of ROI statistics summarized (1113 subjects \(\times\) 34 ROIs = 37\,842); CD = coefficient of dispersion / variation, e.g.\ \(\sigma / \mu\); rCD = robust / quartile coefficient of dispersion \citep{bonettConfidenceIntervalCoefficient2006}.} \label{tab:pred-feature-stats} \\
+	\endlastfoot
+	$\text{CMC}$ & 1.142 & 0.026 & 0.023 & 0.015 \\
+	$\text{CMC}_{\ell / r}$ & 1.000 & 0.026 & 0.026 & 0.017 \\
+	$\text{CMC}_{\ell - r}$ & -0.000 & 0.029 & 3.143 & 2.060 \\
+	$\text{CMC}_{|\ell - r|}$ & 0.026 & 0.020 & 0.772 & 0.567 \\
+	$\hat{V}$ & 7582.320 & 2947.661 & 0.386 & 0.315 \\
+	V & 8505.020 & 3307.624 & 0.386 & 0.315 \\
+	SA & 2129.731 & 306.353 & 0.151 & 0.103 \\
+	$\tau$ & 2.698 & 0.129 & 0.048 & 0.031 \\
+	\end{longtable}
+
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -433,13 +496,6 @@ predictive analyses based on these extracted features.
 \subsubsection{Descriptive Statistics}
 
 
-\paragraph{FreeSurfer Feature Correlations} To assess whether CMC features
-extract  information, for each CMC feature in each CMC
-feature class, and each ROI, we compute the Spearman correlations with a
-number of potentially related original FreeSurfer cortical metrics.
-Specifically, we assess CMC feature correlations with the original FreeSurfer
-components (volume, surface area, and average thickness), and those relating
-to ROI shape (e.g.\ thickness variation and curvature or folding).
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -1591,7 +1647,7 @@ p\_sel\_feat\_cmc = proportion of all *selected* features that are CMC features;
 \end{table}
 
 
-\section{Discussion}
+\section{Discussion} \label{sec:discussion}
 
 The human brain's regional cortical development proceeds with a variety of
 underlying factors maturing in tandem with one another. Cortical volume,

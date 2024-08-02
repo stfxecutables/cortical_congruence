@@ -972,6 +972,11 @@ def hcp_cmc_fs_raw_sds() -> None:
     df = load_HCP_CMC_table(keep_corr_relevant=True)
     df = to_wide_subject_table(df)
 
+    dff = load_violin_data()
+    # remove left / right variants of asym metrics
+    ix_drop = (dff["fclass"].str.contains("asym")) & (dff["hemi"] != "both")
+    dff = dff[~ix_drop]
+
     thick_area_ratios = (
         df.filter(regex="SurfArea")
         .min()
@@ -1679,6 +1684,246 @@ def two_roi_violin_plot() -> None:
     plt.close()
 
 
+def load_final_features() -> DataFrame:
+    dff = load_violin_data()
+    # remove left / right variants of asym metrics
+    ix_drop = (dff["fclass"].str.contains("asym")) & (dff["hemi"] != "both")
+    dff = dff[~ix_drop]
+    dff = dff[dff["fclass"] != "d_sd"]
+    return dff
+
+
+def simplified_feature_stats() -> None:
+    dff = load_final_features()
+
+    info = dff.groupby(["fclass"]).describe().droplevel(0, axis="columns")
+    info["CD"] = info["std"] / info["mean"].abs()  # coefficient of variation/dispersion
+    q1, q3 = info["25%"], info["75%"]
+    info["rCD"] = (q3 - q1) / (q3 + q1).abs()
+    info["count"] = info["count"].astype(int)
+    info = cast(DataFrame, info.loc[:, ["count", "mean", "std", "CD", "rCD"]])
+    info = info.loc[
+        ["cmc", "asym_div", "asym_diff", "asym_diff_abs", "pV", "V", "SA", "d"]
+    ]
+    info.rename(columns=dict(std="$\\sigma$", mean="$\\mu$", count="$n$"), inplace=True)
+    info.rename(index={"pV": "$\\hat{V}$", "d": "$\\tau$"}, inplace=True)
+    info.rename(
+        index={
+            "cmc": r"$\text{CMC}$",
+            "asym_diff": r"$\text{CMC}_{\ell - r}$",
+            "asym_diff_abs": r"$\text{CMC}_{|\ell - r|}$",
+            "asym_div": r"$\text{CMC}_{\ell / r}$",
+        },
+        inplace=True,
+    )
+    info.index.rename("Feature", inplace=True)
+    caption = (
+        "Descriptive statistics of features used in predictive models, "
+        r"summarizing across all ROIs and hemispheres (i.e.\ left, right, "
+        "and both hemispheres for non-asymmetry CMC metrics). "
+        r"\(n\) = number of features summarized (1113 subjects \(\times\) 34 ROIs = 37\,842); "
+        r"CD = coefficient of dispersion / variation, e.g.\ \(\sigma / \mu\); "
+        r"rCD = robust / quartile coefficient of dispersion \citep{bonettConfidenceIntervalCoefficient2006}."
+    )
+    print(info)
+    print(
+        info.to_latex(
+            float_format="%0.3f",
+            escape=False,
+            sparsify=True,
+            longtable=True,
+            caption=caption,
+            label="tab:pred-feature-stats",
+        )
+    )
+
+    # now do smarter, not lumping metrics across ROIs
+    info = dff.groupby(["fclass", "roi"]).describe().droplevel(0, axis=1)
+    info["CD"] = info["std"] / info["mean"].abs()  # coefficient of variation/dispersion
+    q1, q3 = info["25%"], info["75%"]
+    info["rCD"] = (q3 - q1) / (q3 + q1).abs()
+    info["count"] = info["count"].astype(int)
+    info = cast(DataFrame, info.loc[:, ["mean", "std", "CD", "rCD"]])
+    info = info.loc[
+        ["cmc", "asym_div", "asym_diff", "asym_diff_abs", "pV", "V", "SA", "d"]
+    ]
+
+    medians = info.groupby("fclass").median()
+    medians = medians.loc[
+        ["cmc", "asym_div", "asym_diff", "asym_diff_abs", "pV", "V", "SA", "d"]
+    ]
+    medians.rename(
+        columns=dict(std="$\\sigma$", mean="$\\mu$", count="$n$"), inplace=True
+    )
+    medians.rename(index={"pV": "$\\hat{V}$", "d": "$\\tau$"}, inplace=True)
+    medians.rename(
+        index={
+            "cmc": r"$\text{CMC}$",
+            "asym_diff": r"$\text{CMC}_{\ell - r}$",
+            "asym_diff_abs": r"$\text{CMC}_{|\ell - r|}$",
+            "asym_div": r"$\text{CMC}_{\ell / r}$",
+        },
+        inplace=True,
+    )
+
+    medians.index.rename("Feature", inplace=True)
+    medians.columns.name = "ROI Statistic"
+    caption = (
+        "Median descriptive statistics of features used in predictive models, "
+        r"summarizing across all ROIs and hemispheres (left, right, "
+        "and both hemispheres for non-asymmetry CMC metrics). "
+        ""
+        r"\(n\) = number of ROI statistics summarized (1113 subjects \(\times\) 34 ROIs = 37\,842); "
+        r"CD = coefficient of dispersion / variation, e.g.\ \(\sigma / \mu\); "
+        r"rCD = robust / quartile coefficient of dispersion \citep{bonettConfidenceIntervalCoefficient2006}."
+    )
+    print(medians)
+    print(
+        medians.round(3).to_latex(
+            float_format="%0.3f",
+            escape=False,
+            sparsify=True,
+            longtable=True,
+            caption=caption,
+            label="tab:pred-feature-stats",
+        )
+    )
+
+
+def simplified_sex_stats() -> None:
+    def p_vals(grp: DataFrame) -> DataFrame:
+        m = grp["value"][grp["sex"] == "M"].dropna()
+        f = grp["value"][grp["sex"] == "F"].dropna()
+        U, p = mannwhitneyu(m.values, f.values)
+        return DataFrame(columns=["U", "p"], data=[[U, p]])
+
+    dff = load_final_features()
+    dff = dff[
+        ~((dff.source == "FS") & (~dff.feature.str.contains("ThickAvg|GrayVol|SurfArea")))
+    ]
+
+    info = dff.groupby(["fclass", "roi", "sex"]).describe().droplevel(0, axis=1)
+    nums = info["mean"].groupby(["fclass", "roi"]).diff().dropna().droplevel("sex")
+    # nums = info["mean"].diff().droplevel("sex", 0)
+    cnts = info["count"] - 1
+    cnts.index.name = None
+    var = dff.groupby(["fclass", "roi", "sex"]).var(numeric_only=True, ddof=1)["value"]
+
+    sd_pooleds = (
+        (cnts * var).groupby(["fclass", "roi"]).sum()
+        / cnts.groupby(["fclass", "roi"]).sum()
+    ).apply(np.sqrt)
+    ps = dff.groupby(["fclass", "roi"]).apply(p_vals)["p"].droplevel(2)
+    ps[:] = multipletests(ps.values, method="holm")[1]
+    # note these very closely match the pooled sds
+    naive_sds = dff.groupby(["fclass", "roi"]).std(ddof=1, numeric_only=True)["value"]
+    cohen_ds = nums / sd_pooleds
+    info = pd.concat([cohen_ds.rename("d"), ps], axis=1, ignore_index=False)
+    table = info.groupby("fclass").describe().round(3)
+    table = table.loc[
+        :,
+        [
+            ("d", "mean"),
+            ("d", "std"),
+            ("d", "min"),
+            # ('d',   '25%'),
+            # ('d',   '50%'),
+            # ('d',   '75%'),
+            ("d", "max"),
+            ("p", "min"),
+            ("p", "max"),
+        ],
+    ]
+
+    table = table.loc[
+        ["cmc", "asym_div", "asym_diff", "asym_diff_abs", "pV", "V", "SA", "d"]
+    ]
+    table.rename(columns=dict(std="$\\sigma$", mean="$\\mu$", count="$n$"), inplace=True)
+    table.rename(index={"pV": "$\\hat{V}$", "d": "$\\tau$"}, inplace=True)
+    table.rename(
+        index={
+            "cmc": r"$\text{CMC}$",
+            "asym_diff": r"$\text{CMC}_{\ell - r}$",
+            "asym_diff_abs": r"$\text{CMC}_{|\ell - r|}$",
+            "asym_div": r"$\text{CMC}_{\ell / r}$",
+        },
+        inplace=True,
+    )
+
+    print(table)
+    print(
+        table.to_latex(
+            float_format="%0.2f",
+            sparsify=True,
+            longtable=True,
+            escape=False,
+            caption=r"Summary of Cohen's d values for sex, for each ROI. I.e. each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects (M=507, F=606) \times the number of ROI hemispeheres (1 or 3 for asymmetry and non-asymmetry measures). Rightmost columns show the smallest and largest of the 34 p-values associated with the Mann-Whitney U statistic.",
+            label="tab:sex-roi-ds",
+        )
+    )
+
+
+def simplified_lateral_stats() -> None:
+    def p_vals(grp: DataFrame) -> DataFrame:
+        m = grp["value"][grp["hemi"] == "left"].dropna()
+        f = grp["value"][grp["hemi"] == "right"].dropna()
+        W, p = wilcoxon(m.values, f.values)
+        return DataFrame(columns=["W", "p"], data=[[W, p]])
+
+    dff = load_final_features()
+    dff = dff[
+        ~((dff.source == "FS") & (~dff.feature.str.contains("ThickAvg|GrayVol|SurfArea")))
+    ]
+    dff = dff[dff["hemi"] != "both"]
+    info = dff.groupby(["fclass", "roi", "sex"]).describe().droplevel(0, axis=1)
+    nums = info["mean"].groupby(["fclass", "roi"]).diff().dropna().droplevel("sex")
+    # nums = info["mean"].diff().droplevel("sex", 0)
+    cnts = info["count"] - 1
+    cnts.index.name = None
+    var = dff.groupby(["fclass", "roi", "sex"]).var(numeric_only=True, ddof=1)["value"]
+
+    sd_pooleds = (
+        (cnts * var).groupby(["fclass", "roi"]).sum()
+        / cnts.groupby(["fclass", "roi"]).sum()
+    ).apply(np.sqrt)
+    ps = dff.groupby(["fclass", "roi"]).apply(p_vals)["p"].droplevel(2)
+    ps[:] = multipletests(ps.values, method="holm")[1]
+    # note these very closely match the pooled sds
+    naive_sds = dff.groupby(["fclass", "roi"]).std(ddof=1, numeric_only=True)["value"]
+    cohen_ds = nums / sd_pooleds
+    info = pd.concat([cohen_ds.rename("d"), ps], axis=1, ignore_index=False)
+    n_sig = info["p"].groupby("fclass").apply(lambda grp: (grp.dropna() < 0.05).sum())
+    table = info.groupby("fclass").describe().round(3)
+    table = table.loc[
+        :,
+        [
+            ("d", "mean"),
+            ("d", "std"),
+            ("d", "min"),
+            ("d", "max"),
+        ],
+    ]
+
+    table = table.loc[["cmc", "pV", "V", "SA", "d"]]
+    table.rename(columns=dict(std="$\\sigma$", mean="$\\mu$", count="$n$"), inplace=True)
+    table.rename(index={"pV": "$\\hat{V}$", "d": "$\\tau$"}, inplace=True)
+    table.rename(index={"cmc": r"$\text{CMC}$"}, inplace=True)
+    table.loc[:, ("d", "n_sig")] = n_sig.values
+    table = table["d"]
+
+    print(table)
+    print(
+        table.to_latex(
+            float_format="%0.2f",
+            sparsify=True,
+            longtable=True,
+            escape=False,
+            caption=r"Summary of Cohen's d values for left vs. right CMC differences, for each ROI. I.e. each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects. Rightmost columns show the smallest and largest of the 34 p-values associated with the Wilcoxon signed rank test.",
+            label="tab:sex-roi-ds",
+        )
+    )
+
+
 if __name__ == "__main__":
     # target_hists()
     # figure1()
@@ -1704,4 +1949,7 @@ if __name__ == "__main__":
     # sample_violin_plot(cmc_only=False, sds="large")
     # sample_violin_plot(cmc_only=False, sds="all")
 
-    two_roi_violin_plot()
+    # two_roi_violin_plot()
+    # simplified_feature_stats()
+    # simplified_sex_stats()
+    simplified_lateral_stats()
