@@ -26,6 +26,7 @@
 
 % below means 2 arguments, default of "cyan" for first
 \newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
+\newcommand{\CMC}{\(\text{CMC}\) }
 
 % https://tex.stackexchange.com/a/514599
 % make longtable captions text width
@@ -236,38 +237,30 @@ may help characterize neurodevelopment.
 
 Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
 volume of that region, and \(SA(r)\) and \(\tau(r)\) to be the (outer, pial)
-surface area and average thickness, respectively\footnote{Practically, these
-will be the cortical ``GrayVol'', ``SurfArea'', and ``ThickAvg'' metrics
-computed by FreeSurfer.}. Then, if \(r\) has a slab- or sheet-like shape with
-constant cross-sectional area equal to \(A(r)\), and uniform height equal to
-\(d(r)\), then \(A(r) \cdot d(r)\) is the expected volume of \(r\)
-(Figure~\ref{fig:slab}). We thus denote the \emph{expected-volume},
-\(\hat{V}(r)\), as
+surface area and average thickness, respectively. Then, if \(r\) has a slab-
+or sheet-like shape with constant cross-sectional area equal to \(A(r)\), and
+uniform height equal to \(d(r)\), then \(A(r) \cdot d(r)\) is the expected
+volume of \(r\) (Figure~\ref{fig:slab}). We thus denote the
+\emph{expected-volume}, \(\hat{V}(r)\), as
 
 \begin{equation}
 \hat{V}(r) = SA(r) \cdot \tau(r).
 \end{equation}
 
 As most anatomical ROIs generally have a large surface area to average
-thickness ratio (see Table~A\ref{tab:sa-ratios}, for the ratios on the
+thickness ratio (see Table~S\ref{tab:sa-ratios}, for the ratios on the
 current data), and relatively small variance in thickness
-\citep{imBrainSizeCortical2008}, we expect \(\hat{V}(r) \approx V(r)\)
-(Figure~\ref{fig:slab}). For more exotic volumes (e.g.\ horn-shaped,
+\citep{imBrainSizeCortical2008}, we expect \(\hat{V}(r) \approx V(r)\), as
+in Figure~\ref{fig:slab}. For more exotic volumes (e.g.\ horn-shaped,
 extremely non-convex, volumes with blobs joined by thin strands) or for
 blob-like volumes (e.g.\ cubelike, spherical, or regular polyhedral), the
 relationship between \(\hat{V}(r)\) and \(V(r)\) (and indeed the values of
 \(d(r)\) itself) lacks interpretability. However, for regions that are more
 sheet-like (or which resemble a crumpled sheet), we expect \(\hat{V}(r)\) to
-better approximate \(\approx V(r)\). Thus, for cortical ROIs, we expect
+better approximate \(V(r)\). Thus, for cortical ROIs, we expect
 greater dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to index the
 complexity of the shape of \(r\).
 
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% small average thickness shouldn't matter, but small variability in
-% thickness does, is this what you meant to say?
 
 \subsubsection{Base Metrics}
 
@@ -290,7 +283,7 @@ sheet-like) \emph{structure}, and the term `congruence' chosen since when
 to be:
 
 \begin{equation}
-\text{CMC}(r) = \text{CMC}_{\text{Lateral}}(r) = \frac{V(r)}{\hat{V}(r)}.
+\text{CMC}(r) = \frac{V(r)}{\hat{V}(r)}.
 \end{equation}
 
 As cortical ROIs manifest in both hemispheres, we more precisely define the \emph{left}
@@ -307,7 +300,8 @@ hemisphere volumes \(r_l\) and \(r_r\), respectively, as:
 
 \begin{equation} \label{eq:cmc-bilateral}
 \text{CMC}_{lr}
-=\frac{V(r_l) + V(r_r)}{\hat{V}(r_l) + \hat{V}(r_r)}
+=\frac{V(r_{\ell}) + V(r_r)}{\hat{V}(r_{\ell}) + \hat{V}(r_r)}
+=\frac{V_{\ell}(r) + V_r(r)}{\hat{V}_{\ell}(r) + \hat{V}_r(r)}
 =\frac{\text{ROI total volume}}{\text{ROI total expected volume}}.
 \end{equation}
 
@@ -316,13 +310,6 @@ hemisphere volumes \(r_l\) and \(r_r\), respectively, as:
 \subsubsection{Asymmetry Metrics}
 
 Define the \emph{asymmetric} CMC metrics:
-
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% These equations need equation numbers and the text connecting them needs to
-% properly introduce each equation. (He just means provide numbers /references)
 
 \begin{equation} \label{eq:asym-signed-diff}
 \text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
@@ -343,24 +330,22 @@ respectively. Also define
 \text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r}
 \end{equation}
 
-to be the \emph{asymmetric CMC ratio}.
+to be the \emph{asymmetric CMC ratio}.  In addition, the expected volume can
+be computed unilaterally
 
-In addition, the expected volume
-can be computed unilaterally
-
-\begin{equation} \label{eq:ev-unilateral}
-\hat{V}(r_{\ell}) = SA(r_{\ell}) \cdot \tau(r_{\ell}) \\
-\hat{V}(r_r) = SA(r_r) \cdot \tau(r_r),
-\end{equation}
+\begin{align} \label{eq:ev-unilateral}
+\hat{V}(r_{\ell}) = \hat{V}_{\ell}(r) = SA(r_{\ell}) \cdot \tau(r_{\ell}) \\
+\hat{V}(r_r) = \hat{V}_r(r) = SA(r_{r}) \cdot \tau(r_r)
+\end{align}
 
 or bilaterally
 
 \begin{equation} \label{eq:ev-bilateral}
-\hat{V}(r_{\ell r}) = \hat{V}(r_{\ell}) + \hat{V}(r_r).
+\hat{V}_{\ell r}(r) = \hat{V}(r_{\ell r}) = \hat{V}_{\ell}(r) + \hat{V}_r(r).
 \end{equation}
 
-This yields a varying number of metrics to assess, depending on the
-hemispheres of interest (Table~\ref{tab:cmc-variants}).
+This yields a variety of CMC-related metrics to assess, depending on the
+hemispheres of interest, and outlined in Table~\ref{tab:cmc-variants}.
 
 \begin{table}
 \centering
@@ -384,30 +369,11 @@ hemispheres of interest (Table~\ref{tab:cmc-variants}).
 \end{table}
 
 
-
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% We aren't exactly measuring deviation from uniform thickness, though when
-% that happens, CMC should shift.
-%
-% this should become: .....deviation from volumetric expectation for a simple
-% structure. (or something like that, also cut the second half of the
-% sentence "where the region......")
-
-All CMC metrics are unitless ratios or differences indexing aspects of a
-cortical region's shape. In the case of equality of \(\hat{V}(r)\) and
-\(V(r)\), this produces a lateral CMC biomarker value of \(1\). Deviations
-from unity in either direction may have implications for structural cortical
-presentation and neurological development (see:
-\hyperref[sec:discussion]{Discussion}).
-
-Equation~\ref{eq:asym-signed-diff} defines a metric that preserves
-directionality of asymmetry, with left/right dominant regions taking on
-positive/negative values of \(\text{CMC}_{l - r}\), respectively. Likewise,
-equation~\ref{eq:asym-ratio} defines a quantity which is greater/less than
-\(1\) when left/right lateral \(\text{CMC}\) is larger.
+All CMC metrics index aspects of a cortical region's shape. In the case of
+equality of \(\hat{V}(r)\) and \(V(r)\), this produces a \CMC metric value of
+\(0\) or \(1\). Deviations from these values in either direction may have
+implications for structural cortical presentation and neurological
+development (see \hyperref[sec:discussion]{Discussion}).
 
 \section{Methods}
 \label{sec:methods}
@@ -443,8 +409,8 @@ each subject. These were computed from the base FreeSurfer cortical measurements
 available in the HCP data. That is the FreeSurfer ``ThickAvg'', ``GrayVol'', and
 ``SurfArea'' measurements were used for \(\tau(r)\),  \(V(r)\), and \(SA(r)\),
 respectively. Descriptive statistics of both the base FreeSurfer and extracted features
-are shown in Table~\ref{tab:pred-feature-stats}.
-
+are shown in Table~\ref{tab:pred-feature-stats}. Dispersion coefficients are included to
+better facilitate comparison of the feature scales.
 
 
 \begin{longtable}{lrrrr}
@@ -477,40 +443,23 @@ are shown in Table~\ref{tab:pred-feature-stats}.
 	\end{longtable}
 
 
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% THis table (tab:lateral-fs) is a mess. Please cut it out. Please summarize
-% the FS features here (there is are surface area, volume, cortical thickness
-% variability, etc. for each cortical ROI)
-
-
 \subsection{Statistical and Predictive Analyses}
 
 For each of the 34 cortical regions \(r\) available from the FreeSurfer
-analysis (see Table~\ref{tab:lateral-cmc}), each of the seven CMC features was
+analysis (see Table~\ref{tab:lateral-cmc}), all CMC features are
 computed for each subject. Then, we run run various statistical and
 predictive analyses based on these extracted features.
 
 \subsubsection{Descriptive Statistics}
 
 
+For each CMC feature and ROI, we compute descriptive measures of group
+separation by sex using Cohen's d and the Mann-Whitney U test. We also
+compare \(\text{CMC}_l\) and \(\text{CMC}_r\) in a similar manner, to asses
+if there are differences in the \(\text{CMC}\) by hemisphere. We also compute
+Spearman correlations with subject age for all features. Spearman correlation
+is preferred as only age bins are available in the HCP phenotypic data.
 
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% I dont see these (above) results and there is no table referred to here.
-% This sounds like it will be very boring and can be removed.
-
-\paragraph{Sex} For each CMC feature, we compute descriptive measures of
-group separation by sex using Cohen's d and the Mann-Whitney U test. We also
-consider each of the seven classes of CMC feature, and compare whether these
-feature classes differ in variability. This is done by computing the average
-CMC metric in each CMC class for each group (e.g.\ sex, laterality, age), and
-then comparing these two group averages with a measure of scale (standard
-deviation; \(\sigma\), or interquartile range; IQR).
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -522,14 +471,7 @@ deviation; \(\sigma\), or interquartile range; IQR).
 % choose one of the 7 metrics to show off. We can also put the remaining 6
 % metric's montages in the appendix.
 
-\paragraph{Laterality} For each ROI, it is reasonable to ask whether
-\(\text{CMC}_l\) and \(\text{CMC}_r\) differ. We also compare relevant CMC
-features in this manner.
 
-\paragraph{Age and Sex} For each CMC feature in each CMC feature class, we
-compute the Spearman correlations with subject age. Spearman
-correlation is preferred as only age bins are available in the HCP phenotypic
-data.
 
 
 \subsubsection{Predictive Analyses}
@@ -543,19 +485,10 @@ online}.
 
 \paragraph{Behavioural Targets} \label{sec:cleaning}
 
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% What do you mean by synthetic?? These are real phenotypic targets aren't
-% they?, so the word synthetic might mislead the reader.
-
-
 To investigate the predictive potential of CMC features, a number of \emph{ad
-hoc} regression targets were constructed from the HCP behavioural data.
+hoc} regression targets were extracted from the HCP behavioural data.
 First, behavioural data were cleaned of irrelevant, missing, constant, or
-redundant features (see Section~\ref{sec:cleaning}).
-(\texttt{src/munging/hcp.py::load\_hcp\_phenotypic}). Then, the remaining
+redundant features (see Section~\ref{sec:cleaning}). Then, the remaining
 behavioural features were reduced in an exploratory fashion.
 
 \begin{figure}
@@ -599,94 +532,65 @@ with correlations of 1.0.}
 \end{figure}
 
 
-% \begin{verbatim}
-% #lst:cleaning .txt
-% Behavioural Data initial shape
-% 						⬇︎
-% 				  (1206, 582)
-% 						⬇︎
-% Remove obvious junk, book-keeping (IDs, scan counts) and subscale items, or features with 200 or more NaN values
-% 						⬇︎
-% 				  (1206, 400)
-% 						⬇︎
-% Remove highly-correlated features (e.g. various dexterity_unadj
-% and dexterity_ageadj pairs), with correlations above 0.95, and
-% other features with correlations of 1.0.
-% 						⬇︎
-% 				  (1206, 375)
-% 						⬇︎
-% Remove constant and string columns
-% 						⬇︎
-% 				  (1206, 369)
-% 						⬇︎
-% Remove subjects with all missing values for all remaining features
-% 						⬇︎
-% 				  (1113, 369)
-% 						⬇︎
-% Remove sex and age class as potential target features
-% 						⬇︎
-% 				  (1113, 367)
-% \end{verbatim}
-
-
-First, clustering was performed on the features using HDBSCAN [cite
-paper, cite sklearn algorithm] with the absolute value of the Pearson
-correlation as the feature distance metric. HDBSCAN does not require
-specifying the number of clusters, and allows for assignment to "noise" or
-"background" clusters, and thus acts as a natural method to notice patterns
-of correlation in the data. That is, by pooling together all features and
-ignoring the feature measurement procedures, we can find natural clusters of measurements
-without assuming that items are correlated simply by virtue of being members
-of the same behavioural test or measurement instrument.
+First, clustering was performed on the features using HDBSCAN
+\citep{campelloHierarchicalDensityEstimates2015,JMLR:v12:pedregosa11a} with
+the absolute value of the Pearson correlation as the feature distance metric.
+HDBSCAN does not require specifying the number of clusters, and allows for
+assignment to "noise" or "background" clusters, and thus acts as a natural
+method to notice patterns of correlation in the data. That is, by pooling
+together all features and ignoring the feature measurement procedures, we can
+find natural clusters of measurements without assuming that items are
+correlated simply by virtue of being members of the same behavioural test or
+measurement instrument.
 
 Second, after interpolating missing values with the feature means, HDBSCAN
 feature clusters were reduced to a single dimension via exploratory factor
 analysis. Factor analysis is a linear dimensionality reduction method wherein
 the reduced factor can be interpreted as a latent variable that
 well-describes the unreduced data, accounting for noise
-\citep{cattellScientificUseFactor1978,childEssentialsFactorAnalysis2006a}. FA
-was chosen here over PCA as the reduced unidimensional feature is more
-readily interpreted as a latent variable free from error variance
-\cite{attiasIndependentFactorAnalysis1999}.
+\citep{cattellScientificUseFactor1978,childEssentialsFactorAnalysis2006a}.
+Factor analysis was chosen here over PCA as the reduced unidimensional
+feature is more readily interpreted as a latent variable free from error
+variance \cite{attiasIndependentFactorAnalysis1999}.
 
-The resulting synthetic feature names, clusters and loadings are shown in
-\hyperref[sec:appendix-b]{Appendix B}, as are descriptive statistics in Table~\ref{tab:target-stats}.
-Most of the clusters appear to have face value. For example, the factor we
-have labeled "int\_g\_like" involves a number of features measuring fluid and
+The resulting factor target names, clusters and loadings are shown in
+\hyperref[sec:appendix-b]{Appendix B}, as are brief descriptions in
+Table~\ref{tab:target-descs}. Most of the clusters appear to have face value,
+suggesting a useful clustering by HDBSCAN\@. For example, the factor we have
+labeled "int\_g\_like" involves a number of features measuring fluid and
 crystalized intelligence, processing speed, and performance at various
-sorting and reading tasks (Appendix B Table~\ref{tab:int-g-like}), and so
-might be interpreted broadly as a general intelligence factor [cite].
+sorting and reading tasks (Table~S\ref{tab:int-g-like}), and so
+might be interpreted broadly as a general intelligence factor.
 
-\begin{table}
-\centering
-\begin{tabular}{lrrrrrrrrr}
-	\toprule
-	target & mean & std & min & 2.5\% & 25\% & 50\% & 75\% & 97.5\% & max \\
-	\midrule
-	gambling\_perf       & -0.000 & 1.000 & -4.081 & -1.892 & -0.494 & -0.000 & 0.403 & 2.298 & 4.118 \\
-	emotion\_perf        &  0.000 & 1.000 & -0.722 & -0.722 & -0.318 & -0.237 & 0.166 & 1.538 & 15.583\\
-	language\_rt         &  0.000 & 1.000 & -3.813 & -1.684 & -0.711 & -0.012 & 0.589 & 2.220 & 4.465 \\
-	relational\_rt       & -0.000 & 1.000 & -3.059 & -1.963 & -0.678 &  0.000 & 0.621 & 2.108 & 3.664 \\
-	emotion\_rt          &  0.000 & 1.000 & -2.398 & -1.660 & -0.697 & -0.046 & 0.546 & 2.232 & 5.756 \\
-	language\_perf       & -0.000 & 0.982 & -1.680 & -1.680 & -0.644 &  0.000 & 0.655 & 2.025 & 4.199 \\
-	p\_matrices          & -0.000 & 1.000 & -1.491 & -1.364 & -0.837 & -0.097 & 0.625 & 2.067 & 4.982 \\
-	social\_rt           &  0.000 & 0.983 & -1.861 & -1.455 & -0.717 & -0.113 & 0.480 & 2.407 & 4.406 \\
-	psqi\_latent         &  0.000 & 0.998 & -1.734 & -1.377 & -0.652 & -0.288 & 0.438 & 2.251 & 5.138 \\
-	gambling\_rt         & -0.000 & 1.000 & -1.888 & -1.431 & -0.753 & -0.165 & 0.618 & 2.228 & 6.054 \\
-	social\_random\_perf & -0.000 & 0.999 & -0.861 & -0.787 & -0.770 & -0.759 & 0.276 & 2.367 & 4.485 \\
-	int\_g\_like         &  0.000 & 1.000 & -2.190 & -2.180 & -0.700 &  0.074 & 0.681 & 1.861 & 2.589 \\
-	neg\_emotionality    &  0.000 & 0.966 & -2.694 & -1.719 & -0.624 & -0.032 & 0.590 & 2.004 & 4.182 \\
-	wm\_rt               &  0.000 & 1.000 & -2.504 & -1.674 & -0.678 & -0.015 & 0.564 & 2.286 & 5.335 \\
-	wm\_perf             &  0.000 & 0.989 & -1.418 & -1.221 & -0.737 & -0.237 & 0.430 & 2.434 & 4.697 \\
-	\bottomrule
-\end{tabular}
-\label{tab:target-stats}
-\footnotesize
-\caption{Percentiles and extrema for synthetic targets. Columns with percentages
-indicate percentiles. All factors have a mean of approximately 0.0, and
-standard deviation of approximately 1.0, by construction.}
-\normalsize
-\end{table}
+% \begin{table}
+% \centering
+% \begin{tabular}{lrrrrrrrrr}
+% 	\toprule
+% 	target & mean & std & min & 2.5\% & 25\% & 50\% & 75\% & 97.5\% & max \\
+% 	\midrule
+% 	gambling\_perf       & -0.000 & 1.000 & -4.081 & -1.892 & -0.494 & -0.000 & 0.403 & 2.298 & 4.118 \\
+% 	emotion\_perf        &  0.000 & 1.000 & -0.722 & -0.722 & -0.318 & -0.237 & 0.166 & 1.538 & 15.583\\
+% 	language\_rt         &  0.000 & 1.000 & -3.813 & -1.684 & -0.711 & -0.012 & 0.589 & 2.220 & 4.465 \\
+% 	relational\_rt       & -0.000 & 1.000 & -3.059 & -1.963 & -0.678 &  0.000 & 0.621 & 2.108 & 3.664 \\
+% 	emotion\_rt          &  0.000 & 1.000 & -2.398 & -1.660 & -0.697 & -0.046 & 0.546 & 2.232 & 5.756 \\
+% 	language\_perf       & -0.000 & 0.982 & -1.680 & -1.680 & -0.644 &  0.000 & 0.655 & 2.025 & 4.199 \\
+% 	p\_matrices          & -0.000 & 1.000 & -1.491 & -1.364 & -0.837 & -0.097 & 0.625 & 2.067 & 4.982 \\
+% 	social\_rt           &  0.000 & 0.983 & -1.861 & -1.455 & -0.717 & -0.113 & 0.480 & 2.407 & 4.406 \\
+% 	psqi\_latent         &  0.000 & 0.998 & -1.734 & -1.377 & -0.652 & -0.288 & 0.438 & 2.251 & 5.138 \\
+% 	gambling\_rt         & -0.000 & 1.000 & -1.888 & -1.431 & -0.753 & -0.165 & 0.618 & 2.228 & 6.054 \\
+% 	social\_random\_perf & -0.000 & 0.999 & -0.861 & -0.787 & -0.770 & -0.759 & 0.276 & 2.367 & 4.485 \\
+% 	int\_g\_like         &  0.000 & 1.000 & -2.190 & -2.180 & -0.700 &  0.074 & 0.681 & 1.861 & 2.589 \\
+% 	neg\_emotionality    &  0.000 & 0.966 & -2.694 & -1.719 & -0.624 & -0.032 & 0.590 & 2.004 & 4.182 \\
+% 	wm\_rt               &  0.000 & 1.000 & -2.504 & -1.674 & -0.678 & -0.015 & 0.564 & 2.286 & 5.335 \\
+% 	wm\_perf             &  0.000 & 0.989 & -1.418 & -1.221 & -0.737 & -0.237 & 0.430 & 2.434 & 4.697 \\
+% 	\bottomrule
+% \end{tabular}
+% \footnotesize
+% \caption{Percentiles and extrema for synthetic targets. Columns with percentages
+% indicate percentiles. All factors have a mean of approximately 0.0, and
+% standard deviation of approximately 1.0, by construction.} \label{tab:target-stats}
+% \normalsize
+% \end{table}
 
 %%%%%%%%%%%%%%%
 % Jacob says: %
@@ -697,13 +601,11 @@ standard deviation of approximately 1.0, by construction.}
 
 In the interest of space, and since many factor targets turn out not to be
 predictable at all, we refrain from describing each of the extracted factor
-targets here, and relegate such explanation to the discussion. Ultimately, the
-factors are defined by the loadings of their respective items: these are
-listed in Appendix~\ref{sec:appendix-b}.
-
-Likewise, the battery of behavioural tasks administered to HCP subjects is
-too extensive to detail here: the interested reader is referred to
-\citet{Barch2013}.
+targets here, and relegate such explanation to the discussion. Ultimately,
+the factors are defined by the loadings of their respective items: these are
+listed in \hyperref[sec:appendix-b]{Appendix B}. Likewise, the battery of
+behavioural tasks administered to HCP subjects is too extensive to detail
+here: the interested reader is referred to \citet{Barch2013}.
 
 \begin{table}
 \centering
@@ -729,7 +631,7 @@ too extensive to detail here: the interested reader is referred to
 	\bottomrule
 \end{tabular}
 \footnotesize
-\caption{Descriptions of factor targets. } \label{tab:target-descs}
+\caption{Brief descriptions of factor targets. } \label{tab:target-descs}
 \normalsize
 \end{table}
 
@@ -795,8 +697,9 @@ tuning, and feature selection is done on a separate training data split using
 50\%, to ensure there is no double-dipping or data leakage during these
 steps.
 
-In addition, we make available source code used for the analyses in this
-study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
+All source code used for the analyses in this study is available
+\href{https://github.com/stfxecutables/cortical_congruence}{online}
+\citep{dm-bergerStfxecutablesCortical_congruenceInit2024}.
 
 
 \section{Results}
@@ -826,161 +729,59 @@ study \href{https://github.com/stfxecutables/cortical_congruence}{online}.
 % This section (Interpretation) isn't needed.
 
 
-% \begin{table}
-% \centering
-% \begin{tabular}{llrrrrrrrr}
-% 	\toprule
-% 	&  & \multicolumn{8}{r}{r} \\
-% 	&  & count & mean & std & min & 25\% & 50\% & 75\% & max \\
-%  feat\_x & feat\_y &  &  &  &  &  &  &  &  \\
-%  \midrule
-%  \multirow[t]{9}{*}{CurvInd} & CurvInd & 34.000 & 0.593 & 0.148 & 0.212 & 0.537 & 0.613 & 0.698 & 0.813 \\
-% 	& FoldIndex & 136.000 & 0.594 & 0.207 & 0.111 & 0.440 & 0.602 & 0.778 & 0.872 \\
-% 	& GaussCurv & 136.000 & 0.619 & 0.181 & 0.122 & 0.488 & 0.660 & 0.768 & 0.876 \\
-% 	& MeanCurv & 136.000 & 0.578 & 0.150 & 0.109 & 0.496 & 0.596 & 0.692 & 0.845 \\
-% 	& SA & 136.000 & 0.388 & 0.122 & 0.079 & 0.292 & 0.391 & 0.489 & 0.626 \\
-% 	& SA/V & 136.000 & 0.093 & 0.109 & -0.293 & 0.034 & 0.084 & 0.145 & 0.456 \\
-% 	& V & 136.000 & 0.326 & 0.143 & -0.180 & 0.249 & 0.326 & 0.424 & 0.621 \\
-% 	& d & 136.000 & -0.090 & 0.097 & -0.409 & -0.131 & -0.078 & -0.023 & 0.175 \\
-% 	& d\_sd & 136.000 & 0.141 & 0.112 & -0.152 & 0.063 & 0.143 & 0.209 & 0.537 \\
-%  \cline{1-10}
-%  \multirow[t]{8}{*}{FoldIndex} & FoldIndex & 34.000 & 0.379 & 0.142 & 0.074 & 0.299 & 0.387 & 0.482 & 0.683 \\
-% 	& GaussCurv & 136.000 & 0.463 & 0.213 & 0.036 & 0.273 & 0.463 & 0.651 & 0.846 \\
-% 	& MeanCurv & 136.000 & 0.414 & 0.159 & 0.023 & 0.281 & 0.442 & 0.526 & 0.775 \\
-% 	& SA & 136.000 & 0.412 & 0.152 & 0.065 & 0.303 & 0.416 & 0.517 & 0.708 \\
-% 	& SA/V & 136.000 & 0.066 & 0.102 & -0.347 & 0.008 & 0.063 & 0.117 & 0.406 \\
-% 	& V & 136.000 & 0.360 & 0.164 & -0.118 & 0.259 & 0.366 & 0.463 & 0.687 \\
-% 	& d & 136.000 & -0.075 & 0.090 & -0.364 & -0.123 & -0.065 & -0.023 & 0.154 \\
-% 	& d\_sd & 136.000 & 0.118 & 0.104 & -0.136 & 0.055 & 0.103 & 0.166 & 0.501 \\
-%  \cline{1-10}
-%  \multirow[t]{7}{*}{GaussCurv} & GaussCurv & 34.000 & 0.528 & 0.143 & 0.119 & 0.477 & 0.569 & 0.614 & 0.723 \\
-% 	& MeanCurv & 136.000 & 0.679 & 0.160 & 0.123 & 0.591 & 0.704 & 0.815 & 0.889 \\
-% 	& SA & 136.000 & -0.011 & 0.073 & -0.140 & -0.064 & -0.011 & 0.030 & 0.324 \\
-% 	& SA/V & 136.000 & 0.063 & 0.105 & -0.208 & -0.008 & 0.062 & 0.112 & 0.402 \\
-% 	& V & 136.000 & -0.039 & 0.086 & -0.271 & -0.101 & -0.043 & 0.011 & 0.219 \\
-% 	& d & 136.000 & -0.074 & 0.098 & -0.385 & -0.129 & -0.077 & -0.014 & 0.167 \\
-% 	& d\_sd & 136.000 & 0.162 & 0.118 & -0.184 & 0.087 & 0.154 & 0.244 & 0.481 \\
-%  \cline{1-10}
-%  \multirow[t]{5}{*}{MeanCurv} & MeanCurv & 34.000 & 0.661 & 0.152 & 0.290 & 0.600 & 0.687 & 0.771 & 0.892 \\
-% 	& SA & 136.000 & -0.032 & 0.087 & -0.203 & -0.097 & -0.033 & 0.027 & 0.244 \\
-% 	& SA/V & 136.000 & 0.107 & 0.139 & -0.282 & 0.026 & 0.113 & 0.193 & 0.478 \\
-% 	& d & 136.000 & -0.112 & 0.127 & -0.418 & -0.198 & -0.126 & -0.039 & 0.285 \\
-% 	& d\_sd & 136.000 & 0.118 & 0.123 & -0.210 & 0.043 & 0.116 & 0.205 & 0.490 \\
-%  \cline{1-10}
-%  \multirow[t]{4}{*}{SA} & SA & 34.000 & 0.660 & 0.146 & 0.287 & 0.547 & 0.691 & 0.784 & 0.861 \\
-% 	& SA/V & 136.000 & 0.063 & 0.109 & -0.145 & -0.007 & 0.050 & 0.121 & 0.445 \\
-% 	& d & 136.000 & -0.033 & 0.096 & -0.375 & -0.080 & -0.035 & 0.032 & 0.152 \\
-% 	& d\_sd & 136.000 & 0.001 & 0.127 & -0.263 & -0.075 & -0.013 & 0.065 & 0.487 \\
-%  \cline{1-10}
-%  SA/V & SA/V & 34.000 & 0.601 & 0.177 & 0.104 & 0.490 & 0.627 & 0.752 & 0.853 \\
-%  \cline{1-10}
-%  \multirow[t]{6}{*}{V} & MeanCurv & 136.000 & -0.074 & 0.095 & -0.308 & -0.148 & -0.076 & -0.013 & 0.179 \\
-% 	& SA & 136.000 & 0.751 & 0.189 & 0.223 & 0.643 & 0.785 & 0.916 & 0.956 \\
-% 	& SA/V & 136.000 & -0.248 & 0.116 & -0.556 & -0.315 & -0.265 & -0.165 & 0.064 \\
-% 	& V & 34.000 & 0.652 & 0.156 & 0.186 & 0.557 & 0.692 & 0.783 & 0.868 \\
-% 	& d & 136.000 & 0.256 & 0.105 & -0.037 & 0.190 & 0.246 & 0.322 & 0.573 \\
-% 	& d\_sd & 136.000 & 0.080 & 0.095 & -0.201 & 0.011 & 0.100 & 0.138 & 0.321 \\
-%  \cline{1-10}
-%  \multirow[t]{14}{*}{asym\_diff} & CurvInd & 136.000 & -0.002 & 0.080 & -0.216 & -0.047 & 0.002 & 0.042 & 0.263 \\
-% 	& FoldIndex & 136.000 & -0.001 & 0.090 & -0.221 & -0.057 & -0.007 & 0.047 & 0.331 \\
-% 	& GaussCurv & 136.000 & 0.001 & 0.062 & -0.150 & -0.041 & -0.002 & 0.029 & 0.189 \\
-% 	& MeanCurv & 136.000 & 0.002 & 0.083 & -0.248 & -0.052 & -0.001 & 0.052 & 0.293 \\
-% 	& SA & 136.000 & -0.005 & 0.089 & -0.227 & -0.066 & -0.001 & 0.060 & 0.205 \\
-% 	& SA/V & 136.000 & 0.002 & 0.272 & -0.579 & -0.239 & -0.013 & 0.256 & 0.456 \\
-% 	& V & 136.000 & -0.004 & 0.132 & -0.269 & -0.112 & -0.002 & 0.108 & 0.313 \\
-% 	& asym\_diff & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
-% 	& asym\_diff\_abs & 136.000 & -0.015 & 0.428 & -0.715 & -0.416 & 0.003 & 0.280 & 0.731 \\
-% 	& asym\_div & 136.000 & 1.000 & 0.000 & 0.999 & 1.000 & 1.000 & 1.000 & 1.000 \\
-% 	& cmc & 136.000 & -0.005 & 0.534 & -0.745 & -0.523 & 0.002 & 0.513 & 0.797 \\
-% 	& d & 136.000 & 0.002 & 0.080 & -0.133 & -0.062 & 0.008 & 0.047 & 0.215 \\
-% 	& d\_sd & 136.000 & 0.009 & 0.125 & -0.250 & -0.084 & -0.004 & 0.112 & 0.463 \\
-% 	& pV & 136.000 & -0.004 & 0.081 & -0.225 & -0.064 & 0.002 & 0.056 & 0.195 \\
-%  \cline{1-10}
-%  \multirow[t]{13}{*}{asym\_diff\_abs} & CurvInd & 136.000 & -0.008 & 0.053 & -0.208 & -0.033 & -0.017 & 0.033 & 0.117 \\
-% 	& FoldIndex & 136.000 & -0.006 & 0.061 & -0.265 & -0.037 & -0.002 & 0.024 & 0.210 \\
-% 	& GaussCurv & 136.000 & 0.017 & 0.043 & -0.117 & -0.004 & 0.011 & 0.038 & 0.125 \\
-% 	& MeanCurv & 136.000 & 0.015 & 0.051 & -0.169 & -0.018 & 0.012 & 0.047 & 0.151 \\
-% 	& SA & 136.000 & -0.039 & 0.053 & -0.241 & -0.064 & -0.037 & -0.004 & 0.082 \\
-% 	& SA/V & 136.000 & -0.022 & 0.121 & -0.309 & -0.099 & -0.018 & 0.049 & 0.407 \\
-% 	& V & 136.000 & -0.028 & 0.070 & -0.266 & -0.054 & -0.028 & 0.014 & 0.142 \\
-% 	& asym\_diff\_abs & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
-% 	& asym\_div & 136.000 & -0.015 & 0.427 & -0.715 & -0.416 & 0.003 & 0.280 & 0.731 \\
-% 	& cmc & 136.000 & 0.012 & 0.218 & -0.508 & -0.156 & 0.019 & 0.163 & 0.402 \\
-% 	& d & 136.000 & 0.023 & 0.050 & -0.104 & -0.002 & 0.026 & 0.053 & 0.153 \\
-% 	& d\_sd & 136.000 & 0.038 & 0.069 & -0.279 & 0.007 & 0.040 & 0.083 & 0.196 \\
-% 	& pV & 136.000 & -0.031 & 0.056 & -0.212 & -0.059 & -0.027 & 0.002 & 0.082 \\
-%  \cline{1-10}
-%  \multirow[t]{12}{*}{asym\_div} & CurvInd & 136.000 & -0.002 & 0.080 & -0.217 & -0.048 & 0.002 & 0.040 & 0.265 \\
-% 	& FoldIndex & 136.000 & -0.001 & 0.090 & -0.222 & -0.057 & -0.005 & 0.048 & 0.334 \\
-% 	& GaussCurv & 136.000 & 0.001 & 0.062 & -0.151 & -0.041 & -0.001 & 0.029 & 0.190 \\
-% 	& MeanCurv & 136.000 & 0.002 & 0.084 & -0.248 & -0.051 & -0.001 & 0.053 & 0.295 \\
-% 	& SA & 136.000 & -0.005 & 0.089 & -0.228 & -0.065 & -0.001 & 0.060 & 0.197 \\
-% 	& SA/V & 136.000 & 0.001 & 0.272 & -0.585 & -0.239 & -0.013 & 0.253 & 0.444 \\
-% 	& V & 136.000 & -0.003 & 0.132 & -0.270 & -0.111 & -0.000 & 0.108 & 0.316 \\
-% 	& asym\_div & 34.000 & 1.000 & 0.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
-% 	& cmc & 136.000 & -0.004 & 0.534 & -0.740 & -0.523 & -0.002 & 0.509 & 0.804 \\
-% 	& d & 136.000 & 0.002 & 0.080 & -0.132 & -0.060 & 0.008 & 0.047 & 0.209 \\
-% 	& d\_sd & 136.000 & 0.009 & 0.124 & -0.243 & -0.084 & -0.003 & 0.112 & 0.467 \\
-% 	& pV & 136.000 & -0.004 & 0.081 & -0.226 & -0.064 & 0.001 & 0.056 & 0.189 \\
-%  \cline{1-10}
-%  \multirow[t]{11}{*}{cmc} & CurvInd & 136.000 & -0.055 & 0.103 & -0.358 & -0.122 & -0.055 & 0.009 & 0.251 \\
-% 	& FoldIndex & 136.000 & -0.018 & 0.102 & -0.318 & -0.081 & -0.019 & 0.034 & 0.351 \\
-% 	& GaussCurv & 136.000 & -0.008 & 0.092 & -0.292 & -0.063 & -0.015 & 0.041 & 0.254 \\
-% 	& MeanCurv & 136.000 & -0.036 & 0.120 & -0.384 & -0.087 & -0.035 & 0.033 & 0.277 \\
-% 	& SA & 136.000 & -0.093 & 0.125 & -0.380 & -0.178 & -0.093 & -0.010 & 0.311 \\
-% 	& SA/V & 136.000 & -0.415 & 0.187 & -0.756 & -0.556 & -0.413 & -0.276 & 0.135 \\
-% 	& V & 136.000 & 0.078 & 0.124 & -0.168 & -0.002 & 0.069 & 0.165 & 0.489 \\
-% 	& cmc & 34.000 & 0.381 & 0.163 & -0.115 & 0.294 & 0.418 & 0.492 & 0.612 \\
-% 	& d & 136.000 & 0.163 & 0.132 & -0.153 & 0.062 & 0.157 & 0.262 & 0.464 \\
-% 	& d\_sd & 136.000 & 0.226 & 0.181 & -0.171 & 0.105 & 0.225 & 0.353 & 0.679 \\
-% 	& pV & 136.000 & -0.034 & 0.107 & -0.317 & -0.099 & -0.030 & 0.034 & 0.307 \\
-%  \cline{1-10}
-%  \multirow[t]{3}{*}{d} & SA/V & 136.000 & -0.742 & 0.195 & -0.968 & -0.904 & -0.806 & -0.606 & -0.186 \\
-% 	& d & 34.000 & 0.642 & 0.161 & 0.296 & 0.518 & 0.673 & 0.785 & 0.874 \\
-% 	& d\_sd & 136.000 & 0.153 & 0.179 & -0.443 & 0.053 & 0.181 & 0.287 & 0.552 \\
-%  \cline{1-10}
-%  \multirow[t]{2}{*}{d\_sd} & SA/V & 136.000 & -0.219 & 0.189 & -0.557 & -0.369 & -0.252 & -0.074 & 0.398 \\
-% 	& d\_sd & 34.000 & 0.372 & 0.160 & 0.045 & 0.250 & 0.371 & 0.485 & 0.668 \\
-%  \cline{1-10}
-%  \multirow[t]{10}{*}{pV} & CurvInd & 136.000 & 0.341 & 0.131 & -0.083 & 0.264 & 0.340 & 0.432 & 0.622 \\
-% 	& FoldIndex & 136.000 & 0.368 & 0.154 & -0.046 & 0.265 & 0.376 & 0.466 & 0.673 \\
-% 	& GaussCurv & 136.000 & -0.036 & 0.080 & -0.193 & -0.094 & -0.040 & 0.016 & 0.226 \\
-% 	& MeanCurv & 136.000 & -0.067 & 0.088 & -0.247 & -0.137 & -0.069 & -0.009 & 0.175 \\
-% 	& SA & 136.000 & 0.779 & 0.186 & 0.237 & 0.665 & 0.806 & 0.938 & 0.968 \\
-% 	& SA/V & 136.000 & -0.178 & 0.100 & -0.417 & -0.246 & -0.186 & -0.104 & 0.114 \\
-% 	& V & 136.000 & 0.817 & 0.196 & 0.203 & 0.699 & 0.900 & 0.986 & 0.994 \\
-% 	& d & 136.000 & 0.231 & 0.095 & -0.017 & 0.173 & 0.230 & 0.288 & 0.457 \\
-% 	& d\_sd & 136.000 & 0.046 & 0.096 & -0.235 & -0.017 & 0.051 & 0.103 & 0.331 \\
-% 	& pV & 34.000 & 0.668 & 0.148 & 0.233 & 0.580 & 0.699 & 0.798 & 0.862 \\
-%  \cline{1-10}
-% 	\bottomrule
-% \end{tabular}
-% \label{tab:sig-cmc-sex}
-% \footnotesize
-% \caption{Feature correlations ignoring laterality, and restricting to the same ROI.
-% E.g.\ Left, right, and bilateral CMC metrics can be computed for each of the 34
-% ROIs,
-% d = Cohen's d, with positive sign indicating larger metric values for males;
-% U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U.
-% bh = bilateral (both hemispheres) CMC metric;
-% lh/rh = left/right hemisphere lateral CMC metric
-% Note: p-values are adjusted for multiple comparisons using the
-% Holm-Bonferroni stepdown method.}
-% \normalsize
-% \end{table}
-
 
 \subsection{Descriptive Statistics}
 
+
+
+
+
 \subsubsection{CMC Features by Sex}
 
-While all pseudo-volume features differ significantly by sex, otherwise,
-only some lateral and bilateral CMC metrics differ significantly based on
-sex, with the majority of these differences being such that females having
-slightly higher congruence (Table~\ref{tab:sig-cmc-sex}).
+While all base FreeSurfer features differ significantly by sex, as do the
+base \CMC features and expected volume features, \(\text{CMC}_{\ell/r}\) and
+\(\text{CMC}_{\ell - r}\) differ only marginally (Table~\ref{tab:sex-roi-ds}).
 
 
-\begin{table}
+\begin{longtable}{lrrrrrr}
+	\toprule
+	 & \multicolumn{4}{r}{d} & \multicolumn{2}{r}{p} \\
+	Feature & $\mu$ & $\sigma$ & min & max & min & max \\
+	\midrule
+	\endfirsthead
+	\caption[]{Summary of Cohen's d values for sex, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects (M=507, F=606) $\times$ the number of ROI hemispheres (1 or 3 for asymmetry and non-asymmetry measures). Rightmost columns show the smallest and largest of the 34 p-values associated with the Mann-Whitney U statistic. All p-values are corrected for multiple comparisons by the Holm-Bonferroni step-down method.} \\
+	\toprule
+	 & \multicolumn{4}{r}{d} & \multicolumn{2}{r}{p} \\
+	Feature & $\mu$ & $\sigma$ & min & max & min & max \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{7}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\caption{Summary of Cohen's d values for sex, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects (M=507, F=606) $\times$ the number of ROI hemispheres (1 or 3 for asymmetry and non-asymmetry measures). Rightmost columns show the smallest and largest of the 34 p-values associated with the Mann-Whitney U statistic. All p-values are corrected for multiple comparisons by the Holm-Bonferroni step-down method.} \label{tab:sex-roi-ds} \\
+	\endlastfoot
+	$\text{CMC}$ & -0.13 & 0.19 & -0.53 & 0.28 & 0.00 & 1.00 \\*
+	$\text{CMC}_{\ell / r}$ & 0.01 & 0.08 & -0.13 & 0.21 & 0.04 & 1.00 \\*
+	$\text{CMC}_{\ell - r}$ & 0.01 & 0.08 & -0.13 & 0.20 & 0.04 & 1.00 \\*
+	$\text{CMC}_{|\ell - r|}$ & -0.02 & 0.09 & -0.24 & 0.13 & 0.39 & 1.00 \\*
+	$\hat{V}$ & 0.34 & 0.05 & 0.18 & 0.43 & 0.00 & 0.00 \\*
+	V & 0.33 & 0.06 & 0.12 & 0.43 & 0.00 & 0.00 \\*
+	SA & 0.89 & 0.22 & 0.49 & 1.23 & 0.00 & 0.00 \\*
+	$\tau$ & 0.07 & 0.13 & -0.12 & 0.52 & 0.00 & 1.00 \\*
+\end{longtable}
+
+The base \CMC features differing significantly by sex are shown in
+Table~\ref{tab:sig-cmc-sex}. Note that the minimum or maximum Cohen's \(d\)
+values shown in Table~\ref{tab:sex-roi-ds} need not represent a significant
+group difference, and thus the largest observed \CMC separation by sex is in
+the temporal poles overall (first row of Table~\ref{tab:sig-cmc-sex}), with
+this separation being larger in the left hemisphere (second row) than in the
+right (fourth row).
+
+
+\begin{table}[H]
 \centering
 \begin{tabular}{lrrr}
 	\toprule
@@ -1013,7 +814,7 @@ relative to females, though this difference is quite small, practically, and
 remains significant only for pseudo-volume features when considering a robust
 measure of scale (IQR).
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{lrrrrrr}
 	\toprule
@@ -1043,6 +844,30 @@ Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni s
 
 We find the lateral CMC measures differ significantly for all but the
 superior frontal and parsopercularis regions (Table~\ref{tab:lateral-cmc}).
+
+\begin{longtable}{lrrrrr}
+	\toprule
+	Feature & $\mu$ & $\sigma$ & min & max & n\_sig \\
+	\midrule
+	\endfirsthead
+	\caption[]{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \\
+	\toprule
+	Feature & $\mu$ & $\sigma$ & min & max & n\_sig \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{6}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
+	\bottomrule
+	\caption{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \label{tab:sex-lateral-ds} \\
+	\endlastfoot
+	$\text{CMC}$ & -0.12 & 0.18 & -0.50 & 0.27 & 32 \\*
+	$\hat{V}$ & 0.89 & 0.23 & 0.47 & 1.33 & 31 \\*
+	V & 0.86 & 0.25 & 0.30 & 1.37 & 29 \\*
+	SA & 0.89 & 0.22 & 0.46 & 1.23 & 28 \\*
+	$\tau$ & 0.07 & 0.13 & -0.12 & 0.53 & 32 \\*
+\end{longtable}
 
 \begin{table}
 \centering
@@ -1111,56 +936,56 @@ Significant feature age correlations are shown in Table~\ref{tab:cmc-age-spearma
 	\toprule
 	ROI & CMC class & $r$ & $r_p$ & $r_M$ & $r_{M_p}$ & $r_F$ & $r_{F_p}$ & $p_{\min}$ \\
 	\midrule
-	bh-superiorfrontal & Bilateral & -0.1795 & 0.0000 & -0.1870 & 0.0198 & -0.1909 & 0.0020 & 0.0000 \\
-	bh-caudalmiddlefrontal & Bilateral & -0.1778 & 0.0000 & -0.1848 & 0.0249 & -0.1649 & 0.0389 & 0.0000 \\
-	lh-middletemporal & Pseudo-volume & -0.1709 & 0.0000 & -0.0418 & 1.0000 & -0.1476 & 0.2224 & 0.0000 \\
-	bh-isthmuscingulate & Pseudo-volume & -0.1675 & 0.0000 & -0.0902 & 1.0000 & -0.0870 & 1.0000 & 0.0000 \\
-	bh-middletemporal & Pseudo-volume & -0.1667 & 0.0000 & -0.0429 & 1.0000 & -0.1312 & 0.9631 & 0.0000 \\
-	lh-isthmuscingulate & Pseudo-volume & -0.1656 & 0.0000 & -0.0960 & 1.0000 & -0.0799 & 1.0000 & 0.0000 \\
-	lh-lateralorbitofrontal & Left Lateral & -0.1652 & 0.0000 & -0.1757 & 0.0602 & -0.1382 & 0.5262 & 0.0000 \\
-	bh-lateralorbitofrontal & Pseudo-volume & -0.1651 & 0.0000 & 0.0139 & 1.0000 & -0.1747 & 0.0134 & 0.0000 \\
-	rh-lateralorbitofrontal & Pseudo-volume & -0.1635 & 0.0000 & 0.0313 & 1.0000 & -0.1924 & 0.0016 & 0.0000 \\
-	rh-superiorfrontal & Right Lateral & -0.1626 & 0.0000 & -0.1755 & 0.0609 & -0.1649 & 0.0391 & 0.0000 \\
-	bh-postcentral & Pseudo-volume & -0.1611 & 0.0001 & -0.0072 & 1.0000 & -0.1353 & 0.6805 & 0.0001 \\
-	rh-inferiorparietal & Pseudo-volume & -0.1574 & 0.0001 & -0.0610 & 1.0000 & -0.1198 & 1.0000 & 0.0001 \\
-	rh-postcentral & Pseudo-volume & -0.1548 & 0.0002 & -0.0199 & 1.0000 & -0.1181 & 1.0000 & 0.0002 \\
-	bh-lateralorbitofrontal & Bilateral & -0.1542 & 0.0002 & -0.1637 & 0.1791 & -0.1306 & 1.0000 & 0.0002 \\
-	bh-rostralmiddlefrontal & Pseudo-volume & -0.1534 & 0.0002 & 0.0151 & 1.0000 & -0.1530 & 0.1321 & 0.0002 \\
-	bh-inferiorparietal & Pseudo-volume & -0.1531 & 0.0003 & -0.0526 & 1.0000 & -0.1024 & 1.0000 & 0.0003 \\
-	lh-superiorfrontal & Left Lateral & -0.1476 & 0.0007 & -0.1489 & 0.6230 & -0.1585 & 0.0761 & 0.0007 \\
-	lh-postcentral & Pseudo-volume & -0.1475 & 0.0007 & 0.0114 & 1.0000 & -0.1421 & 0.3679 & 0.0007 \\
-	rh-caudalmiddlefrontal & Right Lateral & -0.1467 & 0.0008 & -0.1574 & 0.3076 & -0.1451 & 0.2807 & 0.0008 \\
-	lh-lateralorbitofrontal & Pseudo-volume & -0.1460 & 0.0009 & -0.0012 & 1.0000 & -0.1333 & 0.8081 & 0.0009 \\
-	rh-middletemporal & Pseudo-volume & -0.1455 & 0.0010 & -0.0368 & 1.0000 & -0.1070 & 1.0000 & 0.0010 \\
-	rh-rostralmiddlefrontal & Pseudo-volume & -0.1438 & 0.0013 & 0.0228 & 1.0000 & -0.1489 & 0.1977 & 0.0013 \\
-	bh-inferiortemporal & Pseudo-volume & -0.1433 & 0.0014 & -0.0436 & 1.0000 & -0.0866 & 1.0000 & 0.0014 \\
-	lh-caudalmiddlefrontal & Left Lateral & -0.1406 & 0.0022 & -0.1354 & 1.0000 & -0.1313 & 0.9563 & 0.0022 \\
-	lh-inferiortemporal & Pseudo-volume & -0.1398 & 0.0025 & -0.0372 & 1.0000 & -0.0951 & 1.0000 & 0.0025 \\
-	bh-fusiform & Pseudo-volume & -0.1391 & 0.0028 & -0.0177 & 1.0000 & -0.0807 & 1.0000 & 0.0028 \\
-	lh-fusiform & Pseudo-volume & -0.1386 & 0.0031 & -0.0473 & 1.0000 & -0.0780 & 1.0000 & 0.0031 \\
-	bh-superiorparietal & Pseudo-volume & -0.1354 & 0.0051 & -0.0110 & 1.0000 & -0.1461 & 0.2545 & 0.0051 \\
-	rh-isthmuscingulate & Pseudo-volume & -0.1347 & 0.0058 & -0.0322 & 1.0000 & -0.0956 & 1.0000 & 0.0058 \\
-	rh-superiorfrontal & Pseudo-volume & -0.1343 & 0.0061 & -0.0112 & 1.0000 & -0.0915 & 1.0000 & 0.0061 \\
-	lh-rostralmiddlefrontal & Pseudo-volume & -0.1334 & 0.0070 & 0.0071 & 1.0000 & -0.1302 & 1.0000 & 0.0070 \\
-	bh-superiortemporal & Pseudo-volume & -0.1334 & 0.0071 & -0.0164 & 1.0000 & -0.0794 & 1.0000 & 0.0071 \\
-	bh-superiorfrontal & Pseudo-volume & -0.1317 & 0.0092 & 0.0030 & 1.0000 & -0.0904 & 1.0000 & 0.0092 \\
-	rh-superiorparietal & Pseudo-volume & -0.1304 & 0.0113 & -0.0136 & 1.0000 & -0.1196 & 1.0000 & 0.0113 \\
-	bh-frontalpole & Pseudo-volume & -0.1296 & 0.0127 & -0.0467 & 1.0000 & -0.1093 & 1.0000 & 0.0127 \\
-	bh-precentral & Bilateral & -0.1292 & 0.0135 & -0.1227 & 1.0000 & -0.1452 & 0.2787 & 0.0135 \\
-	rh-superiortemporal & Pseudo-volume & -0.1289 & 0.0141 & -0.0312 & 1.0000 & -0.0820 & 1.0000 & 0.0141 \\
-	bh-parstriangularis & Pseudo-volume & -0.1287 & 0.0146 & -0.0280 & 1.0000 & -0.0761 & 1.0000 & 0.0146 \\
-	bh-rostralmiddlefrontal & Bilateral & -0.1253 & 0.0242 & -0.1491 & 0.6121 & -0.0928 & 1.0000 & 0.0242 \\
-	rh-posteriorcingulate & Pseudo-volume & -0.1248 & 0.0259 & -0.0042 & 1.0000 & -0.1350 & 0.6939 & 0.0259 \\
-	rh-parstriangularis & Right Lateral & -0.1068 & 0.2954 & -0.1839 & 0.0271 & -0.0426 & 1.0000 & 0.0271 \\
-	bh-precentral & Pseudo-volume & -0.1242 & 0.0282 & 0.0236 & 1.0000 & -0.0647 & 1.0000 & 0.0282 \\
-	lh-posteriorcingulate & Left Lateral & -0.1241 & 0.0286 & -0.1145 & 1.0000 & -0.1163 & 1.0000 & 0.0286 \\
-	lh-parsopercularis & Pseudo-volume & -0.1238 & 0.0300 & -0.0737 & 1.0000 & -0.0705 & 1.0000 & 0.0300 \\
-	bh-precuneus & Pseudo-volume & -0.1237 & 0.0304 & -0.0031 & 1.0000 & -0.1123 & 1.0000 & 0.0304 \\
-	rh-parstriangularis & Pseudo-volume & -0.1226 & 0.0357 & -0.0316 & 1.0000 & -0.0848 & 1.0000 & 0.0357 \\
-	bh-frontalpole & Bilateral & -0.1223 & 0.0370 & -0.0943 & 1.0000 & -0.1600 & 0.0655 & 0.0370 \\
-	rh-frontalpole & Pseudo-volume & -0.1223 & 0.0373 & -0.0728 & 1.0000 & -0.0873 & 1.0000 & 0.0373 \\
-	bh-parsopercularis & Pseudo-volume & -0.1223 & 0.0373 & -0.0648 & 1.0000 & -0.0699 & 1.0000 & 0.0373 \\
-	rh-precuneus & Pseudo-volume & -0.1214 & 0.0423 & -0.0022 & 1.0000 & -0.0939 & 1.0000 & 0.0423 \\
+	bh-superiorfrontal & $\text{CMC}_{\ell r}$ & -0.1795 & 0.0000 & -0.1870 & 0.0198 & -0.1909 & 0.0020 & 0.0000 \\
+	bh-caudalmiddlefrontal & $\text{CMC}_{\ell r}$ & -0.1778 & 0.0000 & -0.1848 & 0.0249 & -0.1649 & 0.0389 & 0.0000 \\
+	lh-middletemporal & $\hat{V}_{\ell}$ & -0.1709 & 0.0000 & -0.0418 & 1.0000 & -0.1476 & 0.2224 & 0.0000 \\
+	bh-isthmuscingulate & $\hat{V}_{\ell r}$ & -0.1675 & 0.0000 & -0.0902 & 1.0000 & -0.0870 & 1.0000 & 0.0000 \\
+	bh-middletemporal & $\hat{V}_{\ell r}$ & -0.1667 & 0.0000 & -0.0429 & 1.0000 & -0.1312 & 0.9631 & 0.0000 \\
+	lh-isthmuscingulate & $\hat{V}_{\ell}$ & -0.1656 & 0.0000 & -0.0960 & 1.0000 & -0.0799 & 1.0000 & 0.0000 \\
+	lh-lateralorbitofrontal & $\text{CMC}_{\ell}$ & -0.1652 & 0.0000 & -0.1757 & 0.0602 & -0.1382 & 0.5262 & 0.0000 \\
+	bh-lateralorbitofrontal & $\hat{V}_{\ell r}$ & -0.1651 & 0.0000 & 0.0139 & 1.0000 & -0.1747 & 0.0134 & 0.0000 \\
+	rh-lateralorbitofrontal & $\hat{V}_{r}$ & -0.1635 & 0.0000 & 0.0313 & 1.0000 & -0.1924 & 0.0016 & 0.0000 \\
+	rh-superiorfrontal & $\text{CMC}_r$ & -0.1626 & 0.0000 & -0.1755 & 0.0609 & -0.1649 & 0.0391 & 0.0000 \\
+	bh-postcentral & $\hat{V}_{\ell r}$ & -0.1611 & 0.0001 & -0.0072 & 1.0000 & -0.1353 & 0.6805 & 0.0001 \\
+	rh-inferiorparietal & $\hat{V}_{r}$ & -0.1574 & 0.0001 & -0.0610 & 1.0000 & -0.1198 & 1.0000 & 0.0001 \\
+	rh-postcentral & $\hat{V}_{r}$ & -0.1548 & 0.0002 & -0.0199 & 1.0000 & -0.1181 & 1.0000 & 0.0002 \\
+	bh-lateralorbitofrontal & $\text{CMC}_{\ell r}$ & -0.1542 & 0.0002 & -0.1637 & 0.1791 & -0.1306 & 1.0000 & 0.0002 \\
+	bh-rostralmiddlefrontal & $\hat{V}_{\ell r}$ & -0.1534 & 0.0002 & 0.0151 & 1.0000 & -0.1530 & 0.1321 & 0.0002 \\
+	bh-inferiorparietal & $\hat{V}_{\ell r}$ & -0.1531 & 0.0003 & -0.0526 & 1.0000 & -0.1024 & 1.0000 & 0.0003 \\
+	lh-superiorfrontal & $\text{CMC}_{\ell}$ & -0.1476 & 0.0007 & -0.1489 & 0.6230 & -0.1585 & 0.0761 & 0.0007 \\
+	lh-postcentral & $\hat{V}_{\ell}$ & -0.1475 & 0.0007 & 0.0114 & 1.0000 & -0.1421 & 0.3679 & 0.0007 \\
+	rh-caudalmiddlefrontal & $\text{CMC}_r$ & -0.1467 & 0.0008 & -0.1574 & 0.3076 & -0.1451 & 0.2807 & 0.0008 \\
+	lh-lateralorbitofrontal & $\hat{V}_{\ell}$ & -0.1460 & 0.0009 & -0.0012 & 1.0000 & -0.1333 & 0.8081 & 0.0009 \\
+	rh-middletemporal & $\hat{V}_{r}$ & -0.1455 & 0.0010 & -0.0368 & 1.0000 & -0.1070 & 1.0000 & 0.0010 \\
+	rh-rostralmiddlefrontal & $\hat{V}_{r}$ & -0.1438 & 0.0013 & 0.0228 & 1.0000 & -0.1489 & 0.1977 & 0.0013 \\
+	bh-inferiortemporal & $\hat{V}_{\ell r}$ & -0.1433 & 0.0014 & -0.0436 & 1.0000 & -0.0866 & 1.0000 & 0.0014 \\
+	lh-caudalmiddlefrontal & $\text{CMC}_{\ell}$ & -0.1406 & 0.0022 & -0.1354 & 1.0000 & -0.1313 & 0.9563 & 0.0022 \\
+	lh-inferiortemporal & $\hat{V}_{\ell}$ & -0.1398 & 0.0025 & -0.0372 & 1.0000 & -0.0951 & 1.0000 & 0.0025 \\
+	bh-fusiform & $\hat{V}_{\ell r}$ & -0.1391 & 0.0028 & -0.0177 & 1.0000 & -0.0807 & 1.0000 & 0.0028 \\
+	lh-fusiform & $\hat{V}_{\ell}$ & -0.1386 & 0.0031 & -0.0473 & 1.0000 & -0.0780 & 1.0000 & 0.0031 \\
+	bh-superiorparietal & $\hat{V}_{\ell r}$ & -0.1354 & 0.0051 & -0.0110 & 1.0000 & -0.1461 & 0.2545 & 0.0051 \\
+	rh-isthmuscingulate & $\hat{V}_{r}$ & -0.1347 & 0.0058 & -0.0322 & 1.0000 & -0.0956 & 1.0000 & 0.0058 \\
+	rh-superiorfrontal & $\hat{V}_{r}$ & -0.1343 & 0.0061 & -0.0112 & 1.0000 & -0.0915 & 1.0000 & 0.0061 \\
+	lh-rostralmiddlefrontal & $\hat{V}_{\ell}$ & -0.1334 & 0.0070 & 0.0071 & 1.0000 & -0.1302 & 1.0000 & 0.0070 \\
+	bh-superiortemporal & $\hat{V}_{\ell r}$ & -0.1334 & 0.0071 & -0.0164 & 1.0000 & -0.0794 & 1.0000 & 0.0071 \\
+	bh-superiorfrontal & $\hat{V}_{\ell r}$ & -0.1317 & 0.0092 & 0.0030 & 1.0000 & -0.0904 & 1.0000 & 0.0092 \\
+	rh-superiorparietal & $\hat{V}_{r}$ & -0.1304 & 0.0113 & -0.0136 & 1.0000 & -0.1196 & 1.0000 & 0.0113 \\
+	bh-frontalpole & $\hat{V}_{\ell r}$ & -0.1296 & 0.0127 & -0.0467 & 1.0000 & -0.1093 & 1.0000 & 0.0127 \\
+	bh-precentral & $\text{CMC}_{\ell r}$ & -0.1292 & 0.0135 & -0.1227 & 1.0000 & -0.1452 & 0.2787 & 0.0135 \\
+	rh-superiortemporal & $\hat{V}_{r}$ & -0.1289 & 0.0141 & -0.0312 & 1.0000 & -0.0820 & 1.0000 & 0.0141 \\
+	bh-parstriangularis & $\hat{V}_{\ell r}$ & -0.1287 & 0.0146 & -0.0280 & 1.0000 & -0.0761 & 1.0000 & 0.0146 \\
+	bh-rostralmiddlefrontal & $\text{CMC}_{\ell r}$ & -0.1253 & 0.0242 & -0.1491 & 0.6121 & -0.0928 & 1.0000 & 0.0242 \\
+	rh-posteriorcingulate & $\hat{V}_{r}$ & -0.1248 & 0.0259 & -0.0042 & 1.0000 & -0.1350 & 0.6939 & 0.0259 \\
+	rh-parstriangularis & $\text{CMC}_r$ & -0.1068 & 0.2954 & -0.1839 & 0.0271 & -0.0426 & 1.0000 & 0.0271 \\
+	bh-precentral & $\hat{V}_{\ell r}$ & -0.1242 & 0.0282 & 0.0236 & 1.0000 & -0.0647 & 1.0000 & 0.0282 \\
+	lh-posteriorcingulate & $\text{CMC}_{\ell}$ & -0.1241 & 0.0286 & -0.1145 & 1.0000 & -0.1163 & 1.0000 & 0.0286 \\
+	lh-parsopercularis & $\hat{V}_{\ell}$ & -0.1238 & 0.0300 & -0.0737 & 1.0000 & -0.0705 & 1.0000 & 0.0300 \\
+	bh-precuneus & $\hat{V}_{\ell r}$ & -0.1237 & 0.0304 & -0.0031 & 1.0000 & -0.1123 & 1.0000 & 0.0304 \\
+	rh-parstriangularis & $\hat{V}_{r}$ & -0.1226 & 0.0357 & -0.0316 & 1.0000 & -0.0848 & 1.0000 & 0.0357 \\
+	bh-frontalpole & $\text{CMC}_{\ell r}$ & -0.1223 & 0.0370 & -0.0943 & 1.0000 & -0.1600 & 0.0655 & 0.0370 \\
+	rh-frontalpole & $\hat{V}_{r}$ & -0.1223 & 0.0373 & -0.0728 & 1.0000 & -0.0873 & 1.0000 & 0.0373 \\
+	bh-parsopercularis & $\hat{V}_{\ell r}$ & -0.1223 & 0.0373 & -0.0648 & 1.0000 & -0.0699 & 1.0000 & 0.0373 \\
+	rh-precuneus & $\hat{V}_{r}$ & -0.1214 & 0.0423 & -0.0022 & 1.0000 & -0.0939 & 1.0000 & 0.0423 \\
 	% lh-superiorfrontal & Pseudo-volume & -0.1180 & 0.0684 & 0.0127 & 1.0000 & -0.0856 & 1.0000 & 0.0684 \\
 	% lh-precentral & Pseudo-volume & -0.1165 & 0.0837 & 0.0320 & 1.0000 & -0.0709 & 1.0000 & 0.0837 \\
 	% rh-fusiform & Pseudo-volume & -0.1159 & 0.0913 & 0.0233 & 1.0000 & -0.0650 & 1.0000 & 0.0913 \\
@@ -1445,7 +1270,7 @@ Note: All p-values are adjusted for multiple comparisons using the Holm-Bonferro
 
 \subsection{Predictive Analyses}
 
-\subsubsection{Predictive Performance}
+\subsubsection{Predictive Performance} \label{sec:pred-performance}
 
 For the factor targets \texttt{emotion\_perf}, \texttt{neg\_emotionality},
 \texttt{psqi\_latent}, \texttt{relational\_rt}, and
@@ -1453,142 +1278,155 @@ For the factor targets \texttt{emotion\_perf}, \texttt{neg\_emotionality},
 dummy regressors, implying that neither FreeSurfer nor CMC features had
 predictive utility for these targets.
 
-A breakdown of the proportion of models exceeding dummy regressor
-performance, for each group of target and feature sets, is presented below in
-Table~\ref{tab:cmc-p-target-predictive} and Table~\ref{tab:cmc-p-predictive}.
-More detailed breakdowns by model are included in [Appendix C](appendix-c),
-in Table~\ref{tab:cmc-model-p-predictive}. Overall, the
-\texttt{int\_g\_like}, \texttt{language\_perf}, \texttt{emotion\_rt}, and
-\texttt{gambling\_rt}" synthetic targets were most consistently predictable
-across the majority of runs.
+Note that, as \texttt{df-analyze} is exhaustive in its search for optimal
+models, a large number of highly-misspecfied models (i.e.\ with performance
+failing to exceed dummy peformance) can be produced. Including such
+``trivial'' models can be misleading in summaries (for example, if most
+feature selection methods perform poorly, but a single selection method has
+excellent performance). Thus, we limit summaries and tables to description of
+``non-trivial'' models exceeding dummy performance. Readers interested in
+complete tables should refer to \hyperref[sec:appendix-c]{Appendix C},
+Table~\ref{tab:cmc-p-model-predictive}.
+
+
+Table~\ref{tab:cmc-p-target-predictive} summarizes the proportions of
+non-trivial models for each target and feature source. Thus, for example,
+models predicting \texttt{int\_g\_like} are all non-trivial when using only
+\CMC features or when using only FreeSurfer features, but less than half
+exceed dummy performance when both \CMC and FreeSurfer features are used
+in combination.
+
+Table~\ref{tab:cmc-target-feat-best} summarizes the absolute best model
+performances for each combination of target and feature source. That is, for
+the \texttt{int\_g\_like} target, the best performance (\(R^2=0.144\))
+results from using only FreeSurfer features. Note, however, that the differences in
+the MAE among these best models are quite small, and, practically, there is
+likely similar predictive information in both FreeSurfer and \CMC metrics overall.
+Note also that the inclusion of \emph{both} FreeSurfer and \CMC features in a
+model generally has a negative impact on peak model performance.
+
 
 % from summary.py::summarize_hcp_prediction_percents
 
-\begin{table}
-\centering
-\begin{tabular}{lr}
+
+\begin{longtable}{llr}
 	\toprule
-	target & exceeds\_dummy \\
+	target & source & {} \\
 	\midrule
-	int\_g\_like & 0.983 \\
-	language\_perf & 0.650 \\
-	emotion\_rt & 0.517 \\
-	gambling\_rt & 0.417 \\
-	p\_matrices & 0.367 \\
-	wm\_perf & 0.167 \\
-	wm\_rt & 0.167 \\
-	gambling\_perf & 0.125 \\
-	social\_rt & 0.083 \\
-	language\_rt & 0.033 \\
-	emotion\_perf & 0.000 \\
-	neg\_emotionality & 0.000 \\
-	psqi\_latent & 0.000 \\
-	relational\_rt & 0.000 \\
-	social\_random\_perf & 0.000 \\
+	\endfirsthead
+	\caption[]{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \\
+	\toprule
+	target & source & {} \\
+	\midrule
+	\endhead
+	\midrule
+	\multicolumn{3}{r}{Continued on next page} \\
+	\midrule
+	\endfoot
 	\bottomrule
-\end{tabular}
-\footnotesize
-\caption{Proportion of model runs where predictions exceed dummy performance.\
-exceeds\_dummy = proportion of runs with performance exceeding dummy models;}
-\normalsize
-\label{tab:cmc-p-target-predictive}
-\end{table}
-
-
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% This [table above] is really boring and doesn't add much. It doesn't tell
-% us anything about CMC, so can be cut.
-
-\begin{table}
-\centering
-\begin{tabular}{llr}
-	\toprule
-	target & feats & exceeds\_dummy \\
-	\midrule
-	emotion\_perf & CMC & 0.000 \\
-	emotion\_perf & FS & 0.000 \\
-	emotion\_perf & FS+CMC & 0.000 \\
-	emotion\_rt & CMC & 0.417 \\
+	\caption{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
+	\endlastfoot
 	emotion\_rt & FS & 0.583 \\
-	emotion\_rt & FS+CMC & 0.583 \\
-	gambling\_perf & CMC & 0.083 \\
+	emotion\_rt & CMC & 0.417 \\
+	\vspace{0.2cm}
+	emotion\_rt & FS+CMC & 0.292 \\
 	gambling\_perf & FS & 0.167 \\
+	\vspace{0.2cm}
+	gambling\_perf & CMC & 0.083 \\
 	gambling\_rt & CMC & 0.500 \\
 	gambling\_rt & FS & 0.333 \\
-	gambling\_rt & FS+CMC & 0.417 \\
+	\vspace{0.2cm}
+	gambling\_rt & FS+CMC & 0.208 \\
 	int\_g\_like & CMC & 1.000 \\
 	int\_g\_like & FS & 1.000 \\
-	int\_g\_like & FS+CMC & 0.917 \\
+	\vspace{0.2cm}
+	int\_g\_like & FS+CMC & 0.458 \\
 	language\_perf & CMC & 0.667 \\
 	language\_perf & FS & 0.667 \\
-	language\_perf & FS+CMC & 0.583 \\
-	language\_rt & CMC & 0.000 \\
+	\vspace{0.2cm}
+	language\_perf & FS+CMC & 0.292 \\
+	\vspace{0.2cm}
 	language\_rt & FS & 0.083 \\
-	language\_rt & FS+CMC & 0.000 \\
-	neg\_emotionality & CMC & 0.000 \\
-	neg\_emotionality & FS & 0.000 \\
-	neg\_emotionality & FS+CMC & 0.000 \\
-	p\_matrices & CMC & 0.167 \\
 	p\_matrices & FS & 0.583 \\
-	p\_matrices & FS+CMC & 0.333 \\
-	psqi\_latent & CMC & 0.000 \\
-	psqi\_latent & FS & 0.000 \\
-	relational\_rt & CMC & 0.000 \\
-	relational\_rt & FS & 0.000 \\
-	social\_random\_perf & CMC & 0.000 \\
-	social\_random\_perf & FS & 0.000 \\
-	social\_rt & CMC & 0.000 \\
+	p\_matrices & CMC & 0.167 \\
+	\vspace{0.2cm}
+	p\_matrices & FS+CMC & 0.167 \\
+	\vspace{0.2cm}
 	social\_rt & FS & 0.167 \\
-	wm\_perf & CMC & 0.167 \\
 	wm\_perf & FS & 0.250 \\
-	wm\_perf & FS+CMC & 0.000 \\
+	\vspace{0.2cm}
+	wm\_perf & CMC & 0.167 \\
 	wm\_rt & CMC & 0.250 \\
 	wm\_rt & FS & 0.083 \\
-	wm\_rt & FS+CMC & 0.167 \\
-	\bottomrule
-\end{tabular}
-\footnotesize
-\caption{%
-Performance of models on runs exceeding dummy model performance.\
-feats = feature set;
-exceeds\_dummy = proportion of runs with performance exceeding dummy models;
-For target definitions, see [Appendix B](appendix-b).
-}
-\normalsize
-\label{tab:cmc-p-predictive}
-\end{table}
+	wm\_rt & FS+CMC & 0.083 \\
+	\end{longtable}
+
+	\begin{longtable}{llllrrr}
+		\toprule
+		target & feats & selection & model & r2 & mae & mae+ \\
+		\midrule
+		\endfirsthead
+		\caption[]{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \\
+		\toprule
+		target & feats & selection & model & r2 & mae & mae+ \\
+		\midrule
+		\endhead
+		\midrule
+		\multicolumn{7}{r}{Continued on next page} \\
+		\midrule
+		\endfoot
+		\bottomrule
+		\caption{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \label{tab:cmc-target-feat-best} \\
+		\endlastfoot
+		emotion\_rt & FS & none & lgbm & 0.046 & 0.190 & 0.004 \\*
+		emotion\_rt & FS+CMC & none & lgbm & 0.044 & 0.190 & 0.003 \\*
+		emotion\_rt & CMC & wrap & elastic & 0.032 & 0.191 & 0.003 \\*
+	  \\*
+		gambling\_perf & CMC & wrap & elastic & 0.003 & 0.165 & 0.001 \\*
+		gambling\_perf & FS & embed\_linear & lgbm & 0.001 & 0.166 & 0.000 \\*
+	  \\*
+		gambling\_rt & FS+CMC & pred & lgbm & 0.021 & 0.200 & 0.006 \\*
+		gambling\_rt & FS & embed\_linear & lgbm & 0.014 & 0.203 & 0.003 \\*
+		gambling\_rt & CMC & wrap & elastic & 0.015 & 0.203 & 0.003 \\*
+		\\*
+		int\_g\_like & FS & none & elastic & 0.144 & 0.184 & 0.018 \\*
+		int\_g\_like & CMC & embed\_lgbm & elastic & 0.104 & 0.191 & 0.011 \\*
+		int\_g\_like & FS+CMC & pred & elastic & 0.076 & 0.191 & 0.011 \\*
+		\\*
+		language\_perf & FS & embed\_linear & lgbm & 0.106 & 0.194 & 0.010 \\*
+		language\_perf & CMC & assoc & lgbm & 0.093 & 0.196 & 0.007 \\*
+		language\_perf & FS+CMC & assoc & lgbm & 0.089 & 0.197 & 0.007 \\*
+		\\*
+		language\_rt & FS & wrap & lgbm & 0.002 & 0.190 & 0.000 \\*
+		\\*
+		p\_matrices & CMC & wrap & elastic & 0.033 & 0.234 & 0.004 \\*
+		p\_matrices & FS & pred & lgbm & 0.030 & 0.235 & 0.003 \\*
+		p\_matrices & FS+CMC & wrap & elastic & 0.035 & 0.235 & 0.003 \\*
+		\\*
+		social\_rt & FS & embed\_lgbm & lgbm & 0.001 & 0.194 & 0.000 \\*
+		\\*
+		wm\_perf & FS & embed\_lgbm & lgbm & 0.097 & 0.196 & 0.003 \\*
+		\\*
+		wm\_perf & CMC & embed\_linear & lgbm & 0.093 & 0.197 & 0.002 \\*
+		\\*
+		wm\_rt & CMC & pred & lgbm & 0.025 & 0.195 & 0.002 \\*
+		wm\_rt & FS & none & lgbm & 0.021 & 0.195 & 0.002 \\*
+		wm\_rt & FS+CMC & wrap & elastic & 0.006 & 0.196 & 0.001 \\*
+\end{longtable}
 
 
 
-The observed predictive performances on the final holdout set are presented
-in Table~\ref{tab:cmc-p-model-predictive}. For the \texttt{int\_g\_like} and
-\texttt{language\_perf} synthetic target features, the holdout coefficient of
-determination consistently exceeded 0.1, and, in many cases, for completely
-linear models (ElasticNet). If we interpret the \(R^2\) value then as the
-proportion of explained variance [cite], then this suggests either FS or CMC
-features (or both) explain over 10\% of the variance in these two synthetic
-targets.
-
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% This [above] isn't easy to follow at all
-
-[**FOR DISCUSSION**] All synthetic targets that are best-predicted are
-\texttt{int\_g\_like}, \texttt{language\_perf} (performance on language
-tasks, e.g.\ verbal intelligence), \texttt{wm\_perf} (performance on working
-memory tasks, often considered part of intelligence), and, maybe weakly,
-\texttt{p\_matrices}, which is performance on Raven's progressive matrices,
-often considered one of the simplest, cleanest correlates of the general
-intelligence factor *g*. Granted, in almost all cases, just using FS features
-will better predict these synthetic targets than CMC alone, or FS+CMC both,
-which strongly suggests CMC features are poor transformations of FS features.
-Nevertheless, this does suggest that these intelligence-related aspects are
-most predictable from static morphology, as measured by FreeSurfer.
+% [**FOR DISCUSSION**] All synthetic targets that are best-predicted are
+% \texttt{int\_g\_like}, \texttt{language\_perf} (performance on language
+% tasks, e.g.\ verbal intelligence), \texttt{wm\_perf} (performance on working
+% memory tasks, often considered part of intelligence), and, maybe weakly,
+% \texttt{p\_matrices}, which is performance on Raven's progressive matrices,
+% often considered one of the simplest, cleanest correlates of the general
+% intelligence factor *g*. Granted, in almost all cases, just using FS features
+% will better predict these synthetic targets than CMC alone, or FS+CMC both,
+% which strongly suggests CMC features are poor transformations of FS features.
+% Nevertheless, this does suggest that these intelligence-related aspects are
+% most predictable from static morphology, as measured by FreeSurfer.
 
 
 
@@ -1598,7 +1436,7 @@ most predictable from static morphology, as measured by FreeSurfer.
 A number of model runs involve both FS and CMC feature sets. As \texttt{df-analyze}
 automates simple feature selection via filter, wrapper, and embedded
 methoods, it is possible to roughly examine the proportion of CMC features
-selected by some of the most predictive models. These are show below in
+selected by some of the most predictive models. These are shown below in
 Table~\ref{tab:cmc-feature-select}.
 
 Note that performances are lower than in previous tables and figures, as the best
@@ -1660,36 +1498,33 @@ surface area, while cortical thickness thins with long-term development.
 These three biomarkers are inter-related, and existing studies focused on
 these measurements typically do not consider the inherent interdependence
 between their respective development, even though underlying
-interdependencies are inevitable. This paper presents a novel set of cortical
-morphological congruence (CMC) biomarkers that are based on cortical volume,
-surface area and thickness, \textcolor{red}{and produces measurements with
-relatively small standard deviations (see Figure 1)}, implying potential
-reliability and reproducibility from the proposed methods.
+interdependencies are inevitable. This paper presents a novel set of metrics
+that are based on cortical volume, surface area and thickness.
 
 \subsection{Interpretation of CMC and its potential relationship with macro-structural cortical development}
 
-The proposed CMC biomarkers, defined in equations 1 through 4, rely on
-underlying measurements of gray matter volume (measured in mm\(^3\)), surface area
-(measured in mm\(^2\)) and average cortical thickness (measured in mm). The nature
-of the proposed equations are such that they each produce a unitless index of
-CMC, different values of which imply potentially major differences in the
+The proposed (non-asymmetry) \CMC features, defined in
+Equations~\ref{eq:cmc-laterals}~-~\ref{eq:cmc-bilateral}, rely on underlying
+measurements of gray matter volume (measured in mm\(^3\)), surface area
+(measured in mm\(^2\)) and average cortical thickness (measured in mm). The
+nature of the proposed equations are such that they each produce an index,
+different values of which imply potentially major differences in the
 conformation of the local cortical region, potentially implying major
 differences in the tissue's historical neurodevelopment. When a cortical
-region exhibits a CMC (see equations 1 \& 2) measurement equal to 1, which is
-expected for very regularly shaped structures, that region exhibits a
-relatively simple cortical morphological presentation, and can be said to
-have high underlying cortical morphological congruence. Examples of this can
-be found consistently across subjects in brain structures such as the banks
-of the superior temporal sulcus (n=1,113, mean CMCLateral=1.0*, sd
-CMCLateral=0.025*), and the insula (mean CMCLateral=1.0?, std dev
-CMCLateral=???). When CMC values deviate from 1, this implies varying degrees
-of incongruence between the region's volumetric biomarkers and its surface
-area and cortical thickness biomarkers combined. The directionality of that
-incongruence (i.e.\ whether CMC is above or below 1) has major implications
-for the presentation of the conformation of that tissue, and implies
-differential cortical development has occurred.
+region exhibits a \CMC measurement equal to 1, which is expected for
+sheet-like structures, that region exhibits a relatively simple cortical
+morphological presentation, and can be said to have high underlying cortical
+morphological congruence. Examples of this can be found consistently across
+subjects in brain structures such as the banks of the superior temporal
+sulcus (\(\mu=1.002, \sigma=0.034\)), and the insula
+(\(\mu=1.035, \sigma=0.025\)). When \CMC values deviate from
+1, this implies varying degrees of incongruence between the region's
+volumetric biomarkers and its surface area and cortical thickness biomarkers
+combined. The directionality of that incongruence (i.e.\ whether \CMC is above
+or below 1) has major implications for the presentation of the conformation
+of that tissue, and implies differential cortical development has occurred.
 
-When a cortical region exhibits CMC above 1, the GM volume has developed to
+When a cortical region exhibits \CMC above 1, the GM volume has developed to
 be larger than the surface area times the mean thickness. This can occur when
 the overall growth of regional cortical tissue proceeds more quickly than
 increases in the surface area. Broadly speaking, the morphological structure
@@ -1699,18 +1534,19 @@ of the cortical region (well-rounded boundaries between the cortex and the
 pia mater which surrounds the cortex) will contribute to CMC measurements
 above 1. Regions such as the entorhinal cortex, which plays a role in working
 memory and thus is a highly relied upon region of cortical tissue, exhibits
-high CMC values (mean = 1.3**, standard deviation = 0.?). This implies that
-the entorhinal region's development may have involved rapid increases in
-volume relative to its respective increases in surface area. These high CMC
-values may also implicate a distribution of pruning locations that supports
-sulcal formation, leading to more convex (partly spherical) local surface
-areas within the entorhinal cortex adjacent to locations of sulcal formation.
-Thus, we hypothesize that pruning in the entorhinal cortex has been more
-extensive (and possibly proceeded faster) than pruning in regions exhibiting
-cortical morphological congruence (CMC = 1) such as the banks of the superior
-temporal sulcus, or the insula. Results demonstrate that in addition to the
-entorhinal cortex, multiple regions exhibit consistently high CMC values,
-including the temporal pole, frontal pole, and pars orbitalis (see Figure 1).
+high CMC values (\(\mu=1.323, \sigma=0.084\)). This implies that the
+entorhinal region's development may have involved rapid increases in volume
+relative to its respective increases in surface area. These high CMC values
+may also implicate a distribution of pruning locations that supports sulcal
+formation, leading to more convex (partly spherical) local surface areas
+within the entorhinal cortex adjacent to locations of sulcal formation. Thus,
+we hypothesize that pruning in the entorhinal cortex has been more extensive
+(and possibly proceeded faster) than pruning in regions exhibiting cortical
+morphological congruence (\(\text{CMC} = 1\)) such as the banks of the
+superior temporal sulcus, or the insula. Results demonstrate that in addition
+to the entorhinal cortex, multiple regions exhibit consistently high mean
+\CMC values, including the temporal pole (\(\mu=1.410\)), frontal pole
+(\(\mu=1.384\)), and pars orbitalis (\(\mu=1.281\)).
 
 
 When a cortical region exhibits CMC values below 1, the combination of the
@@ -1723,17 +1559,11 @@ of locations of pruning within the cortex can result in the emergence of
 comparatively complex surfaces relative to the more spherical/convex surfaces
 already discussed, potentially resulting in comparatively large surface areas
 yielding reduced values for our CMC biomarkers. Regions such as the
-pericalcarine cortex exhibit low CMC values (mean = 0.95*, standard deviation
-= \verb|??|), which could imply that surface area growth has outpaced corresponding
+pericalcarine cortex exhibit low CMC values (\(\mu=0.965, \sigma=0.025\)),
+which could imply that surface area growth has outpaced corresponding
 volumetric growth in this region's development relative to other cortical
 regions.
 
-
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% Please insert the correct values for these regions
 
 \subsection{Potential for CMC to characterize important aspects of brain development}
 
@@ -1756,23 +1586,26 @@ overlapping functional abilities between the genders in most capacities.
 However, some male-female differences were observed in the temporal pole, the
 frontal pole and the pars opercularis, with females exhibiting higher CMC
 biomarkers on average than their male counterparts, though the distributions
-are still overlapping (see Figure 1). The temporal pole has been implicated
-in many functions, including emotional processing
-\citep{corcoles-paradaFrontalInsularInput2019}, and the frontal pole has been
-reported to contribute to control over emotional approach-avoidance actions
-\citep{bramsonHumanLateralFrontal2020}. Thus, gender differences in the
-presentation of the temporal and frontal poles, as assessed by CMC, may
-assist in characterization of known gender differences in emotional
-expression \citep{chaplinGenderEmotionExpression2015}. The pars opercularis
-is involved in language processing \citep{greweEmergenceUnmarkedNew2005}, and
-sex differences in the pars opercularis, as assessed with CMC, may be
-indicative of underlying known differences in language development between
-males and females \citep{satoNeurobiologySexDifferences2020}. Indeed, it is
-encouraging that group-wise differences are observed in overlapping
-distributions as although we know sex effects exist in emotional expression
-and language development, there is a wide amount of variability in function
-across both genders, which is reflected in our CMC biomarker results
-exhibiting partially overlapping distributions between the sexes.
+are still overlapping (see Figure~\ref{fig:violins} for an illustrative
+example).
+
+The temporal pole has been implicated in many functions, including
+emotional processing \citep{corcoles-paradaFrontalInsularInput2019}, and the
+frontal pole has been reported to contribute to control over emotional
+approach-avoidance actions \citep{bramsonHumanLateralFrontal2020}. Thus,
+gender differences in the presentation of the temporal and frontal poles, as
+assessed by CMC, may assist in characterization of known gender differences
+in emotional expression \citep{chaplinGenderEmotionExpression2015}. The pars
+opercularis is involved in language processing
+\citep{greweEmergenceUnmarkedNew2005}, and sex differences in the pars
+opercularis, as assessed with CMC, may be indicative of underlying known
+differences in language development between males and females
+\citep{satoNeurobiologySexDifferences2020}. Indeed, it is encouraging that
+group-wise differences are observed in overlapping distributions as although
+we know sex effects exist in emotional expression and language development,
+there is a wide amount of variability in function across both genders, which
+is reflected in our CMC biomarker results exhibiting partially overlapping
+distributions between the sexes.
 
 
 %%%%%%%%%%%%%%%
@@ -1791,10 +1624,6 @@ exhibiting partially overlapping distributions between the sexes.
 \textcolor{orange}{%
 ***Hopefully there is something related to phenotypic data that Derek's
 analysis will uncover?
-}
-
-\textcolor{orange}{%
-***Discuss variation explained psychological statistical test results here
 }
 
 \textcolor{orange}{%
@@ -1857,199 +1686,7 @@ and abnormal brain, reliably and reproducibly.
 
 
 
-\section{Appendix A - FreeSurfer / CMC Compobent Feature}\label{sec:appendix-a}
-
-
-\begin{longtable}{lrrr}
-	\caption{Measures of Separation of base FreeSurfer Features (left vs.\ right hemisphere). d = Cohen's d, W = Wilcoxon signed rank test, W (p) = p-value for W. Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \label{tab:lateral-fs} \\
-	\toprule
-	 & d & W & W (p) \\
-	ROI &  &  &  \\
-	\midrule
-	\endfirsthead
-	\caption[]{Measures of Separation of base FreeSurfer Features (left vs.\ right hemisphere). d = Cohen's d, W = Wilcoxon signed rank test, W (p) = p-value for W. Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \\
-	\toprule
-	 & d & W & W (p) \\
-	ROI &  &  &  \\
-	\midrule
-	\endhead
-	\midrule
-	\multicolumn{4}{r}{Continued on next page} \\
-	\midrule
-	\endfoot
-	\bottomrule
-	\endlastfoot
-	ThickAvg\_\_inferiortemporal & 1.913 & 168552.000 & 0.000 \\
-	ThickAvg\_\_rostralanteriorcingulate & -1.898 & 4993.500 & 0.000 \\
-	ThickAvg\_\_fusiform & -1.843 & 0.000 & 0.000 \\
-	ThickAvg\_\_pericalcarine & 1.842 & 7625.500 & 0.000 \\
-	ThickAvg\_\_postcentral & -1.825 & 0.000 & 0.000 \\
-	ThickAvg\_\_precentral & 1.824 & 0.000 & 0.000 \\
-	ThickAvg\_\_isthmuscingulate & 1.780 & 0.000 & 0.000 \\
-	ThickAvg\_\_insula & 1.774 & 0.000 & 0.000 \\
-	ThickAvg\_\_paracentral & 1.751 & 30331.500 & 0.000 \\
-	ThickAvg\_\_precuneus & 1.716 & 0.000 & 0.000 \\
-	ThickAvg\_\_caudalanteriorcingulate & -1.651 & 0.000 & 0.000 \\
-	ThickAvg\_\_cuneus & 1.607 & 0.000 & 0.000 \\
-	ThickAvg\_\_lateralorbitofrontal & 1.599 & 0.000 & 0.000 \\
-	ThickAvg\_\_lingual & -1.563 & 0.000 & 0.000 \\
-	ThickAvg\_\_transversetemporal & 1.538 & 0.000 & 0.000 \\
-	ThickAvg\_\_superiortemporal & -1.472 & 116444.500 & 0.000 \\
-	ThickAvg\_\_posteriorcingulate & -1.470 & 0.000 & 0.000 \\
-	ThickAvg\_\_parahippocampal & 1.466 & 0.000 & 0.000 \\
-	ThickAvg\_\_superiorparietal & 1.433 & 0.000 & 0.000 \\
-	Area\_\_frontalpole & -1.360 & 3510.500 & 0.000 \\
-	SurfArea\_\_frontalpole & -1.360 & 47046.000 & 0.000 \\
-	GrayVol\_\_frontalpole & -1.330 & 3527.500 & 0.000 \\
-	SurfArea\_\_transversetemporal & 1.319 & 7695.000 & 0.000 \\
-	Area\_\_transversetemporal & 1.319 & 12451.000 & 0.000 \\
-	Area\_\_parsorbitalis & -1.266 & 4209.000 & 0.000 \\
-	SurfArea\_\_parsorbitalis & -1.266 & 88337.000 & 0.000 \\
-	GrayVol\_\_parsorbitalis & -1.265 & 2215.000 & 0.000 \\
-	ThickAvg\_\_middletemporal & -1.218 & 0.000 & 0.000 \\
-	GrayVol\_\_inferiorparietal & -1.163 & 2039.500 & 0.000 \\
-	ThickAvg\_\_parstriangularis & -1.159 & 0.000 & 0.000 \\
-	ThickAvg\_\_supramarginal & -1.123 & 0.000 & 0.000 \\
-	GrayVol\_\_transversetemporal & 1.104 & 1464.500 & 0.000 \\
-	SurfArea\_\_rostralanteriorcingulate & 1.084 & 0.000 & 0.000 \\
-	Area\_\_rostralanteriorcingulate & 1.084 & 34500.000 & 0.000 \\
-	Area\_\_inferiorparietal & -1.078 & 833.000 & 0.000 \\
-	SurfArea\_\_inferiorparietal & -1.078 & 120187.500 & 0.000 \\
-	ThickAvg\_\_frontalpole & -1.037 & 0.000 & 0.000 \\
-	Thick\_\_\_medialorbitofrontal & -1.031 & 0.000 & 0.000 \\
-	GrayVol\_\_rostralanteriorcingulate & 1.024 & 21433.500 & 0.000 \\
-	ThickAvg\_\_lateraloccipital & -1.017 & 49.000 & 0.000 \\
-	ThickAvg\_\_caudalmiddlefrontal & -0.973 & 11104.000 & 0.000 \\
-	GrayVol\_\_parstriangularis & -0.966 & 41362.000 & 0.000 \\
-	ThickAvg\_\_medialorbitofrontal & -0.955 & 0.000 & 0.000 \\
-	SurfArea\_\_temporalpole & 0.929 & 91259.500 & 0.000 \\
-	Area\_\_temporalpole & 0.929 & 187447.000 & 0.000 \\
-	ThickAvg\_\_parsorbitalis & 0.915 & 0.000 & 0.000 \\
-	Area\_\_parsopercularis & 0.911 & 41545.000 & 0.000 \\
-	SurfArea\_\_parsopercularis & 0.911 & 297040.500 & 0.744 \\
-	GrayVol\_\_parsopercularis & 0.896 & 38251.500 & 0.000 \\
-	SurfArea\_\_parstriangularis & -0.867 & 16618.000 & 0.000 \\
-	Area\_\_parstriangularis & -0.867 & 29132.500 & 0.000 \\
-	SurfArea\_\_paracentral & -0.841 & 0.000 & 0.000 \\
-	Area\_\_paracentral & -0.841 & 62069.500 & 0.000 \\
-	GrayVol\_\_middletemporal & -0.803 & 18687.000 & 0.000 \\
-	Thick\_\_\_bankssts & -0.777 & 0.000 & 0.000 \\
-	ThickAvg\_\_temporalpole & -0.770 & 0.000 & 0.000 \\
-	GrayVol\_\_paracentral & -0.766 & 43831.000 & 0.000 \\
-	Thick\_\_\_caudalanteriorcingulate & 0.753 & 0.000 & 0.000 \\
-	Thick\_\_\_temporalpole & -0.741 & 0.000 & 0.000 \\
-	Area\_\_entorhinal & 0.738 & 126581.000 & 0.000 \\
-	SurfArea\_\_entorhinal & 0.738 & 150876.000 & 0.000 \\
-	Area\_\_middletemporal & -0.718 & 11374.500 & 0.000 \\
-	SurfArea\_\_middletemporal & -0.718 & 12275.000 & 0.000 \\
-	SurfArea\_\_caudalanteriorcingulate & -0.707 & 469.500 & 0.000 \\
-	Area\_\_caudalanteriorcingulate & -0.707 & 151094.000 & 0.000 \\
-	ThickAvg\_\_inferiorparietal & -0.706 & 226159.000 & 0.000 \\
-	Thick\_\_\_inferiorparietal & -0.635 & 0.000 & 0.000 \\
-	GrayVol\_\_pericalcarine & -0.593 & 57421.000 & 0.000 \\
-	GrayVol\_\_caudalanteriorcingulate & -0.589 & 106594.500 & 0.000 \\
-	Thick\_\_\_middletemporal & -0.555 & 0.000 & 0.000 \\
-	SurfArea\_\_pericalcarine & -0.530 & 0.000 & 0.000 \\
-	Area\_\_pericalcarine & -0.530 & 46557.500 & 0.000 \\
-	SurfArea\_\_medialorbitofrontal & 0.496 & 22949.000 & 0.000 \\
-	Area\_\_medialorbitofrontal & 0.496 & 285946.500 & 0.161 \\
-	Thick\_\_\_parstriangularis & -0.486 & 8126.500 & 0.000 \\
-	GrayVol\_\_entorhinal & 0.485 & 62042.000 & 0.000 \\
-	Thick\_\_\_entorhinal & -0.484 & 0.000 & 0.000 \\
-	ThickAvg\_\_entorhinal & -0.471 & 16634.500 & 0.000 \\
-	Area\_\_bankssts & 0.471 & 225056.000 & 0.000 \\
-	SurfArea\_\_bankssts & 0.471 & 268972.000 & 0.002 \\
-	SurfArea\_\_insula & -0.463 & 16.000 & 0.000 \\
-	Area\_\_insula & -0.463 & 106012.500 & 0.000 \\
-	Thick\_\_\_lateraloccipital & -0.462 & 0.000 & 0.000 \\
-	GrayVol\_\_parahippocampal & 0.458 & 198655.000 & 0.000 \\
-	SurfArea\_\_isthmuscingulate & 0.446 & 0.000 & 0.000 \\
-	Area\_\_isthmuscingulate & 0.446 & 184355.500 & 0.000 \\
-	Thick\_\_\_transversetemporal & -0.443 & 0.000 & 0.000 \\
-	SurfArea\_\_caudalmiddlefrontal & 0.433 & 66604.000 & 0.000 \\
-	Area\_\_caudalmiddlefrontal & 0.433 & 179733.500 & 0.000 \\
-	ThickAvg\_\_rostralmiddlefrontal & -0.431 & 0.000 & 0.000 \\
-	GrayVol\_\_precuneus & -0.410 & 96547.500 & 0.000 \\
-	Thick\_\_\_superiortemporal & -0.403 & 0.000 & 0.000 \\
-	SurfArea\_\_superiortemporal & 0.400 & 5106.000 & 0.000 \\
-	Area\_\_superiortemporal & 0.400 & 204111.000 & 0.000 \\
-	SurfArea\_\_supramarginal & 0.398 & 42292.500 & 0.000 \\
-	Area\_\_supramarginal & 0.398 & 170684.500 & 0.000 \\
-	Thick\_\_\_supramarginal & -0.396 & 0.000 & 0.000 \\
-	SurfArea\_\_precuneus & -0.393 & 0.000 & 0.000 \\
-	Area\_\_precuneus & -0.393 & 85970.000 & 0.000 \\
-	Thick\_\_\_superiorparietal & -0.376 & 106136.500 & 0.000 \\
-	GrayVol\_\_temporalpole & 0.374 & 52650.000 & 0.000 \\
-	SurfArea\_\_postcentral & 0.355 & 0.000 & 0.000 \\
-	Area\_\_postcentral & 0.355 & 182161.500 & 0.000 \\
-	GrayVol\_\_rostralmiddlefrontal & -0.349 & 144353.000 & 0.000 \\
-	GrayVol\_\_insula & -0.343 & 95660.500 & 0.000 \\
-	Thick\_\_\_parsopercularis & -0.342 & 0.000 & 0.000 \\
-	Thick\_\_\_parsorbitalis & -0.339 & 0.000 & 0.000 \\
-	GrayVol\_\_isthmuscingulate & 0.334 & 154757.000 & 0.000 \\
-	GrayVol\_\_supramarginal & 0.333 & 144106.500 & 0.000 \\
-	GrayVol\_\_caudalmiddlefrontal & 0.313 & 137658.000 & 0.000 \\
-	Thick\_\_\_inferiortemporal & -0.305 & 122975.000 & 0.000 \\
-	Thick\_\_\_insula & 0.302 & 0.000 & 0.000 \\
-	Thick\_\_\_precuneus & -0.302 & 0.000 & 0.000 \\
-	SurfArea\_\_inferiortemporal & 0.286 & 0.000 & 0.000 \\
-	Area\_\_inferiortemporal & 0.286 & 245206.000 & 0.000 \\
-	Area\_\_rostralmiddlefrontal & -0.286 & 115219.500 & 0.000 \\
-	SurfArea\_\_rostralmiddlefrontal & -0.286 & 188723.500 & 0.000 \\
-	SurfArea\_\_parahippocampal & 0.275 & 3113.500 & 0.000 \\
-	Area\_\_parahippocampal & 0.275 & 140248.500 & 0.000 \\
-	GrayVol\_\_bankssts & 0.266 & 152069.500 & 0.000 \\
-	GrayVol\_\_postcentral & 0.265 & 140871.500 & 0.000 \\
-	Thick\_\_\_superiorfrontal & -0.248 & 2378.500 & 0.000 \\
-	Thick\_\_\_posteriorcingulate & 0.242 & 9243.000 & 0.000 \\
-	Thick\_\_\_paracentral & -0.221 & 2957.500 & 0.000 \\
-	Thick\_\_\_postcentral & -0.218 & 0.000 & 0.000 \\
-	GrayVol\_\_cuneus & -0.217 & 208953.500 & 0.000 \\
-	GrayVol\_\_fusiform & 0.216 & 212240.500 & 0.000 \\
-	SurfArea\_\_lateralorbitofrontal & 0.211 & 110.000 & 0.000 \\
-	Area\_\_lateralorbitofrontal & 0.211 & 194772.500 & 0.000 \\
-	SurfArea\_\_fusiform & 0.206 & 0.000 & 0.000 \\
-	Area\_\_fusiform & 0.206 & 208310.000 & 0.000 \\
-	ThickAvg\_\_superiorfrontal & -0.195 & 0.000 & 0.000 \\
-	GrayVol\_\_superiortemporal & 0.190 & 106677.000 & 0.000 \\
-	SurfArea\_\_posteriorcingulate & -0.187 & 6120.500 & 0.000 \\
-	Area\_\_posteriorcingulate & -0.187 & 275233.000 & 0.010 \\
-	Thick\_\_\_isthmuscingulate & -0.183 & 0.000 & 0.000 \\
-	SurfArea\_\_cuneus & -0.179 & 1519.000 & 0.000 \\
-	Area\_\_cuneus & -0.179 & 191317.500 & 0.000 \\
-	Area\_\_superiorfrontal & 0.175 & 250741.000 & 0.000 \\
-	SurfArea\_\_superiorfrontal & 0.175 & 254495.000 & 0.000 \\
-	GrayVol\_\_superiorparietal & -0.174 & 307024.500 & 0.784 \\
-	SurfArea\_\_lateraloccipital & 0.164 & 66088.000 & 0.000 \\
-	Area\_\_lateraloccipital & 0.164 & 297578.500 & 0.744 \\
-	Thick\_\_\_fusiform & -0.158 & 0.000 & 0.000 \\
-	GrayVol\_\_lateralorbitofrontal & 0.157 & 170688.000 & 0.000 \\
-	Thick\_\_\_caudalmiddlefrontal & -0.153 & 0.000 & 0.000 \\
-	Thick\_\_\_lateralorbitofrontal & -0.149 & 0.000 & 0.000 \\
-	SurfArea\_\_precentral & -0.140 & 10.000 & 0.000 \\
-	Area\_\_precentral & -0.140 & 262601.500 & 0.000 \\
-	Thick\_\_\_lingual & -0.136 & 22381.500 & 0.000 \\
-	GrayVol\_\_inferiortemporal & 0.135 & 177113.000 & 0.000 \\
-	Thick\_\_\_rostralmiddlefrontal & -0.129 & 0.000 & 0.000 \\
-	ThickAvg\_\_bankssts & 0.127 & 0.000 & 0.000 \\
-	Thick\_\_\_frontalpole & -0.119 & 0.000 & 0.000 \\
-	GrayVol\_\_posteriorcingulate & -0.099 & 246876.500 & 0.000 \\
-	GrayVol\_\_superiorfrontal & 0.094 & 195883.000 & 0.000 \\
-	GrayVol\_\_precentral & -0.088 & 232292.500 & 0.000 \\
-	Thick\_\_\_parahippocampal & 0.087 & 0.000 & 0.000 \\
-	GrayVol\_\_lingual & -0.063 & 290324.500 & 0.268 \\
-	Thick\_\_\_rostralanteriorcingulate & 0.063 & 0.000 & 0.000 \\
-	Thick\_\_\_cuneus & -0.063 & 132102.000 & 0.000 \\
-	SurfArea\_\_lingual & -0.044 & 3167.500 & 0.000 \\
-	Area\_\_lingual & -0.044 & 284216.000 & 0.112 \\
-	GrayVol\_\_medialorbitofrontal & -0.044 & 128854.000 & 0.000 \\
-	ThickAvg\_\_parsopercularis & 0.040 & 0.000 & 0.000 \\
-	Thick\_\_\_pericalcarine & -0.031 & 4999.500 & 0.000 \\
-	Thick\_\_\_precentral & 0.029 & 4019.500 & 0.000 \\
-	GrayVol\_\_lateraloccipital & 0.024 & 232025.500 & 0.000 \\
-	SurfArea\_\_superiorparietal & -0.009 & 592.500 & 0.000 \\
-	Area\_\_superiorparietal & -0.009 & 215625.000 & 0.000 \\
-	\end{longtable}
+\section{Appendix A}\label{sec:appendix-a}
 
 
 
@@ -2487,17 +2124,14 @@ wm\_task\_2bk\_place\_acc\_target & -0.4516 \\
 
 \section{Appendix C}\label{sec:appendix-c}
 
-s
 
 \begin{longtable}{llllrrr}
-\caption{
-	Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;}\label{tab:cmc-p-model-predictive} \\
+\caption{Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;}\label{tab:cmc-p-model-predictive} \\
 	\toprule
 	target & feats & selection & model & r2 & mae & mae+ \\
 	\midrule
 	\endfirsthead
-	\caption[]{
-	Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;} \\
+	\caption[]{Performance of models exceeding dummy model performance.  FS = FreeSurfer features; CMC = CMC features; FS+CMC = both FS and CMC features used; wrap = forward stepwise feature selection with a linear model; assoc = feature selection by univariate association (mutual information); pred = feature selection by (linear) univariate prediction performance (accuracy); none = no feature selection (all features used in model) lgbm = LightGBM regressor; elastic = ElasticNet; r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE;} \\
 	\toprule
 	target & feats & selection & model & r2 & mae & mae+ \\
 	\midrule
@@ -2642,111 +2276,111 @@ s
 
 % from summary.py
 
-\begin{longtable}{lllr}
-	\caption{Proportion of model runs that exceed dummy performance.\
-	feats = feature set; model = predictive model;
-	exceeds\_dummy = proportion of runs with performance exceeding dummy models
-	} \label{tab:cmc-model-p-predictive} \\
-	\toprule
-	target & feats & model & exceeds\_dummy \\
-	\midrule
-	\endfirsthead
+% \begin{longtable}{lllr}
+% 	\caption{Proportion of model runs that exceed dummy performance.\
+% 	feats = feature set; model = predictive model;
+% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models
+% 	} \label{tab:cmc-model-p-predictive} \\
+% 	\toprule
+% 	target & feats & model & exceeds\_dummy \\
+% 	\midrule
+% 	\endfirsthead
 
-	\caption[]{
-	Proportion of model runs that exceed dummy performance.\
-	feats = feature set; model = predictive model;
-	exceeds\_dummy = proportion of runs with performance exceeding dummy models} \\
-	\toprule
-	target & feats & model & exceeds\_dummy \\
-	\midrule
-	\endhead
-	\midrule
-	\multicolumn{4}{r}{Continued on next page} \\
-	\midrule
-	\endfoot
-	\bottomrule
-	\endlastfoot
-	emotion\_rt & FS & lgbm & 1.000 \\
-	int\_g\_like & CMC & elastic & 1.000 \\
-	int\_g\_like & CMC & lgbm & 1.000 \\
-	int\_g\_like & FS & elastic & 1.000 \\
-	int\_g\_like & FS & lgbm & 1.000 \\
-	int\_g\_like & FS+CMC & elastic & 1.000 \\
-	language\_perf & CMC & lgbm & 1.000 \\
-	int\_g\_like & FS+CMC & lgbm & 0.833 \\
-	language\_perf & FS+CMC & lgbm & 0.833 \\
-	p\_matrices & FS & lgbm & 0.833 \\
-	language\_perf & FS & lgbm & 0.833 \\
-	emotion\_rt & FS+CMC & lgbm & 0.833 \\
-	gambling\_rt & CMC & lgbm & 0.667 \\
-	emotion\_rt & CMC & lgbm & 0.667 \\
-	gambling\_rt & FS+CMC & lgbm & 0.667 \\
-	gambling\_rt & FS & lgbm & 0.500 \\
-	language\_perf & FS & elastic & 0.500 \\
-	p\_matrices & FS+CMC & lgbm & 0.500 \\
-	language\_perf & FS+CMC & elastic & 0.333 \\
-	language\_perf & CMC & elastic & 0.333 \\
-	wm\_perf & FS & lgbm & 0.333 \\
-	gambling\_rt & CMC & elastic & 0.333 \\
-	gambling\_perf & FS & lgbm & 0.333 \\
-	emotion\_rt & FS+CMC & elastic & 0.333 \\
-	p\_matrices & FS & elastic & 0.333 \\
-	wm\_rt & CMC & lgbm & 0.333 \\
-	wm\_perf & CMC & lgbm & 0.167 \\
-	wm\_perf & CMC & elastic & 0.167 \\
-	social\_rt & FS & lgbm & 0.167 \\
-	social\_rt & FS & elastic & 0.167 \\
-	p\_matrices & CMC & elastic & 0.167 \\
-	language\_rt & FS & lgbm & 0.167 \\
-	p\_matrices & CMC & lgbm & 0.167 \\
-	p\_matrices & FS+CMC & elastic & 0.167 \\
-	wm\_perf & FS & elastic & 0.167 \\
-	wm\_rt & FS+CMC & lgbm & 0.167 \\
-	gambling\_perf & CMC & elastic & 0.167 \\
-	emotion\_rt & CMC & elastic & 0.167 \\
-	gambling\_rt & FS+CMC & elastic & 0.167 \\
-	gambling\_rt & FS & elastic & 0.167 \\
-	wm\_rt & CMC & elastic & 0.167 \\
-	wm\_rt & FS+CMC & elastic & 0.167 \\
-	wm\_rt & FS & lgbm & 0.167 \\
-	emotion\_rt & FS & elastic & 0.167 \\
-	relational\_rt & FS & lgbm & 0.000 \\
-	social\_random\_perf & CMC & elastic & 0.000 \\
-	social\_random\_perf & CMC & lgbm & 0.000 \\
-	wm\_rt & FS & elastic & 0.000 \\
-	wm\_perf & FS+CMC & elastic & 0.000 \\
-	relational\_rt & CMC & lgbm & 0.000 \\
-	social\_random\_perf & FS & elastic & 0.000 \\
-	social\_random\_perf & FS & lgbm & 0.000 \\
-	social\_rt & CMC & elastic & 0.000 \\
-	social\_rt & CMC & lgbm & 0.000 \\
-	wm\_perf & FS+CMC & lgbm & 0.000 \\
-	relational\_rt & FS & elastic & 0.000 \\
-	emotion\_perf & CMC & elastic & 0.000 \\
-	relational\_rt & CMC & elastic & 0.000 \\
-	language\_rt & FS+CMC & elastic & 0.000 \\
-	emotion\_perf & FS & elastic & 0.000 \\
-	emotion\_perf & FS & lgbm & 0.000 \\
-	emotion\_perf & FS+CMC & elastic & 0.000 \\
-	emotion\_perf & FS+CMC & lgbm & 0.000 \\
-	gambling\_perf & CMC & lgbm & 0.000 \\
-	gambling\_perf & FS & elastic & 0.000 \\
-	language\_rt & CMC & elastic & 0.000 \\
-	language\_rt & CMC & lgbm & 0.000 \\
-	language\_rt & FS & elastic & 0.000 \\
-	language\_rt & FS+CMC & lgbm & 0.000 \\
-	psqi\_latent & FS & lgbm & 0.000 \\
-	emotion\_perf & CMC & lgbm & 0.000 \\
-	neg\_emotionality & CMC & lgbm & 0.000 \\
-	neg\_emotionality & FS & elastic & 0.000 \\
-	neg\_emotionality & FS & lgbm & 0.000 \\
-	neg\_emotionality & FS+CMC & elastic & 0.000 \\
-	neg\_emotionality & FS+CMC & lgbm & 0.000 \\
-	psqi\_latent & CMC & elastic & 0.000 \\
-	psqi\_latent & CMC & lgbm & 0.000 \\
-	psqi\_latent & FS & elastic & 0.000 \\
-	neg\_emotionality & CMC & elastic & 0.000 \\
-\end{longtable}
+% 	\caption[]{
+% 	Proportion of model runs that exceed dummy performance.\
+% 	feats = feature set; model = predictive model;
+% 	exceeds\_dummy = proportion of runs with performance exceeding dummy models} \\
+% 	\toprule
+% 	target & feats & model & exceeds\_dummy \\
+% 	\midrule
+% 	\endhead
+% 	\midrule
+% 	\multicolumn{4}{r}{Continued on next page} \\
+% 	\midrule
+% 	\endfoot
+% 	\bottomrule
+% 	\endlastfoot
+% 	emotion\_rt & FS & lgbm & 1.000 \\
+% 	int\_g\_like & CMC & elastic & 1.000 \\
+% 	int\_g\_like & CMC & lgbm & 1.000 \\
+% 	int\_g\_like & FS & elastic & 1.000 \\
+% 	int\_g\_like & FS & lgbm & 1.000 \\
+% 	int\_g\_like & FS+CMC & elastic & 1.000 \\
+% 	language\_perf & CMC & lgbm & 1.000 \\
+% 	int\_g\_like & FS+CMC & lgbm & 0.833 \\
+% 	language\_perf & FS+CMC & lgbm & 0.833 \\
+% 	p\_matrices & FS & lgbm & 0.833 \\
+% 	language\_perf & FS & lgbm & 0.833 \\
+% 	emotion\_rt & FS+CMC & lgbm & 0.833 \\
+% 	gambling\_rt & CMC & lgbm & 0.667 \\
+% 	emotion\_rt & CMC & lgbm & 0.667 \\
+% 	gambling\_rt & FS+CMC & lgbm & 0.667 \\
+% 	gambling\_rt & FS & lgbm & 0.500 \\
+% 	language\_perf & FS & elastic & 0.500 \\
+% 	p\_matrices & FS+CMC & lgbm & 0.500 \\
+% 	language\_perf & FS+CMC & elastic & 0.333 \\
+% 	language\_perf & CMC & elastic & 0.333 \\
+% 	wm\_perf & FS & lgbm & 0.333 \\
+% 	gambling\_rt & CMC & elastic & 0.333 \\
+% 	gambling\_perf & FS & lgbm & 0.333 \\
+% 	emotion\_rt & FS+CMC & elastic & 0.333 \\
+% 	p\_matrices & FS & elastic & 0.333 \\
+% 	wm\_rt & CMC & lgbm & 0.333 \\
+% 	wm\_perf & CMC & lgbm & 0.167 \\
+% 	wm\_perf & CMC & elastic & 0.167 \\
+% 	social\_rt & FS & lgbm & 0.167 \\
+% 	social\_rt & FS & elastic & 0.167 \\
+% 	p\_matrices & CMC & elastic & 0.167 \\
+% 	language\_rt & FS & lgbm & 0.167 \\
+% 	p\_matrices & CMC & lgbm & 0.167 \\
+% 	p\_matrices & FS+CMC & elastic & 0.167 \\
+% 	wm\_perf & FS & elastic & 0.167 \\
+% 	wm\_rt & FS+CMC & lgbm & 0.167 \\
+% 	gambling\_perf & CMC & elastic & 0.167 \\
+% 	emotion\_rt & CMC & elastic & 0.167 \\
+% 	gambling\_rt & FS+CMC & elastic & 0.167 \\
+% 	gambling\_rt & FS & elastic & 0.167 \\
+% 	wm\_rt & CMC & elastic & 0.167 \\
+% 	wm\_rt & FS+CMC & elastic & 0.167 \\
+% 	wm\_rt & FS & lgbm & 0.167 \\
+% 	emotion\_rt & FS & elastic & 0.167 \\
+% 	relational\_rt & FS & lgbm & 0.000 \\
+% 	social\_random\_perf & CMC & elastic & 0.000 \\
+% 	social\_random\_perf & CMC & lgbm & 0.000 \\
+% 	wm\_rt & FS & elastic & 0.000 \\
+% 	wm\_perf & FS+CMC & elastic & 0.000 \\
+% 	relational\_rt & CMC & lgbm & 0.000 \\
+% 	social\_random\_perf & FS & elastic & 0.000 \\
+% 	social\_random\_perf & FS & lgbm & 0.000 \\
+% 	social\_rt & CMC & elastic & 0.000 \\
+% 	social\_rt & CMC & lgbm & 0.000 \\
+% 	wm\_perf & FS+CMC & lgbm & 0.000 \\
+% 	relational\_rt & FS & elastic & 0.000 \\
+% 	emotion\_perf & CMC & elastic & 0.000 \\
+% 	relational\_rt & CMC & elastic & 0.000 \\
+% 	language\_rt & FS+CMC & elastic & 0.000 \\
+% 	emotion\_perf & FS & elastic & 0.000 \\
+% 	emotion\_perf & FS & lgbm & 0.000 \\
+% 	emotion\_perf & FS+CMC & elastic & 0.000 \\
+% 	emotion\_perf & FS+CMC & lgbm & 0.000 \\
+% 	gambling\_perf & CMC & lgbm & 0.000 \\
+% 	gambling\_perf & FS & elastic & 0.000 \\
+% 	language\_rt & CMC & elastic & 0.000 \\
+% 	language\_rt & CMC & lgbm & 0.000 \\
+% 	language\_rt & FS & elastic & 0.000 \\
+% 	language\_rt & FS+CMC & lgbm & 0.000 \\
+% 	psqi\_latent & FS & lgbm & 0.000 \\
+% 	emotion\_perf & CMC & lgbm & 0.000 \\
+% 	neg\_emotionality & CMC & lgbm & 0.000 \\
+% 	neg\_emotionality & FS & elastic & 0.000 \\
+% 	neg\_emotionality & FS & lgbm & 0.000 \\
+% 	neg\_emotionality & FS+CMC & elastic & 0.000 \\
+% 	neg\_emotionality & FS+CMC & lgbm & 0.000 \\
+% 	psqi\_latent & CMC & elastic & 0.000 \\
+% 	psqi\_latent & CMC & lgbm & 0.000 \\
+% 	psqi\_latent & FS & elastic & 0.000 \\
+% 	neg\_emotionality & CMC & elastic & 0.000 \\
+% \end{longtable}
 
 
 

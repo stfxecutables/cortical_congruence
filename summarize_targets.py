@@ -1857,7 +1857,7 @@ def simplified_sex_stats() -> None:
             sparsify=True,
             longtable=True,
             escape=False,
-            caption=r"Summary of Cohen's d values for sex, for each ROI. I.e. each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects (M=507, F=606) \times the number of ROI hemispeheres (1 or 3 for asymmetry and non-asymmetry measures). Rightmost columns show the smallest and largest of the 34 p-values associated with the Mann-Whitney U statistic.",
+            caption=r"Summary of Cohen's d values for sex, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects (M=507, F=606) $\times$ the number of ROI hemispeheres (1 or 3 for asymmetry and non-asymmetry measures). Rightmost columns show the smallest and largest of the 34 p-values associated with the Mann-Whitney U statistic. All p-values are corrected for multiple comparisons by the Holm-Bonferroni step-down method.",
             label="tab:sex-roi-ds",
         )
     )
@@ -1908,7 +1908,7 @@ def simplified_lateral_stats() -> None:
     table.rename(columns=dict(std="$\\sigma$", mean="$\\mu$", count="$n$"), inplace=True)
     table.rename(index={"pV": "$\\hat{V}$", "d": "$\\tau$"}, inplace=True)
     table.rename(index={"cmc": r"$\text{CMC}$"}, inplace=True)
-    table.loc[:, ("d", "n_sig")] = n_sig.values
+    table.loc[:, ("d", f"n\_sig")] = n_sig.values
     table = table["d"]
 
     print(table)
@@ -1918,10 +1918,28 @@ def simplified_lateral_stats() -> None:
             sparsify=True,
             longtable=True,
             escape=False,
-            caption=r"Summary of Cohen's d values for left vs. right CMC differences, for each ROI. I.e. each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects. Rightmost columns show the smallest and largest of the 34 p-values associated with the Wilcoxon signed rank test.",
-            label="tab:sex-roi-ds",
+            caption=r"Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.",
+            label="tab:sex-lateral-ds",
         )
     )
+
+
+def random_stats() -> None:
+    dff = load_final_features()
+    dff = dff[
+        ~((dff.source == "FS") & (~dff.feature.str.contains("ThickAvg|GrayVol|SurfArea")))
+    ]
+    info = dff.groupby(["fclass", "roi"]).describe().round(3)
+    print(info.loc[("cmc", "bankssts")].loc["value"])
+    print(info.loc[("cmc", "insula")].loc["value"])
+
+    print(info.loc[("cmc", "entorhinal")].loc["value"])
+    print(info.loc[("cmc", "temporalpole")].loc["value"])
+    print(info.loc[("cmc", "frontalpole")].loc["value"])
+    print(info.loc[("cmc", "parsorbitalis")].loc["value"])
+    print(info.loc[("cmc", "pericalcarine")].loc["value"])
+
+    print(info.xs("cmc")["value"].sort_values(by="mean"))
 
 
 if __name__ == "__main__":
@@ -1952,4 +1970,5 @@ if __name__ == "__main__":
     # two_roi_violin_plot()
     # simplified_feature_stats()
     # simplified_sex_stats()
-    simplified_lateral_stats()
+    # simplified_lateral_stats()
+    # random_stats()

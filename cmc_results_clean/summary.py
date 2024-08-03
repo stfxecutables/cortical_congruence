@@ -512,33 +512,31 @@ def summarize_hcp_prediction_percents() -> None:
     print(caption.replace(". ", ".\n").replace("; ", ";\n"))
     # raise
 
+    # 24 is number of combos in this groupby
     ps = (
-        hcp.groupby(["target", "feats"])
-        .apply(lambda g: ((g["mae+"] > 0) & (g["r2+"] > 0)).mean(), include_groups=False)
-        .reset_index()
-        .rename(columns={0: "exceeds_dummy"})
+        hcp[(hcp["mae+"] > 0) & (hcp["r2"] > 0)]
+        .groupby(["target", "feats"])
+        .count()
+        .iloc[:, 0]
+        / 24
     )
+    ps = ps.reset_index().rename(columns={"data": "exceeds_dummy"})
+    ps = ps.sort_values(by=["target", "exceeds_dummy"], ascending=[True, False])
     print("Total proportion of all models:\n")
+    print(ps.to_markdown(index=False, floatfmt="0.3f"))
+    caption = "For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance."
     print(
-        ps.sort_values(
-            by=["target", "feats", "exceeds_dummy"], ascending=[True, True, False]
+        ps.to_latex(
+            index=False,
+            float_format="%0.3f",
+            escape=True,
+            longtable=True,
+            sparsify=True,
+            caption=caption,
+            label="tab:cmc-p-target-predictive",
         )
-        .drop_duplicates()
-        .to_markdown(index=False, floatfmt="0.3f")
     )
-    print(
-        ps.sort_values(
-            by=["target", "feats", "exceeds_dummy"], ascending=[True, True, False]
-        )
-        .drop_duplicates()
-        .to_latex(index=False, float_format="%0.3f")
-    )
-    print(
-        "\n: Proportion of model runs that exceed dummy performance.\n"
-        "feats = feature set;\n"
-        "exceeds_dummy = proportion of runs with performance exceeding dummy models;\n"
-        "{#tbl:cmc_p_predictive}\n\n"
-    )
+    print(caption)
 
     ps = (
         hcp.groupby(["target"])
@@ -700,6 +698,28 @@ if __name__ == "__main__":
         )
     )
     print(caption.replace(". ", ".\n").replace("; ", ";\n"))
+
+    real_bests = (
+        bests.groupby(["target", "feats"])
+        .apply(lambda grp: grp.nlargest(1, "mae+"))
+        .droplevel([1, 2])
+        .reset_index(drop=True)
+        .sort_values(by=["target", "mae+"], ascending=[True, False])
+        .loc[:, ["target", "feats", "selection", "model", "r2", "mae", "mae+"]]
+        .round(3)
+    )
+    bests_cap = r"Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer feature only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE."
+    print(real_bests)
+    print(
+        real_bests.to_latex(
+            index=False,
+            float_format="%0.3f",
+            longtable=True,
+            escape=True,
+            caption=bests_cap,
+            label="tab:cmc-target-feat-best",
+        )
+    )
     raise
 
     bests["cmc_win"] = bests["p_sel_feat_cmc"] > bests["p_sel_feat_fs"]
