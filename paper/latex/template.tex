@@ -27,6 +27,7 @@
 % below means 2 arguments, default of "cyan" for first
 \newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
 \newcommand{\CMC}{\(\text{CMC}\) }
+\raggedbottom
 
 % https://tex.stackexchange.com/a/514599
 % make longtable captions text width
@@ -806,44 +807,47 @@ Holm-Bonferroni stepdown method.} \label{tab:sig-cmc-sex}
 \normalsize
 \end{table}
 
-For CMC feature classes, both pseudo-volume and left lateral CMC features
-differ significantly in the overall spread standard deviation of their mean
-values (Table~\ref{tab:sig-cmc-scale-sex}). That is, male CMC pseudo-volume
-and left lateral CMC features have more variable average values for males,
-relative to females, though this difference is quite small, practically, and
-remains significant only for pseudo-volume features when considering a robust
-measure of scale (IQR).
+% For CMC feature classes, both pseudo-volume and left lateral CMC features
+% differ significantly in the overall spread standard deviation of their mean
+% values (Table~\ref{tab:sig-cmc-scale-sex}). That is, male CMC pseudo-volume
+% and left lateral CMC features have more variable average values for males,
+% relative to females, though this difference is quite small, practically, and
+% remains significant only for pseudo-volume features when considering a robust
+% measure of scale (IQR).
 
-\begin{table}[H]
-\centering
-\begin{tabular}{lrrrrrr}
-	\toprule
-	CMC class & \(d_{\sigma}\) & \(d_\text{IQR}\)  & \(w_{\sigma}\) & \(w_\text{IQR}\)   & \(p_{\sigma}\)   & \(p_\text{IQR}\) \\
-	\midrule
-	Pseudo-volume        &  0.145 &  0.130 &  25.000 &  42.000 & 0.000 & 0.000 \\
-	Left Lateral         &  0.021 &  0.029 & 146.000 & 184.000 & 0.009 & 0.053 \\
-	Asym (signed ratio)  & -0.041 &  0.019 & 204.000 & 232.000 & 0.113 & 0.270 \\
-	Bilateral            &  0.012 & -0.001 & 204.000 & 290.000 & 0.113 & 0.906 \\
-	Asym (signed diff)   & -0.010 &  0.007 & 252.000 & 289.000 & 0.447 & 0.893 \\
-	Asym (unsigned diff) & -0.002 &  0.001 & 287.000 & 289.000 & 0.866 & 0.893 \\
-	Right Lateral        & -0.002 & -0.007 & 293.000 & 267.000 & 0.946 & 0.612 \\
-	\bottomrule
-\end{tabular}
-\footnotesize
-\caption{CMC feature classes with significant differences in scale, by sex.
-\(\sigma\) = standard deviation; IQR = interquartile range;
-\(d_{[\cdot]}\) = Cohen's \(d\) for metric \([\cdot]\), with positive sign indicating larger metric values for males;
-\(W_{[\cdot]}\) = Wilcoxon signed rank test \(W\) for measure of scale \([\cdot]\);
-\(p_{[\cdot]}\) = p-value for \(W_{[\cdot]}\);
-Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \label{tab:sig-cmc-scale-sex}
-\normalsize
-\end{table}
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{lrrrrrr}
+% 	\toprule
+% 	CMC class & \(d_{\sigma}\) & \(d_\text{IQR}\)  & \(w_{\sigma}\) & \(w_\text{IQR}\)   & \(p_{\sigma}\)   & \(p_\text{IQR}\) \\
+% 	\midrule
+% 	Pseudo-volume        &  0.145 &  0.130 &  25.000 &  42.000 & 0.000 & 0.000 \\
+% 	Left Lateral         &  0.021 &  0.029 & 146.000 & 184.000 & 0.009 & 0.053 \\
+% 	Asym (signed ratio)  & -0.041 &  0.019 & 204.000 & 232.000 & 0.113 & 0.270 \\
+% 	Bilateral            &  0.012 & -0.001 & 204.000 & 290.000 & 0.113 & 0.906 \\
+% 	Asym (signed diff)   & -0.010 &  0.007 & 252.000 & 289.000 & 0.447 & 0.893 \\
+% 	Asym (unsigned diff) & -0.002 &  0.001 & 287.000 & 289.000 & 0.866 & 0.893 \\
+% 	Right Lateral        & -0.002 & -0.007 & 293.000 & 267.000 & 0.946 & 0.612 \\
+% 	\bottomrule
+% \end{tabular}
+% \footnotesize
+% \caption{CMC feature classes with significant differences in scale, by sex.
+% \(\sigma\) = standard deviation; IQR = interquartile range;
+% \(d_{[\cdot]}\) = Cohen's \(d\) for metric \([\cdot]\), with positive sign indicating larger metric values for males;
+% \(W_{[\cdot]}\) = Wilcoxon signed rank test \(W\) for measure of scale \([\cdot]\);
+% \(p_{[\cdot]}\) = p-value for \(W_{[\cdot]}\);
+% Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method} \label{tab:sig-cmc-scale-sex}
+% \normalsize
+% \end{table}
 
 
 \subsubsection{CMC Features by Laterality, Age, and Sex}
 
-We find the lateral CMC measures differ significantly for all but the
-superior frontal and parsopercularis regions (Table~\ref{tab:lateral-cmc}).
+Excluding the asymmetry CMC measures, we find significant differences for all
+feature classes (Table~\ref{tab:sex-lateral-ds}).  For the base \CMC metrics,
+only the superior frontal and pars opercularis regions  do not differ
+significantly by hemisphere (Table~\ref{tab:lateral-cmc}).
+
 
 \begin{longtable}{lrrrrr}
 	\toprule
@@ -869,66 +873,63 @@ superior frontal and parsopercularis regions (Table~\ref{tab:lateral-cmc}).
 	$\tau$ & 0.07 & 0.13 & -0.12 & 0.53 & 32 \\*
 \end{longtable}
 
+
 \begin{table}
 \centering
 \begin{tabular}{lrrrrr}
 	\toprule
-	ROI & d &  \(W\) & \(W_{\sigma}\) & \(W_{\text{IQR}}\) & \(p\) \\
+	ROI & d &  \(W\) & \(p\) \\
 	\midrule
-	inferiortemporal         & -1.890 &  0.000      & 254.000 & 272.000 & 0.000 \\
-	insula                   & -1.778 &  21.000     & 254.000 & 272.000 & 0.000 \\
-	pericalcarine            & -1.883 &  0.000      & 254.000 & 272.000 & 0.000 \\
-	precuneus                & -1.772 &  0.000      & 254.000 & 272.000 & 0.000 \\
-	precentral               & -1.661 &  75.000     & 254.000 & 272.000 & 0.000 \\
-	rostralanteriorcingulate & 1.673  &  143.000    & 254.000 & 272.000 & 0.000 \\
-	fusiform                 & 1.706  &  260.000    & 254.000 & 272.000 & 0.000 \\
-	superiorparietal         & -1.598 &  376.000    & 254.000 & 272.000 & 0.000 \\
-	postcentral              & 1.625  &  534.000    & 254.000 & 272.000 & 0.000 \\
-	paracentral              & -1.406 &  593.000    & 254.000 & 272.000 & 0.000 \\
-	caudalanteriorcingulate  & 1.630  &  1092.000   & 254.000 & 272.000 & 0.000 \\
-	lateralorbitofrontal     & -1.337 &  1710.000   & 254.000 & 272.000 & 0.000 \\
-	isthmuscingulate         & -1.498 &  1886.000   & 254.000 & 272.000 & 0.000 \\
-	cuneus                   & -1.648 &  2429.000   & 254.000 & 272.000 & 0.000 \\
-	transversetemporal       & -1.510 &  2995.000   & 254.000 & 272.000 & 0.000 \\
-	lingual                  &  1.531 &  5488.000   & 254.000 & 272.000 & 0.000 \\
-	posteriorcingulate       &  1.375 &  8640.000   & 254.000 & 272.000 & 0.000 \\
-	superiortemporal         &  1.176 &  18322.000  & 254.000 & 272.000 & 0.000 \\
-	parahippocampal          & -0.934 &  39694.000  & 254.000 & 272.000 & 0.000 \\
-	middletemporal           &  0.940 &  44794.000  & 254.000 & 272.000 & 0.000 \\
-	supramarginal            &  1.019 &  59895.000  & 254.000 & 272.000 & 0.000 \\
-	frontalpole              &  0.880 &  70533.000  & 254.000 & 272.000 & 0.000 \\
-	parsorbitalis            & -0.939 &  76597.000  & 254.000 & 272.000 & 0.000 \\
-	lateraloccipital         &  0.894 &  79894.000  & 254.000 & 272.000 & 0.000 \\
-	parstriangularis         &  0.611 &  90160.000  & 254.000 & 272.000 & 0.000 \\
-	caudalmiddlefrontal      &  0.589 &  127030.000 & 254.000 & 272.000 & 0.000 \\
-	inferiorparietal         &  0.482 &  171122.000 & 254.000 & 272.000 & 0.000 \\
-	medialorbitofrontal      & -0.357 &  180895.000 & 254.000 & 272.000 & 0.000 \\
-	bankssts                 & -0.417 &  187242.000 & 254.000 & 272.000 & 0.000 \\
-	entorhinal               & -0.364 &  192057.000 & 254.000 & 272.000 & 0.000 \\
-	rostralmiddlefrontal     &  0.275 &  224623.000 & 254.000 & 272.000 & 0.000 \\
-	temporalpole             & -0.216 &  235096.000 & 254.000 & 272.000 & 0.000 \\
-	parsopercularis          & -0.055 &  298155.000 & 254.000 & 272.000 & 0.541 \\
-	superiorfrontal          &  0.030 &  306615.000 & 254.000 & 272.000 & 0.754 \\
+	inferiortemporal         & -1.890 &  0.000       & 0.000 \\
+	insula                   & -1.778 &  21.000      & 0.000 \\
+	pericalcarine            & -1.883 &  0.000       & 0.000 \\
+	precuneus                & -1.772 &  0.000       & 0.000 \\
+	precentral               & -1.661 &  75.000      & 0.000 \\
+	rostralanteriorcingulate & 1.673  &  143.000     & 0.000 \\
+	fusiform                 & 1.706  &  260.000     & 0.000 \\
+	superiorparietal         & -1.598 &  376.000     & 0.000 \\
+	postcentral              & 1.625  &  534.000     & 0.000 \\
+	paracentral              & -1.406 &  593.000     & 0.000 \\
+	caudalanteriorcingulate  & 1.630  &  1092.000    & 0.000 \\
+	lateralorbitofrontal     & -1.337 &  1710.000    & 0.000 \\
+	isthmuscingulate         & -1.498 &  1886.000    & 0.000 \\
+	cuneus                   & -1.648 &  2429.000    & 0.000 \\
+	transversetemporal       & -1.510 &  2995.000    & 0.000 \\
+	lingual                  &  1.531 &  5488.000    & 0.000 \\
+	posteriorcingulate       &  1.375 &  8640.000    & 0.000 \\
+	superiortemporal         &  1.176 &  18322.000   & 0.000 \\
+	parahippocampal          & -0.934 &  39694.000   & 0.000 \\
+	middletemporal           &  0.940 &  44794.000   & 0.000 \\
+	supramarginal            &  1.019 &  59895.000   & 0.000 \\
+	frontalpole              &  0.880 &  70533.000   & 0.000 \\
+	parsorbitalis            & -0.939 &  76597.000   & 0.000 \\
+	lateraloccipital         &  0.894 &  79894.000   & 0.000 \\
+	parstriangularis         &  0.611 &  90160.000   & 0.000 \\
+	caudalmiddlefrontal      &  0.589 &  127030.000  & 0.000 \\
+	inferiorparietal         &  0.482 &  171122.000  & 0.000 \\
+	medialorbitofrontal      & -0.357 &  180895.000  & 0.000 \\
+	bankssts                 & -0.417 &  187242.000  & 0.000 \\
+	entorhinal               & -0.364 &  192057.000  & 0.000 \\
+	rostralmiddlefrontal     &  0.275 &  224623.000  & 0.000 \\
+	temporalpole             & -0.216 &  235096.000  & 0.000 \\
+	parsopercularis          & -0.055 &  298155.000  & 0.541 \\
+	superiorfrontal          &  0.030 &  306615.000  & 0.754 \\
 	\bottomrule
 \end{tabular}
 \footnotesize
 \caption{Measures of separation of lateral CMC features (left vs.\ right
 hemisphere). d = Cohen's d, with a positive sign indicating greater congruence in left hemisphere ROIs;
-U = Mann-Whitney U, U (p) = p-value for Mann-Whitney U;
-W = Wilcoxon signed rank test; W (p) = p-value for W
+W = Wilcoxon signed rank test; p = p-value for W;
 Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
 } \label{tab:lateral-cmc}
 \normalsize
 \end{table}
 
 
-%%%%%%%%%%%%%%%
-% Jacob says: %
-%%%%%%%%%%%%%%%
-%
-% This [table above] is good - keep this
-
-Significant feature age correlations are shown in Table~\ref{tab:cmc-age-spearman}.
+Significant feature-age correlations are shown in Table~\ref{tab:cmc-age-spearman}. Note
+that, when restricting to a specific sex, the feature-age correlations tend not to be
+significant (\(r_{M_p}\) and \(r_{F_p}\) columns), which may reflect the reduced sample
+size when restricting to one sex.
 
 \begin{table}
 \centering
@@ -1439,9 +1440,11 @@ methoods, it is possible to roughly examine the proportion of CMC features
 selected by some of the most predictive models. These are shown below in
 Table~\ref{tab:cmc-feature-select}.
 
-Note that performances are lower than in previous tables and figures, as the best
-performing models often did not use a mixed feature set, or were those where no
-feature selection was employed.
+Note that performances are lower than in
+Table~\ref{tab:cmc-target-feat-best}, as the best performing models usually
+did not use a mixed feature set (e.g. ``FS+CMC''), or occured in models where
+no feature selection was performend, and thus do not allow assessing the
+relative contribution of the different features.
 
 \begin{table}
 \centering
@@ -1608,9 +1611,9 @@ is reflected in our CMC biomarker results exhibiting partially overlapping
 distributions between the sexes.
 
 
-%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%
 % Jacob says: %
-%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%
 %
 % Please add some short blurbs on how CMC helps with getting AI models with
 % value above the dummy model more often for predicting the two things I
@@ -1620,16 +1623,16 @@ distributions between the sexes.
 % If the variation explained test has been run and is clearly presented in
 % the results, then this can be briefly discussed here as well, otherwise it
 % can be dropped from the manuscript.
-
-\textcolor{orange}{%
-***Hopefully there is something related to phenotypic data that Derek's
-analysis will uncover?
-}
-
-\textcolor{orange}{%
-***Discuss machine learning predictive capacity and features underlying those
-predictions here
-}
+%
+% \textcolor{orange}{%
+% ***Hopefully there is something related to phenotypic data that Derek's
+% analysis will uncover?
+% }
+%
+% \textcolor{orange}{%
+% ***Discuss machine learning predictive capacity and features underlying those
+% predictions here
+% }
 
 Although most cortical regions exhibited consistent CMC values in the left
 and right hemispheres, we did observe asymmetries in the transverse temporal,
