@@ -21,7 +21,7 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
-\usepackage[format=plain,margin=1cm,font=small,textfont=small,justification=justified]{caption}
+\usepackage[format=plain,margin=0.5cm,font=small,textfont=small,justification=justified]{caption}
 \usepackage[normalem]{ulem}  % strikethrough
 
 
@@ -850,11 +850,12 @@ significantly by hemisphere (Table~\ref{tab:lateral-cmc}).
 
 
 \begin{longtable}{lrrrrr}
+	\caption{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \label{tab:sex-lateral-ds} \\
 	\toprule
 	Feature & $\mu$ & $\sigma$ & min & max & n\_sig \\
 	\midrule
 	\endfirsthead
-	\caption[]{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \\
+	% \caption[]{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \\
 	\toprule
 	Feature & $\mu$ & $\sigma$ & min & max & n\_sig \\
 	\midrule
@@ -864,7 +865,6 @@ significantly by hemisphere (Table~\ref{tab:lateral-cmc}).
 	\midrule
 	\endfoot
 	\bottomrule
-	\caption{Summary of Cohen's d values for left vs.\ right CMC differences, for each ROI\@. I.e.\ each row summarizes 34 Cohen's d values, one for each ROI, and where each d value summarizes 1\,113 subjects.\ n\_sig = amount of the 34 (adjusted) p-values < 0.05.} \label{tab:sex-lateral-ds} \\
 	\endlastfoot
 	$\text{CMC}$ & -0.12 & 0.18 & -0.50 & 0.27 & 32 \\*
 	$\hat{V}$ & 0.89 & 0.23 & 0.47 & 1.33 & 31 \\*
@@ -876,6 +876,11 @@ significantly by hemisphere (Table~\ref{tab:lateral-cmc}).
 
 \begin{table}
 \centering
+\caption{Measures of separation of lateral CMC features (left vs.\ right
+hemisphere). d = Cohen's d, with a positive sign indicating greater congruence in left hemisphere ROIs;
+W = Wilcoxon signed rank test; p = p-value for W;
+Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
+} \label{tab:lateral-cmc}
 \begin{tabular}{lrrrrr}
 	\toprule
 	ROI & d &  \(W\) & \(p\) \\
@@ -916,13 +921,6 @@ significantly by hemisphere (Table~\ref{tab:lateral-cmc}).
 	superiorfrontal          &  0.030 &  306615.000  & 0.754 \\
 	\bottomrule
 \end{tabular}
-\footnotesize
-\caption{Measures of separation of lateral CMC features (left vs.\ right
-hemisphere). d = Cohen's d, with a positive sign indicating greater congruence in left hemisphere ROIs;
-W = Wilcoxon signed rank test; p = p-value for W;
-Note: p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
-} \label{tab:lateral-cmc}
-\normalsize
 \end{table}
 
 
@@ -932,6 +930,13 @@ significant (\(r_{M_p}\) and \(r_{F_p}\) columns), which may reflect the reduced
 size when restricting to one sex.
 
 \begin{table}
+\caption{Spearman correlations between CMC feature classes, age, and sex.
+$r$ = Spearman's correlation with age, all subjects;
+$r_X$ = male/female correlation for X = M/F, respectively;
+$[]_p$ = two-sided p-value for metric [];
+$p_{\min}$ = smallest p-value of each row;
+Note: All p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
+}
 \centering
 \begin{tabular}{llrrrrrrr}
 	\toprule
@@ -1245,15 +1250,6 @@ size when restricting to one sex.
 	% rh-transversetemporal & Pseudo-volume & -0.0218 & 1.0000 & 0.0303 & 1.0000 & 0.0158 & 1.0000 & 1.0000 \\
 	\bottomrule
 \end{tabular}
-\footnotesize
-\caption{Spearman correlations between CMC feature classes, age, and sex.
-$r$ = Spearman's correlation with age, all subjects;
-$r_X$ = male/female correlation for X = M/F, respectively;
-$[]_p$ = two-sided p-value for metric [];
-$p_{\min}$ = smallest p-value of each row;
-Note: All p-values are adjusted for multiple comparisons using the Holm-Bonferroni stepdown method
-}
-\normalsize
 \label{tab:cmc-age-spearman}
 \end{table}
 
@@ -1311,11 +1307,12 @@ model generally has a negative impact on peak model performance.
 
 
 \begin{longtable}{llr}
+	\caption{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
 	\toprule
 	target & source & {} \\
 	\midrule
 	\endfirsthead
-	\caption[]{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \\
+	% \caption[]{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \\
 	\toprule
 	target & source & {} \\
 	\midrule
@@ -1325,7 +1322,7 @@ model generally has a negative impact on peak model performance.
 	\midrule
 	\endfoot
 	\bottomrule
-	\caption{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
+	% \caption{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
 	\endlastfoot
 	emotion\_rt & FS & 0.583 \\
 	emotion\_rt & CMC & 0.417 \\
@@ -1363,11 +1360,12 @@ model generally has a negative impact on peak model performance.
 	\end{longtable}
 
 	\begin{longtable}{llllrrr}
+		\caption{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \label{tab:cmc-target-feat-best} \\
 		\toprule
 		target & feats & selection & model & r2 & mae & mae+ \\
 		\midrule
 		\endfirsthead
-		\caption[]{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \\
+		% \caption[]{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \\
 		\toprule
 		target & feats & selection & model & r2 & mae & mae+ \\
 		\midrule
@@ -1377,7 +1375,7 @@ model generally has a negative impact on peak model performance.
 		\midrule
 		\endfoot
 		\bottomrule
-		\caption{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \label{tab:cmc-target-feat-best} \\
+		% \caption{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \label{tab:cmc-target-feat-best} \\
 		\endlastfoot
 		emotion\_rt & FS & none & lgbm & 0.046 & 0.190 & 0.004 \\*
 		emotion\_rt & FS+CMC & none & lgbm & 0.044 & 0.190 & 0.003 \\*
@@ -1447,6 +1445,10 @@ no feature selection was performend, and thus do not allow assessing the
 relative contribution of the different features.
 
 \begin{table}
+\caption{Proportion of CMC features selected for best performing models;
+p\_sel\_cmc = proportion of *all available* CMC features selected for final model;
+p\_sel\_feat\_cmc = proportion of all *selected* features that are CMC features;
+}
 \centering
 \begin{tabular}{lllrrrrr}
 	\toprule
@@ -1478,12 +1480,6 @@ relative contribution of the different features.
 	language\_perf & pred & lgbm & 0.087 & 0.197 & 0.007 & 0.324 & 0.325 \\
 	\bottomrule
 \end{tabular}
-\footnotesize
-\caption{Proportion of CMC features selected for best performing models;
-p\_sel\_cmc = proportion of *all available* CMC features selected for final model;
-p\_sel\_feat\_cmc = proportion of all *selected* features that are CMC features;
-}
-\normalsize
 \label{tab:cmc-feature-select}
 \end{table}
 
@@ -1695,6 +1691,7 @@ and abnormal brain, reliably and reproducibly.
 
 \begin{table}[H]
 \centering
+\caption{Ratios of ROI surface area divided by ROI average thickness.}\label{tab:sa-ratios}
 \begin{tabular}{lrr}
 \toprule
 hemi & left & right \\
@@ -1736,9 +1733,6 @@ superiorparietal & 2220.3 & 1947.2 \\
 superiorfrontal & 2485.1 & 2077.1 \\
 \bottomrule
 \end{tabular}
-\footnotesize
-\caption{Ratios of ROI surface area divided by ROI average thickness.}\label{tab:sa-ratios}
-\normalsize
 \end{table}
 
 \section{Appendix B - Factor Targets} \label{sec:appendix-b}
@@ -1766,6 +1760,7 @@ loadings are the Pearson correlation between the original, unreduced variable
 wm = working memory
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{gambling-perf} factor loadings.}\label{tab:gambling-perf}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1777,13 +1772,11 @@ gambling\_task\_punish\_perc\_larger & -0.8337 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{gambling-perf} factor loadings.}\label{tab:gambling-perf}
-\normalsize
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{emotion-perf} factor loadings.}\label{tab:emotion-perf}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1795,14 +1788,11 @@ emotion\_task\_face\_acc & -0.8298 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{emotion-perf} factor loadings.}
-\normalsize
-\label{tab:emotion-perf}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{language-rt} factor loadings.}\label{tab:language-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1814,14 +1804,11 @@ language\_task\_math\_median\_rt & 0.8138 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{language-rt} factor loadings.}
-\normalsize
-\label{tab:language-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{relational-rt} factor loadings.}\label{tab:relational-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1833,14 +1820,11 @@ relational\_task\_match\_median\_rt & -0.8610 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{relational-rt} factor loadings.}
-\normalsize
-\label{tab:relational-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{emotion-rt} factor loadings.}\label{tab:emotion-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1852,14 +1836,11 @@ emotion\_task\_shape\_median\_rt & 0.9373 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{emotion-rt} factor loadings.}
-\normalsize
-\label{tab:emotion-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{language-perf} factor loadings.}\label{tab:language-perf}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1871,14 +1852,11 @@ language\_task\_story\_avg\_difficulty\_level & -0.7606 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{language-perf} factor loadings.}
-\normalsize
-\label{tab:language-perf}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{p-matrices} factor loadings.}\label{tab:p-matrices}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1890,14 +1868,11 @@ pmat24\_a\_si & -0.7005 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{p-matrices} factor loadings.}
-\normalsize
-\label{tab:p-matrices}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{social-rt} factor loadings.}\label{tab:social-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1910,14 +1885,11 @@ social\_task\_median\_rt\_tom & 0.4017 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{social-rt} factor loadings.}
-\normalsize
-\label{tab:social-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{psqi-latent} factor loadings.}\label{tab:psqi-latent}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1931,14 +1903,11 @@ psqi\_comp7 & 0.4649 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{psqi-latent} factor loadings.}
-\normalsize
-\label{tab:psqi-latent}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{gambling-rt} factor loadings.}\label{tab:gambling-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1953,14 +1922,11 @@ gambling\_task\_punish\_median\_rt\_larger & 0.8357 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{gambling-rt} factor loadings.}
-\normalsize
-\label{tab:gambling-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{social-random-perf} factor loadings.}\label{tab:social-random-perf}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -1978,14 +1944,11 @@ social\_task\_tom\_perc\_random & 0.0638 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{social-random-perf} factor loadings.}
-\normalsize
-\label{tab:social-random-perf}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{int-g-like} factor loadings.}\label{tab:int-g-like}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2005,14 +1968,11 @@ picseq\_unadj & -0.4938 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{int-g-like} factor loadings.}
-\normalsize
-\label{tab:int-g-like}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{neg-emotionality} factor loadings.}\label{tab:neg-emotionality}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2040,14 +2000,11 @@ fearsomat\_unadj & 0.3752 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{neg-emotionality} factor loadings.}
-\normalsize
-\label{tab:neg-emotionality}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{wm-rt} factor loadings.}\label{tab:wm-rt}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2079,14 +2036,11 @@ wm\_task\_0bk\_place\_median\_rt\_target & 0.5302 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\caption{Synthetic target \texttt{wm-rt} factor loadings.}
-\normalsize
-\label{tab:wm-rt}
 \end{table}
 
 
 \begin{table}[H]
+\caption{Synthetic target \texttt{wm-perf} factor loadings.}\label{tab:wm-perf}
 \centering
 \begin{tabular}{lr}
 \toprule
@@ -2120,8 +2074,6 @@ wm\_task\_2bk\_place\_acc\_target & -0.4516 \\
 \bottomrule
 \end{tabular}
 
-\footnotesize
-\normalsize
 \end{table}
 
 
