@@ -243,10 +243,11 @@ surface area and average thickness, respectively. Then, if \(r\) has a slab-
 or sheet-like shape with constant cross-sectional area equal to \(A(r)\), and
 uniform height equal to \(d(r)\), such that \(d(r) = \tau(r)\)\footnote{Note
 that in general an ROI will \emph{not} have constant cross-sectional area,
-making the quantities \(A(r)\) and \(d(r)\) undefined. Only \(SA(r)\) and
-\(\tau(r)\) can be measured for an arbitrary volume.}, then
-\(A(r) \cdot d(r)\) is the expected volume of \(r\) (Figure~\ref{fig:slab}).
-We thus denote the \emph{expected-volume}, \(\hat{V}(r)\), as
+making the quantities \(A(r)\) and \(d(r)\) undefined in the general case.
+Only \(SA(r)\), \(V(r)\), and \(\tau(r)\) can be measured for an arbitrary
+volume.}, then \(A(r) \cdot d(r)\) is the expected volume of \(r\)
+(Figure~\ref{fig:slab}). We thus denote the \emph{expected-volume},
+\(\hat{V}(r)\), as
 
 \begin{equation}
 \hat{V}(r) = SA(r) \cdot \tau(r).
@@ -450,7 +451,7 @@ better facilitate comparison of the feature scales.
 
 For each of the 34 cortical regions \(r\) available from the FreeSurfer
 analysis (see Table~\ref{tab:lateral-cmc}), all CMC features are
-computed for each subject. Then, we run run various statistical and
+computed for each subject. Then, we run various statistical and
 predictive analyses based on these extracted features.
 
 \subsubsection{Descriptive Statistics}
@@ -653,7 +654,7 @@ preprocessing, and the subsequent feature selection, fitting, tuning, and
 validation of various classic machine-learning (ML) models from scikit-learn
 \citep{JMLR:v12:pedregosa11a}, LightGBM \citep{LightGBMNIPS2017} , and
 PyTorch \citep{Ansel2024PyTorch}. The software was previously applied to
-brain MRI predictive application focused on schizophrenia diagnostics
+a brain MRI predictive application focused on schizophrenia diagnostics
 \citep{levmanMorphologicalStudySchizophrenia2022}, and automates the search
 for an optimal combination of feature selection, models, and hyperparameters
 on simple tabular data.
@@ -695,8 +696,7 @@ All models are hyperparameter-tuned with Optuna \citep{Optuna2019}, using a
 tuning budget of 100 trials and 5-fold cross-validation for evaluation. All
 tuning, and feature selection is done on a separate training data split using
 50\% of the available samples, with final results reported on the remaining
-50\%, to ensure there is no double-dipping or data leakage during these
-steps.
+50\%, to ensure there is no data leakage during these steps.
 
 All source code used for the analyses in this study is available
 \href{https://github.com/stfxecutables/cortical_congruence}{online}
@@ -1278,7 +1278,7 @@ predictive utility for these targets.
 Note that, as \texttt{df-analyze} is exhaustive in its search for optimal
 models, a large number of highly-misspecfied models (i.e.\ with performance
 failing to exceed dummy peformance) can be produced. Including such
-``trivial'' models can be misleading in summaries (for example, if most
+misspecified models can be misleading in summaries (for example, if most
 feature selection methods perform poorly, but a single selection method has
 excellent performance). Thus, we limit summaries and tables to description of
 ``non-trivial'' models exceeding dummy performance. Readers interested in
@@ -1296,25 +1296,28 @@ in combination.
 Table~\ref{tab:cmc-target-feat-best} summarizes the absolute best model
 performances for each combination of target and feature source. That is, for
 the \texttt{int\_g\_like} target, the best performance (\(R^2=0.144\))
-results from using only FreeSurfer features. Note, however, that the differences in
-the MAE among these best models are quite small, and, practically, there is
-likely similar predictive information in both FreeSurfer and \CMC metrics overall.
-Note also that the inclusion of \emph{both} FreeSurfer and \CMC features in a
-model generally has a negative impact on peak model performance.
+results from using only FreeSurfer features. Note, however, that the
+differences in the MAE among these best models are quite small, and,
+practically, there is likely similar predictive information in both
+FreeSurfer and \CMC metrics overall. Note also that the inclusion of
+\emph{both} FreeSurfer and \CMC features in a model generally has a negative
+impact on peak model performance. Also note that CMC features alone produced
+the highest proportion of models exceeding dummy model performance for the
+\texttt{gambling\_rt} and \texttt{wm\_rt} tasks.
 
 
 % from summary.py::summarize_hcp_prediction_percents
 
 
 \begin{longtable}{llr}
-	\caption{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
+	\caption{The proportion of model runs exceeding dummy performance, for each combination of target and feature class. For omitted combinations (e.g.\ \texttt{language\_rt} with CMC features only), the proportion of runs exceeding dummy performance is zero.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \label{tab:cmc-p-target-predictive} \\
 	\toprule
-	target & source & {} \\
+	target & source & proportion \\
 	\midrule
 	\endfirsthead
 	% \caption[]{For each combination of target and feature class, the proportion of model runs that exceeds dummy performance. Omitted combinations have no runs exceeding dummy performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.} \\
 	\toprule
-	target & source & {} \\
+	target & source & proportion \\
 	\midrule
 	\endhead
 	\midrule
@@ -1358,6 +1361,21 @@ model generally has a negative impact on peak model performance.
 	wm\_rt & FS & 0.083 \\
 	wm\_rt & FS+CMC & 0.083 \\
 	\end{longtable}
+
+\subsubsection{Selected Features}
+
+A number of model runs involve both FS and CMC feature sets. As \texttt{df-analyze}
+automates simple feature selection via filter, wrapper, and embedded
+methoods, it is possible to roughly examine the proportion of CMC features
+selected by some of the most predictive models. These are shown below in
+Table~\ref{tab:cmc-feature-select}.
+
+Note that performances are lower than in
+Table~\ref{tab:cmc-target-feat-best}, as the best performing models usually
+did not use a mixed feature set (e.g. ``FS+CMC''), or occured in models where
+no feature selection was performend, and thus do not allow assessing the
+relative contribution of the different features.
+
 
 	\begin{longtable}{llllrrr}
 		\caption{Best model performance, for each combination of target and feature source. Missing combinations indicate no runs in that combination exceed dummy model performance.\ source = feature source: FS = FreeSurfer features only, CMC = CMC features only, FS+CMC = both FS and CMC features.\ selection = feature selection method: wrap = stepwise selection with linear model wrapper; pred = univariate prediction; embed\_[x] = embedded selection with model [x]; none = all features used in model.\ model = regressor model: lgbm = LightGBM; elastic = ElasticNet.\ r2 = coefficient of determination; mae = mean absolute error; mae+ = improvement in MAE relative to dummy model MAE.} \label{tab:cmc-target-feat-best} \\
@@ -1430,24 +1448,12 @@ model generally has a negative impact on peak model performance.
 
 
 
-\subsubsection{Selected Features}
 
-A number of model runs involve both FS and CMC feature sets. As \texttt{df-analyze}
-automates simple feature selection via filter, wrapper, and embedded
-methoods, it is possible to roughly examine the proportion of CMC features
-selected by some of the most predictive models. These are shown below in
-Table~\ref{tab:cmc-feature-select}.
-
-Note that performances are lower than in
-Table~\ref{tab:cmc-target-feat-best}, as the best performing models usually
-did not use a mixed feature set (e.g. ``FS+CMC''), or occured in models where
-no feature selection was performend, and thus do not allow assessing the
-relative contribution of the different features.
 
 \begin{table}
 \caption{Proportion of CMC features selected for best performing models;
-p\_sel\_cmc = proportion of *all available* CMC features selected for final model;
-p\_sel\_feat\_cmc = proportion of all *selected* features that are CMC features;
+p\_sel\_cmc = proportion of \emph{all available} CMC features selected for final model;
+p\_sel\_feat\_cmc = proportion of all \emph{selected} features that are CMC features;
 }
 \centering
 \begin{tabular}{lllrrrrr}
@@ -1500,7 +1506,7 @@ between their respective development, even though underlying
 interdependencies are inevitable. This paper presents a novel set of metrics
 that are based on cortical volume, surface area and thickness.
 
-\subsection{Interpretation of CMC and its potential relationship with macro-structural cortical development}
+\subsection{Interpretation of CMC and its Potential Relationship with Macro-structural Cortical Development}
 
 The proposed (non-asymmetry) \CMC features, defined in
 Equations~\ref{eq:cmc-laterals}~-~\ref{eq:cmc-bilateral}, rely on underlying
@@ -1554,17 +1560,17 @@ gray matter volume. This can occur when the surface area, which is expected
 to be affected by several underlying factors, including regional brain
 growth, cortical folding and pruning, develops more rapidly than the growth
 in overall regional gray matter volume alone. Additionally, the distribution
-of locations of pruning within the cortex can result in the emergence of
-comparatively complex surfaces relative to the more spherical/convex surfaces
-already discussed, potentially resulting in comparatively large surface areas
-yielding reduced values for our CMC biomarkers. Regions such as the
-pericalcarine cortex exhibit low CMC values (\(\mu=0.965, \sigma=0.025\)),
-which could imply that surface area growth has outpaced corresponding
-volumetric growth in this region's development relative to other cortical
-regions.
+of locations of pruning within the cortex can potentially result in the
+emergence of comparatively complex surfaces relative to the more
+spherical/convex surfaces already discussed, potentially resulting in
+comparatively large surface areas yielding reduced values for our CMC
+biomarkers. Regions such as the pericalcarine cortex exhibit low CMC values
+(\(\mu=0.965, \sigma=0.025\)), which could imply that surface area growth has
+outpaced corresponding volumetric growth in this region's development
+relative to other cortical regions.
 
 
-\subsection{Potential for CMC to characterize important aspects of brain development}
+\subsection{Potential for CMC to Characterize Aspects of Brain Development}
 
 The combination of regional cortical volume, surface area and mean thickness,
 biomarkers with relatively high variability across subjects, into a single
@@ -1650,19 +1656,19 @@ identification of asymmetries of CMC biomarkers implies that our analyses
 have considerable consistency with known asymmetric properties of the human
 brain.
 
-\subsection{Potential for CMC to characterize pathologies}
+\subsection{Potential for CMC to Characterize Pathologies}
 
 A wide variety of pathological conditions have been demonstrated to exhibit
 abnormal phenotypic presentation of regions of the brain, including Down
 Syndrome \citep{levmanStructuralMagneticResonance2019}, attention deficit
 hyperactivity disorder (ADHD)
-\citep{listonAtypicalPrefrontalConnectivity2011,stanleyEvidenceDevelopmentalAlterations2008},
-schizophrenia
-\citep{innocentiSchizophreniaNeurodevelopmentCorpus2003,keshavanSchizophreniaDueExcessive1994,feinbergCorticalPruningDevelopment1990,hoffmanCorticalPruningDevelopment1989,rimolCorticalThicknessSubcortical2010,narrMappingCorticalThickness2005,venkatasubramanianAutomatedMRIParcellation2008,vanharenChangesCorticalThickness2011,schultzReducedCorticalThickness2010,nesvagRegionalThinningCerebral2008,seitzAlterationGrayMatter2018,qiuHippocampalcorticalStructuralConnectivity2010,johnsonHippocampalShapeAbnormalities2013,mackinleyDeviantCorticalSulcation2020},
+\citep{listonAtypicalPrefrontalConnectivity2011,stanleyEvidenceDevelopmentalAlterations2008,levmanCorticalThicknessAbnormalities2022},
+schizophrenia \citep{innocentiSchizophreniaNeurodevelopmentCorpus2003,keshavanSchizophreniaDueExcessive1994,feinbergCorticalPruningDevelopment1990,hoffmanCorticalPruningDevelopment1989,rimolCorticalThicknessSubcortical2010,narrMappingCorticalThickness2005,venkatasubramanianAutomatedMRIParcellation2008,vanharenChangesCorticalThickness2011,schultzReducedCorticalThickness2010,nesvagRegionalThinningCerebral2008,seitzAlterationGrayMatter2018,qiuHippocampalcorticalStructuralConnectivity2010,johnsonHippocampalShapeAbnormalities2013,mackinleyDeviantCorticalSulcation2020,levmanMorphologicalStudySchizophrenia2022},
 psychotic disorders \citep{bakkerCorticalMorphologyDifferences2016}, autism
 \citep{khundrakpamCorticalThicknessAbnormalities2017,pereiraDifferencesCorticalStructure2018,zielinskiLongitudinalChangesCortical2014,levmanStructuralMagneticResonance2019,levmanClinicallyDetectableStructural2021},
 and multiple sclerosis
 \citep{brexLongitudinalStudyAbnormalities2002,losseffProgressiveCerebralAtrophy1996,chenRelatingNeocorticalPathology2004,sailerFocalThinningCerebral2003,levmanClinicallyDetectableStructural2021}.
+
 
 Thus, future work will entail the characterization of the development of the
 pathological brain with CMC\@. As an additional novel biomarker not previously
@@ -1680,9 +1686,51 @@ in characterizing and understanding the developmental processes and
 etiological factors associated with healthy brain development, as well as a
 variety of neurodevelopmental disorders. It is also hoped that congruence
 based biomarkers will assist in characterizing important aspects of healthy
-and abnormal brain, reliably and reproducibly.
+and abnormal brain development, reliably and reproducibly.
 
 
+\subsection{Predictive Analytics}
+
+% Table  9 = tab:cmc-p-target-predictive
+% Table 10 = tab:cmc-target-feat-best
+% Table 11 = tab:cmc-feature-select
+
+The results of the machine learning predictive analysis indicate that in our
+highest performing models, CMC features are selected for at a high rate (see
+Table~\ref{tab:cmc-feature-select}). It should be noted that the predictive
+regression tasks included as part of this analysis are quite challenging, in
+that fundamentally we are predicting phenotypic behavioural scores from
+biomarkers extracted from traditional structural MRI\@. It is not expected to
+be able to produce extremely high performing models in such challenging
+applications. Indeed, mean absolute error across models tends towards about
+20\% of the range of the target variables across predictive tasks.
+
+However, it is encouraging that the inclusion of CMC features has resulted in
+a higher proportion of models reliably demonstrating value (by outperforming
+the dummy models) in the \texttt{gambling\_rt} and \texttt{wm\_rt} prediction
+tasks (see Table~\ref{tab:cmc-p-target-predictive}), implying CMC provides a
+degree of reliability from its feature measurements in these tasks. It is
+also encouraging to note that including CMC features in the
+\texttt{gambling\_rt} task results in a small reduction in mean absolute
+error (see Table~\ref{tab:cmc-target-feat-best}).
+
+Overall, there is much room for improvement in our ability to predict
+behavioural scores, and including only structural MRI derived biomarkers is
+inherently limiting in these applications. Neither CMC nor standard
+FreeSurfer features should be expected to produce particularly high performing
+models in these applications. However, our results demonstrate some
+predictive potential from our proposed CMC features.
+
+\section{Conclusion}
+
+In summary, our results indicate that the CMC metrics developed exhibit
+relatively small standard deviations, implying potential value in producing
+reliable clinically detectable biomarkers of brain development. Results
+across genders and hemispheres imply CMC metrics to be of potential interest
+in brain characterization, and predictive analytics on some particularly
+challenging applications imply some value from CMC based metrics. Future work
+will investigate the potential for CMC to characterize aspects of brain
+development as well as a variety of pathological conditions.
 
 
 \section{Appendix A}\label{sec:appendix-a}
@@ -1694,8 +1742,8 @@ and abnormal brain, reliably and reproducibly.
 \caption{Ratios of ROI surface area divided by ROI average thickness.}\label{tab:sa-ratios}
 \begin{tabular}{lrr}
 \toprule
-hemi & left & right \\
-feature &  &  \\
+hemisphere & left & right \\
+ROI &  &  \\
 \midrule
 frontalpole & 43.3 & 76.4 \\
 entorhinal & 115.6 & 65.8 \\
