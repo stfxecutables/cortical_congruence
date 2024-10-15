@@ -263,8 +263,8 @@ thin strands) or for more regularly shaped volumes (e.g.\ cubelike,
 spherical, or regular polyhedral), the relationship between \(\hat{V}(r)\)
 and \(V(r)\) is difficult to interpret. However, for regions that are more
 sheet-like (or which resemble a crumpled sheet), we expect \(\hat{V}(r)\) to
-better approximate \(V(r)\). Thus, for cortical ROIs, we greater
-dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to potentially assint in
+better approximate \(V(r)\). Thus, for cortical ROIs, we expect greater
+dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to potentially assist in
 the characterization of the complexity of the shape of \(r\).
 
 
@@ -285,7 +285,7 @@ We thus define the \emph{cortical morphological congruence}\footnote{The
 motivation for the terminology being \emph{congruence to simple} (i.e.\
 sheet-like) \emph{structure}, and the term `congruence' chosen since when
 \(V(r) \approx \hat{V}(r)\), it suggests \(SA(r) \approx A(r)\) and \(\tau(r)
-\approx d(r)\), i.e.\ the shapes measurements are approximately equal.}, CMC,
+\approx d(r)\), i.e.\ the shape measurements are approximately equal.}, CMC,
 to be:
 
 \begin{equation}
@@ -540,12 +540,12 @@ First, clustering was performed on the features using HDBSCAN
 \citep{campelloHierarchicalDensityEstimates2015,JMLR:v12:pedregosa11a} with
 the absolute value of the Pearson correlation as the feature distance metric.
 HDBSCAN does not require specifying the number of clusters, and allows for
-assignment to "noise" or "background" clusters, and thus acts as a natural
-method to notice patterns of correlation in the data. That is, by pooling
-together all features and ignoring the feature measurement procedures, we can
-find natural clusters of measurements without assuming that items are
-correlated simply by virtue of being members of the same behavioural test or
-measurement instrument.
+assignment to "noise" or "background" clusters, and thus acts as a method to
+notice patterns of correlation in the data. That is, by pooling together all
+features and ignoring the feature measurement procedures, we can find natural
+clusters of measurements without assuming that items are correlated simply by
+virtue of being members of the same behavioural test or measurement
+instrument.
 
 Second, after interpolating missing values with the feature means, HDBSCAN
 feature clusters were reduced to a single dimension via exploratory factor
@@ -553,9 +553,9 @@ analysis. Factor analysis is a linear dimensionality reduction method wherein
 the reduced factor can be interpreted as a latent variable that
 well-describes the unreduced data, accounting for noise
 \citep{cattellScientificUseFactor1978,childEssentialsFactorAnalysis2006a}.
-Factor analysis was chosen here over PCA as the reduced unidimensional
-feature is more readily interpreted as a latent variable free from error
-variance \cite{attiasIndependentFactorAnalysis1999}.
+Factor analysis was chosen here over principal components analysis, as the
+reduced unidimensional feature is more readily interpreted as a latent
+variable free from error variance \cite{attiasIndependentFactorAnalysis1999}.
 
 The resulting factor target names, clusters and loadings are shown in
 \hyperref[sec:appendix-b]{Appendix B}, as are brief descriptions in
@@ -652,9 +652,9 @@ Predictive analyses were completed with
 available software, developed in house to automate data cleaning and
 preprocessing, and the subsequent feature selection, fitting, tuning, and
 validation of various classic machine-learning (ML) models from scikit-learn
-\citep{JMLR:v12:pedregosa11a}, LightGBM \citep{LightGBMNIPS2017} , and
-PyTorch \citep{Ansel2024PyTorch}. The software was previously applied to
-a brain MRI predictive application focused on schizophrenia diagnostics
+\citep{JMLR:v12:pedregosa11a}, LightGBM \citep{LightGBMNIPS2017} and PyTorch
+\citep{Ansel2024PyTorch}. The software was previously applied to a brain MRI
+predictive application focused on schizophrenia diagnostics
 \citep{levmanMorphologicalStudySchizophrenia2022}, and automates the search
 for an optimal combination of feature selection, models, and hyperparameters
 on simple tabular data.
@@ -709,12 +709,13 @@ All source code used for the analyses in this study is available
 \begin{figure}
 	\centering
 	\includegraphics[width=6.5in]{figures/example_violins.png}
-	\caption{Example distributions of CMC features for two ROIs. The temporal
-	pole has the largest CMC separation by sex (see
-	Table~\ref{tab:sig-cmc-sex}; Cohen's \(|d|=0.50\)), and relatively large
-	standard deviations compared to other ROIs. The paracentral lobule, by
-	contrast, has a typical standard deviation for CMC metrics, but the largest
-	differences between hemispheres (Cohen's \(|d|=0.80\)).}
+	\caption{Example distributions of CMC features (\(\text{CMC}_{\ell}\) and
+	\(\text{CMC}_{r}\)) for two ROIs. The temporal pole has the largest CMC
+	separation by sex (see Table~\ref{tab:sig-cmc-sex}; Cohen's \(|d|=0.50\)),
+	and relatively large standard deviations compared to other ROIs. The
+	paracentral lobule, by contrast, has a typical standard deviation for CMC
+	metrics, but the largest differences between hemispheres (Cohen's
+	\(|d|=0.80\)).}
 	\label{fig:violins}
 \end{figure}
 
