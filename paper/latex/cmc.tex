@@ -185,6 +185,183 @@ may help characterize neurodevelopment.
 
 \section{Methods}
 \label{sec:methods}
+
+\subsection{Cortical Morphology Metrics}
+
+% \citep{winklerCorticalThicknessGrey2010}
+% \begin{quotation}
+% Although the human brain is gyrencephalic, with no absolute
+% linear relationship between brain volume and surface area (Hofman,
+% 1985; Armstrong et al., 1995), simple geometric laws still hold within
+% the cortical mantle, where the grey matter volume is defined as the
+% amount of grey matter that lies between the grey-white interface and
+% the pia mater (Fig. 1, left). Previous findings suggest that cortical
+% surface area and cortical thickness are independent, both globally and
+% regionally, that grey matter volume is a function of these two indices
+% and each of these three measurements are heritable (Winkler et al.,
+% 2009; Panizzon et al., 2009). Furthermore, Panizzon et al. (2009)
+% reported that surface area and cortical thickness are genetically
+% uncorrelated.
+% \end{quotation}
+
+% \note{If the above quote is true, I think this could be a problem for both the
+% CMC formula and/or the interpreation of CMC\@. If two FS features are independent,
+% we probably don't want to form an index out of them.}
+
+% ``Freesurfer generates white and pial surface meshes with identical numbers
+% of vertices, and calculates the cortical thickness as the average of the
+% distances from the point on the white surface to its nearest neighbor on the
+% pial surface, and from the point on the pial surface to its nearest neighbor
+% on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
+
+
+\subsubsection{Motivation}
+
+Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
+volume of that region, and \(SA(r)\) and \(\tau(r)\) to be the (outer, pial)
+surface area and average thickness, respectively. Then, if \(r\) has a slab-
+or sheet-like shape with constant cross-sectional area equal to \(A(r)\), and
+uniform height equal to \(d(r)\), such that \(d(r) = \tau(r)\)\footnote{Note
+that in general an ROI will \emph{not} have constant cross-sectional area,
+making the quantities \(A(r)\) and \(d(r)\) undefined in the general case.
+Only \(SA(r)\), \(V(r)\), and \(\tau(r)\) can be measured for an arbitrary
+volume.}, then \(A(r) \cdot d(r)\) is the expected volume of \(r\)
+(Figure~\ref{fig:slab}). We thus denote the \emph{expected-volume},
+\(\hat{V}(r)\), as
+
+\begin{equation}
+\hat{V}(r) = SA(r) \cdot \tau(r).
+\end{equation}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=5in]{figures/ROI_slabs_strip.pdf}
+	\caption{Left: Example idealized slab-like ROI \(r\) with constant
+	cross-sectional area \(A(r)\), surface areas \(SA(r)\), thickness \(d(r)\),
+	and boundary length (perimeter) \(\partial A(r)\), and thus actual volume
+	\(V(r)\) equal to \(\hat{V}(r) = A(r) \cdot d(r)\). Right: example
+	simplified deviation from slab-like ideal, with raised gyrus-like
+	structure. An actual ROI will not, in general, have a clearly-defined
+	perimeter, as the pial surface may curve smoothly inward to the underlying
+	white matter, however, provided \(A(r)\) is large relative to \(d(r)\),
+	then the \(\partial A(r) \cdot d(r)\) term will be small, and \(\hat{V}(r)
+	= SA(r) \cdot d(r) \approx A(r) \cdot d(r) = V(r)\). Likewise, in the right
+	figure, deviations from the ideal (e.g.\ gyration, of which \(A^{\prime}\)
+	is a simplified representation) means that FreeSurfer reported SA
+	measurements will differ from those of an ideal volume on the left.
+	However, provided \(d(r)\) and \(d^{\prime}\) are small relative to their
+	respective areas, then the underlined terms above will be small.} \label{fig:slab}
+\end{figure}
+
+
+As most anatomical ROIs generally have a large surface area to average
+thickness ratio (see Table~S\ref{tab:sa-ratios}, for the ratios on the
+current data), and relatively small variance in thickness
+\citep{imBrainSizeCortical2008}, we expect \(\hat{V}(r) \approx V(r)\), as in
+Figure~\ref{fig:slab}. For more irregularly shaped volumes (e.g.\
+horn-shaped, extremely non-convex, volumes with thick components joined by
+thin strands) or for more regularly shaped volumes (e.g.\ cubelike,
+spherical, or regular polyhedral), the relationship between \(\hat{V}(r)\)
+and \(V(r)\) is difficult to interpret. However, for regions that are more
+sheet-like (or which resemble a crumpled sheet), we expect \(\hat{V}(r)\) to
+better approximate \(V(r)\). Thus, for cortical ROIs, we expect greater
+dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to potentially assist in
+the characterization of the complexity of the shape of \(r\).
+
+
+\subsubsection{Base Metrics}
+
+We wish to define metrics relating \(\hat{V}\) and \(V\) for an ROI  \(r\).
+The more an ROI \(r\) resembles or is congruent to a shape like in
+Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
+small average thickness relative to the surface area---then the closer
+\(\hat{V}(r)\) will be to \(V(r)\). By contrast, incongruence between
+\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which
+have large \(\tau(r)\) relative to \(SA\), or may increase for ROIs
+which have more variable thickness and/or curvature (e.g.\ any ROI with
+convoluted and/or tube-like structures, have higher overall curvature, or are
+more gyrated or sulcated).
+
+We thus define the \emph{cortical morphological congruence}\footnote{The
+motivation for the terminology being \emph{congruence to simple} (i.e.\
+sheet-like) \emph{structure}, and the term `congruence' chosen since when
+\(V(r) \approx \hat{V}(r)\), it suggests \(SA(r) \approx A(r)\) and \(\tau(r)
+\approx d(r)\), i.e.\ the shape measurements are approximately equal.}, CMC,
+to be:
+
+\begin{equation}
+\text{CMC}(r) = \frac{V(r)}{\hat{V}(r)}.
+\end{equation}
+
+As cortical ROIs manifest in both hemispheres, we more precisely define the \emph{left}
+and \emph{right} CMC, for ROI \(r\) with left and right
+hemisphere volumes \(r_l\) and \(r_r\) as:
+
+\begin{align}
+\label{eq:cmc-laterals}
+\text{CMC}_{\ell} &= \text{CMC}_{\text{Lateral}}(r_{\ell}) \\
+\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r).
+\end{align}
+
+We also define the \emph{bilateral} CMC, for ROI \(r\) as:
+
+\begin{equation} \label{eq:cmc-bilateral}
+\text{CMC}_{lr}
+=\frac{V(r_{\ell}) + V(r_r)}{\hat{V}(r_{\ell}) + \hat{V}(r_r)}
+=\frac{V_{\ell}(r) + V_r(r)}{\hat{V}_{\ell}(r) + \hat{V}_r(r)}
+=\frac{\text{ROI total volume}}{\text{ROI total expected volume}}.
+\end{equation}
+
+
+
+\subsubsection{Asymmetry Metrics}
+
+Define the \emph{asymmetric} CMC metrics:
+
+\begin{equation} \label{eq:asym-signed-diff}
+\text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
+\end{equation}
+
+and
+
+\begin{equation} \label{eq:asym-unsigned-diff}
+\text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
+\end{equation}
+
+to be the \emph{asymmetric CMC differences}, with
+Equation~\ref{eq:asym-signed-diff} and Equation~\ref{eq:asym-unsigned-diff}
+defining the \emph{signed} and \emph{unsigned} CMC asymmetric differences,
+respectively. We also define
+
+\begin{equation} \label{eq:asym-ratio}
+\text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r}
+\end{equation}
+
+to be the \emph{asymmetric CMC ratio}.  In addition, the expected volume can
+be computed unilaterally
+
+\begin{align} \label{eq:ev-unilateral}
+\hat{V}(r_{\ell}) = \hat{V}_{\ell}(r) = SA(r_{\ell}) \cdot \tau(r_{\ell}) \\
+\hat{V}(r_r) = \hat{V}_r(r) = SA(r_{r}) \cdot \tau(r_r)
+\end{align}
+
+or bilaterally
+
+\begin{equation} \label{eq:ev-bilateral}
+\hat{V}_{\ell r}(r) = \hat{V}(r_{\ell r}) = \hat{V}_{\ell}(r) + \hat{V}_r(r).
+\end{equation}
+
+This yields a variety of CMC-related metrics to assess, depending on the
+hemispheres of interest, and outlined in Table~\ref{tab:cmc-variants}.
+
+
+All CMC metrics index aspects of a cortical region's shape. In the case of
+equality of \(\hat{V}(r)\) and \(V(r)\), this produces a \CMC metric value of
+\(0\) or \(1\). Deviations from these values in either direction may have
+implications for structural cortical presentation and neurological
+development (see \hyperref[sec:discussion]{Discussion}).
+
 \subsection{Subject Populations and Imaging}
 \label{sec:population}
 
@@ -536,181 +713,6 @@ All source code used for the analyses in this study is available
 \href{https://github.com/stfxecutables/cortical_congruence}{online}
 \citep{dm-bergerStfxecutablesCortical_congruenceInit2024}.
 
-\subsection{Cortical Morphology Metrics}
-
-% \citep{winklerCorticalThicknessGrey2010}
-% \begin{quotation}
-% Although the human brain is gyrencephalic, with no absolute
-% linear relationship between brain volume and surface area (Hofman,
-% 1985; Armstrong et al., 1995), simple geometric laws still hold within
-% the cortical mantle, where the grey matter volume is defined as the
-% amount of grey matter that lies between the grey-white interface and
-% the pia mater (Fig. 1, left). Previous findings suggest that cortical
-% surface area and cortical thickness are independent, both globally and
-% regionally, that grey matter volume is a function of these two indices
-% and each of these three measurements are heritable (Winkler et al.,
-% 2009; Panizzon et al., 2009). Furthermore, Panizzon et al. (2009)
-% reported that surface area and cortical thickness are genetically
-% uncorrelated.
-% \end{quotation}
-
-% \note{If the above quote is true, I think this could be a problem for both the
-% CMC formula and/or the interpreation of CMC\@. If two FS features are independent,
-% we probably don't want to form an index out of them.}
-
-% ``Freesurfer generates white and pial surface meshes with identical numbers
-% of vertices, and calculates the cortical thickness as the average of the
-% distances from the point on the white surface to its nearest neighbor on the
-% pial surface, and from the point on the pial surface to its nearest neighbor
-% on the white surface'' \citep{demirciCorticalThicknessSystematically2022}
-
-
-\subsubsection{Motivation}
-
-Given a cortical region of interest (ROI) \(r\), define \(V(r)\) to be the
-volume of that region, and \(SA(r)\) and \(\tau(r)\) to be the (outer, pial)
-surface area and average thickness, respectively. Then, if \(r\) has a slab-
-or sheet-like shape with constant cross-sectional area equal to \(A(r)\), and
-uniform height equal to \(d(r)\), such that \(d(r) = \tau(r)\)\footnote{Note
-that in general an ROI will \emph{not} have constant cross-sectional area,
-making the quantities \(A(r)\) and \(d(r)\) undefined in the general case.
-Only \(SA(r)\), \(V(r)\), and \(\tau(r)\) can be measured for an arbitrary
-volume.}, then \(A(r) \cdot d(r)\) is the expected volume of \(r\)
-(Figure~\ref{fig:slab}). We thus denote the \emph{expected-volume},
-\(\hat{V}(r)\), as
-
-\begin{equation}
-\hat{V}(r) = SA(r) \cdot \tau(r).
-\end{equation}
-
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=5in]{figures/ROI_slabs_strip.pdf}
-	\caption{Left: Example idealized slab-like ROI \(r\) with constant
-	cross-sectional area \(A(r)\), surface areas \(SA(r)\), thickness \(d(r)\),
-	and boundary length (perimeter) \(\partial A(r)\), and thus actual volume
-	\(V(r)\) equal to \(\hat{V}(r) = A(r) \cdot d(r)\). Right: example
-	simplified deviation from slab-like ideal, with raised gyrus-like
-	structure. An actual ROI will not, in general, have a clearly-defined
-	perimeter, as the pial surface may curve smoothly inward to the underlying
-	white matter, however, provided \(A(r)\) is large relative to \(d(r)\),
-	then the \(\partial A(r) \cdot d(r)\) term will be small, and \(\hat{V}(r)
-	= SA(r) \cdot d(r) \approx A(r) \cdot d(r) = V(r)\). Likewise, in the right
-	figure, deviations from the ideal (e.g.\ gyration, of which \(A^{\prime}\)
-	is a simplified representation) means that FreeSurfer reported SA
-	measurements will differ from those of an ideal volume on the left.
-	However, provided \(d(r)\) and \(d^{\prime}\) are small relative to their
-	respective areas, then the underlined terms above will be small.} \label{fig:slab}
-\end{figure}
-
-
-As most anatomical ROIs generally have a large surface area to average
-thickness ratio (see Table~S\ref{tab:sa-ratios}, for the ratios on the
-current data), and relatively small variance in thickness
-\citep{imBrainSizeCortical2008}, we expect \(\hat{V}(r) \approx V(r)\), as in
-Figure~\ref{fig:slab}. For more irregularly shaped volumes (e.g.\
-horn-shaped, extremely non-convex, volumes with thick components joined by
-thin strands) or for more regularly shaped volumes (e.g.\ cubelike,
-spherical, or regular polyhedral), the relationship between \(\hat{V}(r)\)
-and \(V(r)\) is difficult to interpret. However, for regions that are more
-sheet-like (or which resemble a crumpled sheet), we expect \(\hat{V}(r)\) to
-better approximate \(V(r)\). Thus, for cortical ROIs, we expect greater
-dissimilarity between \(\hat{V}(r)\) and \(V(r)\) to potentially assist in
-the characterization of the complexity of the shape of \(r\).
-
-
-\subsubsection{Base Metrics}
-
-We wish to define metrics relating \(\hat{V}\) and \(V\) for an ROI  \(r\).
-The more an ROI \(r\) resembles or is congruent to a shape like in
-Figure~\ref{fig:slab}---i.e.\ has limited curvature, regular thickness, and
-small average thickness relative to the surface area---then the closer
-\(\hat{V}(r)\) will be to \(V(r)\). By contrast, incongruence between
-\(\hat{V}(r)\) and \(V(r)\) will increase for ROIs which
-have large \(\tau(r)\) relative to \(SA\), or may increase for ROIs
-which have more variable thickness and/or curvature (e.g.\ any ROI with
-convoluted and/or tube-like structures, have higher overall curvature, or are
-more gyrated or sulcated).
-
-We thus define the \emph{cortical morphological congruence}\footnote{The
-motivation for the terminology being \emph{congruence to simple} (i.e.\
-sheet-like) \emph{structure}, and the term `congruence' chosen since when
-\(V(r) \approx \hat{V}(r)\), it suggests \(SA(r) \approx A(r)\) and \(\tau(r)
-\approx d(r)\), i.e.\ the shape measurements are approximately equal.}, CMC,
-to be:
-
-\begin{equation}
-\text{CMC}(r) = \frac{V(r)}{\hat{V}(r)}.
-\end{equation}
-
-As cortical ROIs manifest in both hemispheres, we more precisely define the \emph{left}
-and \emph{right} CMC, for ROI \(r\) with left and right
-hemisphere volumes \(r_l\) and \(r_r\) as:
-
-\begin{align}
-\label{eq:cmc-laterals}
-\text{CMC}_{\ell} &= \text{CMC}_{\text{Lateral}}(r_{\ell}) \\
-\text{CMC}_r &= \text{CMC}_{\text{Lateral}}(r_r).
-\end{align}
-
-We also define the \emph{bilateral} CMC, for ROI \(r\) as:
-
-\begin{equation} \label{eq:cmc-bilateral}
-\text{CMC}_{lr}
-=\frac{V(r_{\ell}) + V(r_r)}{\hat{V}(r_{\ell}) + \hat{V}(r_r)}
-=\frac{V_{\ell}(r) + V_r(r)}{\hat{V}_{\ell}(r) + \hat{V}_r(r)}
-=\frac{\text{ROI total volume}}{\text{ROI total expected volume}}.
-\end{equation}
-
-
-
-\subsubsection{Asymmetry Metrics}
-
-Define the \emph{asymmetric} CMC metrics:
-
-\begin{equation} \label{eq:asym-signed-diff}
-\text{CMC}_{l - r} = \text{CMC}_{l} - \text{CMC}_{r}
-\end{equation}
-
-and
-
-\begin{equation} \label{eq:asym-unsigned-diff}
-\text{CMC}_{|l - r|} = \lvert\text{CMC}_{l - r} \rvert
-\end{equation}
-
-to be the \emph{asymmetric CMC differences}, with
-Equation~\ref{eq:asym-signed-diff} and Equation~\ref{eq:asym-unsigned-diff}
-defining the \emph{signed} and \emph{unsigned} CMC asymmetric differences,
-respectively. We also define
-
-\begin{equation} \label{eq:asym-ratio}
-\text{CMC}_{l / r} = \text{CMC}_{l} / \text{CMC}_{r}
-\end{equation}
-
-to be the \emph{asymmetric CMC ratio}.  In addition, the expected volume can
-be computed unilaterally
-
-\begin{align} \label{eq:ev-unilateral}
-\hat{V}(r_{\ell}) = \hat{V}_{\ell}(r) = SA(r_{\ell}) \cdot \tau(r_{\ell}) \\
-\hat{V}(r_r) = \hat{V}_r(r) = SA(r_{r}) \cdot \tau(r_r)
-\end{align}
-
-or bilaterally
-
-\begin{equation} \label{eq:ev-bilateral}
-\hat{V}_{\ell r}(r) = \hat{V}(r_{\ell r}) = \hat{V}_{\ell}(r) + \hat{V}_r(r).
-\end{equation}
-
-This yields a variety of CMC-related metrics to assess, depending on the
-hemispheres of interest, and outlined in Table~\ref{tab:cmc-variants}.
-
-
-All CMC metrics index aspects of a cortical region's shape. In the case of
-equality of \(\hat{V}(r)\) and \(V(r)\), this produces a \CMC metric value of
-\(0\) or \(1\). Deviations from these values in either direction may have
-implications for structural cortical presentation and neurological
-development (see \hyperref[sec:discussion]{Discussion}).
 
 
 
