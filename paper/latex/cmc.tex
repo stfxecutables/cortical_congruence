@@ -25,6 +25,7 @@
 \usepackage[normalem]{ulem}  % strikethrough
 
 
+
 % below means 2 arguments, default of "cyan" for first
 \newcommand{\note}[2][cyan]{\textbf{NOTE}: \textcolor{#1}{#2}}
 \newcommand{\CMC}{\(\text{CMC}\) }
@@ -58,9 +59,10 @@
 	% \thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.} \\
 	Department of Computer Science\\
 	St. Francis Xavier University\\
-	Antigonish, Nova Scotia, Canada\\
+	Antigonish, NS, Canada\\
 	Athinoula A. Martinos Center for Biomedical Imaging, Charlestown, Massachusetts 02129\\
 	\texttt{jlevman@stfx.ca} \\
+	% \footnote[number]{Corresponding author} \\
 
 	\And
 
@@ -82,15 +84,16 @@
 \setlength{\affilsep}{0em}
 % box is needed for correct spacing with authblk
 \newbox{\orcid}\sbox{\orcid}{\includegraphics[scale=0.06]{orcid.pdf}}
-\author[1,2]{%
+\author[1,2,*]{%
 	\href{https://orcid.org/0000-0002-9604-3157}{\usebox{\orcid}\hspace{1mm}Jacob Levman\thanks{\texttt{jlevman@stfx.ca}}}%
 }
 \author[1]{%
 	\href{https://orcid.org/0000-0003-4733-0624}{\usebox{\orcid}\hspace{1mm}Derek Berger\thanks{\texttt{dberger@stfx.ca}}}%
 }
 
-\affil[1]{Department of Computer Science, St. Francis Xavier University,Antigonish, Nova Scotia}
+\affil[1]{Department of Computer Science, St. Francis Xavier University, Antigonish, Nova Scotia}
 \affil[2]{Nova Scotia Health Authority, Halifax, NS, Canada}
+\affil[*]{Corresponding author}
 \fi
 
 % Uncomment to override  the `A preprint' in the header
@@ -106,6 +109,8 @@ pdfsubject={q-bio.NC, q-bio.QM},
 pdfauthor={Jacob Levman, Derek Berger},
 pdfkeywords={morphological, congruence, cortex, neurodevelopment, magnetic resonance imaging, healthy},
 }
+
+%
 
 \begin{document}
 
@@ -1750,6 +1755,14 @@ in brain characterization, and predictive analytics on some particularly
 challenging applications imply some value from CMC based metrics. Future work
 will investigate the potential for CMC to characterize aspects of brain
 development as well as a variety of pathological conditions.
+
+\section{Funding}
+
+
+This work was supported by a Canada Foundation for Innovation grant, a Nova
+Scotia Research and Innovation Trust grant, an NSERC Discovery grant, a
+Compute Canada Resource Allocation, and a Nova Scotia Health Authority grant
+to J.L.
 
 
 \section{Appendix A}\label{sec:appendix-a}
